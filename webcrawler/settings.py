@@ -69,6 +69,11 @@ ROBOTSTXT_OBEY = True
 #ITEM_PIPELINES = {
 #    'webcrawler.pipelines.WebcrawlerPipeline': 300,
 #}
+ITEM_PIPELINES = {
+    'webcrawler.pipelines.PricePipeline' : 300,
+    'webcrawler.pipelines.DuplicatesPipeline' : 600,
+    #'webcrawler.pipelines.JsonWriterPipeline' : 800,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
