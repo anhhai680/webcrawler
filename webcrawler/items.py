@@ -12,3 +12,12 @@ class WebcrawlerItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
+
+class ProductItem(scrapy.Item):
+    title = scrapy.Field()
+    description = scrapy.Field()
+    price = scrapy.Field()
+    #specifications = scrapy.Field()
+    link = scrapy.Field()
+    images = scrapy.Field()
+    pass
