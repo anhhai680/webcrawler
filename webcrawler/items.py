@@ -17,7 +17,8 @@ class ProductItem(scrapy.Item):
     title = scrapy.Field()
     description = scrapy.Field()
     price = scrapy.Field()
-    #specifications = scrapy.Field()
+    swatchcolors = scrapy.Field()
+    specifications = scrapy.Field()
     link = scrapy.Field()
     images = scrapy.Field()
     pass

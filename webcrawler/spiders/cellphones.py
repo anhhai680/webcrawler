@@ -80,11 +80,15 @@ class CellphonesSpider(scrapy.Spider):
         product_desc = extract_with_xpath(
             '//meta[@name="description"]/@content')
         product_price = extract_price()
+        product_swatchcolors = response.css('label.opt-label>span::text').getall()
         product_images = extract_product_gallery()
+        product_specifications = response.xpath('//*[@id="tskt"]/tr/*/text()').re('(\w+[^\n]+)')
 
         products['title'] = product_title
         products['description'] = product_desc
         products['price'] = product_price
+        products['swatchcolors'] = product_swatchcolors
+        products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
 
