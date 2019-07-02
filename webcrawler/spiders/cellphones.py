@@ -11,10 +11,11 @@ logger = logging.getLogger('cellphones_logger')
 
 class CellphonesSpider(scrapy.Spider):
     name = 'cellphones'
-    allowed_domains = ['cellphones.com.vn']
+    allowed_domains = ['cellphones.com.vn', 'hoanghamobile.com']
     #sitemap_urls = ['https://cellphones.com.vn/sitemap.xml']
     start_urls = [
         'https://cellphones.com.vn/mobile.html',
+        'https://hoanghamobile.com/dien-thoai-di-dong-c14.html',
         # 'https://cellphones.com.vn/tablet.html',
         # 'https://cellphones.com.vn/hang-cu.html',
         # 'https://cellphones.com.vn/do-choi-cong-nghe/fitbit.html',
@@ -27,13 +28,27 @@ class CellphonesSpider(scrapy.Spider):
             if link_product is not None:
                 yield response.follow(link_product, self.parse_product_detail)
 
+        # Following to scrape for next page
         links = response.xpath(
             '//ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/@href').getall()
-
-        # Following to scrape for next page
-        for next_page in links:
-            if next_page is not None:
+        if len(links) > 0:
+            for next_page in links:
                 yield response.follow(next_page, callback=self.parse)
+        pass
+
+    # Scrape product from hoanghamobile.com
+    def parse_hoanghamobile(self, response):
+        for link_product in response.css('div.mosaic-block>a::attr(href)'):
+            if link_product is not None:
+                yield response.follow(link_product, self.parse_hoanghamobile_product_detail)
+
+        # Following all pagingtation pages
+        paging_pages = response.xpath('//div[@class="paging"]/a[not(contains(@class,"current"))]/@href').getall()
+        if len(paging_pages) > 0:
+            for next_link in paging_pages:
+                next_link = "https://hoanghamobile.com" % next_link
+                yield response.follow(next_link, callback=self.parse_hoanghamobile)
+                pass
         pass
 
     # Following product detail to scrape all information of each product
@@ -80,9 +95,11 @@ class CellphonesSpider(scrapy.Spider):
         product_desc = extract_with_xpath(
             '//meta[@name="description"]/@content')
         product_price = extract_price()
-        product_swatchcolors = response.css('label.opt-label>span::text').getall()
+        product_swatchcolors = response.css(
+            'label.opt-label>span::text').getall()
         product_images = extract_product_gallery()
-        product_specifications = response.xpath('//*[@id="tskt"]/tr/*/text()').re('(\w+[^\n]+)')
+        product_specifications = response.xpath(
+            '//*[@id="tskt"]/tr/*/text()').re('(\w+[^\n]+)')
 
         products['title'] = product_title
         products['description'] = product_desc
@@ -93,4 +110,7 @@ class CellphonesSpider(scrapy.Spider):
         products['images'] = product_images
 
         yield products
+        pass
+    
+    def parse_hoanghamobile_product_detail(self,response):
         pass
