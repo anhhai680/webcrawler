@@ -3,6 +3,9 @@ import scrapy
 import logging
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spidermiddlewares.httperror import HttpError
+from twisted.internet.error import DNSLookupError
+from twisted.internet.error import TimeoutError, TCPTimedOutError
 from ..items import ProductItem
 
 logger = logging.getLogger('cellphones_logger')
@@ -10,6 +13,11 @@ logger = logging.getLogger('cellphones_logger')
 
 class CellphonesSpider(CrawlSpider):
     name = 'cellphones'
+    # custom_settings = {
+    #     "DEPTH_LIMIT": 4,
+    #     "DOWNLOAD_DELAY": 2,
+    #     "CONCURRENT_REQUESTS_PER_DOMAIN": 1
+    # }
     allowed_domains = ['cellphones.com.vn', 'hoanghamobile.com']
     # sitemap_urls = ['https://cellphones.com.vn/sitemap.xml']
     start_urls = [
@@ -22,11 +30,22 @@ class CellphonesSpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(allow=('mobile\.html'), deny=(
             'timkiem\.html')), callback='parse_cellphones'),
-
         # Extract links matching 'item.php' and parse them with the spider's method parse_item
         Rule(LinkExtractor(allow=('dien-thoai-di-dong-c14\.html')),
-             callback='parse_hoanghamobile')
+             callback='parse_hoanghamobile'),
     )
+
+    # def start_requests(self):
+    #     for url in self.start_urls:
+    #         if url in 'cellphones.com.vn':
+    #             yield scrapy.Request(url, callback=self.parse_cellphones,
+    #                                 errback=self.errback_httpbin,
+    #                                 dont_filter=True)
+    #         elif url in 'hoanghamobile.com':
+    #             yield scrapy.Request(url, callback=self.parse_hoanghamobile_product_detail,
+    #                                 errback=self.errback_httpbin,
+    #                                 dont_filter=True)
+    #         pass
 
     def parse_cellphones(self, response):
         # logger.info('Parse url: %s',response.url)
@@ -139,19 +158,20 @@ class CellphonesSpider(CrawlSpider):
             XPATH_PRODUCT_SWATCHCOLORS).getall()
         product_images = self.extract_with_xpath(
             response, XPATH_PRODUCT_IMAGES)
-        product_specifications = {}
+        product_specifications = []
 
         # Specifications product
         for spec_info in response.css('div.simple-prop>p'):
             if spec_info is not None:
                 try:
                     spec_key = self.extract_with_css(spec_info, 'label::text')
-                    spec_value = self.extract_with_css(spec_info, 'span>a::text')
+                    spec_value = self.extract_with_css(
+                        spec_info, 'span>a::text')
                     product_specifications.append({spec_key, spec_value})
                 except:
                     pass
         # if score is None:
-		# 	raise ValueError('BOT FOUND!! Empty body returned')
+                # 	raise ValueError('BOT FOUND!! Empty body returned')
 
         products = ProductItem()
         products['title'] = product_title
@@ -170,3 +190,25 @@ class CellphonesSpider(CrawlSpider):
 
     def extract_with_xpath(self, response, query):
         return response.xpath(query).get(default='').strip()
+
+    def errback_httpbin(self, failure):
+        # log all failures
+        self.logger.error(repr(failure))
+
+        # in case you want to do something special for some errors,
+        # you may need the failure's type:
+
+        if failure.check(HttpError):
+            # these exceptions come from HttpError spider middleware
+            # you can get the non-200 response
+            response = failure.value.response
+            self.logger.error('HttpError on %s', response.url)
+
+        elif failure.check(DNSLookupError):
+            # this is the original request
+            request = failure.request
+            self.logger.error('DNSLookupError on %s', request.url)
+
+        elif failure.check(TimeoutError, TCPTimedOutError):
+            request = failure.request
+            self.logger.error('TimeoutError on %s', request.url)
