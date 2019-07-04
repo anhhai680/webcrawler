@@ -11,18 +11,20 @@ from urlparser import urlparser
 
 from ..items import ProductItem
 
-logger = logging.getLogger('cellphones_logger')
+logging.basicConfig(format='%(asctime)s %(message)s',
+                    datefmt='%m/%d/%Y %I:%M:%S %p')
+logger = logging.getLogger(__name__)
 
 
 class CellphonesSpider(CrawlSpider):
-    name = 'cellphones'
+    name = 'phonespider'
     # custom_settings = {
     #     "DEPTH_LIMIT": 4,
     #     "DOWNLOAD_DELAY": 3,
     #     "CONCURRENT_REQUESTS_PER_DOMAIN": 32
     # }
     allowed_domains = ['cellphones.com.vn', 'hoanghamobile.com']
-    # sitemap_urls = ['https://cellphones.com.vn/sitemap.xml']
+
     start_urls = [
         'https://cellphones.com.vn/mobile.html',
         'https://hoanghamobile.com/dien-thoai-di-dong-c14.html',
@@ -31,59 +33,55 @@ class CellphonesSpider(CrawlSpider):
         # 'https://cellphones.com.vn/do-choi-cong-nghe/fitbit.html',
     ]
     rules = (
-        Rule(LinkExtractor(allow=('mobile\.html'), deny=(
-            'timkiem\.html')), callback='parse_cellphones'),
+        Rule(LinkExtractor(allow=('mobile.html'), deny=(
+            'timkiem.html',
+            'mobile.html#top',
+            'mobile.html?operating_system=181'
+            )), callback='parse_cellphones'),
         # Extract links matching 'item.php' and parse them with the spider's method parse_item
-        Rule(LinkExtractor(allow=('dien-thoai-di-dong-c14\.html')),
-             callback='parse_hoanghamobile'),
+        Rule(LinkExtractor(allow=('dien-thoai-di-dong-c14.html'), deny=(
+            '?sort=0&brand=(.*?)',
+            '.*.html?sort=(.*?)&brand=(.*?)',
+            '.*.html?sort=(.*?)&type=(.*?)',
+            '.*.html?sort=(.*?)&min=(.*?)&max=(.*?)',
+            '.*.html?sort=(.*?)&min=(.*?)',
+            '.*.html?sort=(.*?)&max=(.*?)',
+            '.*.html?brand=(.*?)',
+            )
+        ), callback='parse_hoanghamobile'),
     )
 
     # def start_requests(self):
     #     for url in self.start_urls:
-    #         if url in 'cellphones.com.vn':
+    #         parsed_uri = urlparser.urlparse(url)
+    #         domain = '{uri.netloc}'.format(uri=parsed_uri)
+    #         if domain in 'cellphones.com.vn':
     #             yield scrapy.Request(url, callback=self.parse_cellphones,
     #                                 errback=self.errback_httpbin,
     #                                 dont_filter=True)
-    #         elif url in 'hoanghamobile.com':
-    #             yield scrapy.Request(url, callback=self.parse_hoanghamobile_product_detail,
+    #         elif domain in 'hoanghamobile.com':
+    #             yield scrapy.Request(url, callback=self.parse_hoanghamobile,
     #                                 errback=self.errback_httpbin,
     #                                 dont_filter=True)
     #         pass
 
     def parse_cellphones(self, response):
-        # logger.info('Parsing url: %s',response.url)
+        logger.debug('Parsing url: %s', response.url)
         # Get all product links on current page
         for link_product in response.css('div.lt-product-group-image>a::attr(href)'):
             if link_product is not None:
-                yield response.follow(link_product, self.parse_product_detail)
+                yield response.follow(link_product, self.parse_cellphones_product_detail)
 
         # Following to scrape for next page
         links = response.xpath(
             '//ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/@href').getall()
         if len(links) > 0:
             for next_page in links:
-                yield response.follow(next_page, callback=self.parse)
-        pass
-
-    # Scrape product from hoanghamobile.com
-    def parse_hoanghamobile(self, response):
-        for link_product in response.css('div.mosaic-block>a::attr(href)'):
-            if link_product is not None:
-                yield response.follow(link_product, self.parse_hoanghamobile_product_detail)
-
-        # Following all pagingtation pages
-        paging_pages = response.xpath(
-            '//div[@class="paging"]/a[not(contains(@class,"current"))]/@href').getall()
-        if len(paging_pages) > 0:
-            for next_link in paging_pages:
-                #next_link = "https://hoanghamobile.com" + next_link
-                next_link = self.extract_domain_name + next_link
-                yield response.follow(next_link, callback=self.parse_hoanghamobile)
-                pass
+                yield response.follow(next_page, callback=self.parse_cellphones)
         pass
 
     # Following product detail to scrape all information of each product
-    def parse_product_detail(self, response):
+    def parse_cellphones_product_detail(self, response):
 
         def extract_price():
             price = response.css(
@@ -102,12 +100,11 @@ class CellphonesSpider(CrawlSpider):
             return gallery
 
         product_link = response.url
+
         # Continues scrape other product model's link on this page
         for other_model_link in response.css('div.linked>div>a::attr(href)'):
             if other_model_link is not None and other_model_link != product_link:
-                yield response.follow(other_model_link, self.parse_product_detail)
-
-        products = ProductItem()
+                yield response.follow(other_model_link, self.parse_cellphones_product_detail)
 
         product_title = self.extract_with_css(response, 'h1::text')
         product_desc = self.extract_with_xpath(
@@ -117,8 +114,9 @@ class CellphonesSpider(CrawlSpider):
             'label.opt-label>span::text').getall()
         product_images = extract_product_gallery()
         product_specifications = response.xpath(
-            '//*[@id="tskt"]/tr/*/text()').re('(\w+[^\n]+)')
+            '//*[@id="tskt"]/tr/*/text()').re('(\\w+[^\n]+)')
 
+        products = ProductItem()
         products['title'] = product_title
         products['description'] = product_desc
         products['price'] = product_price
@@ -128,6 +126,27 @@ class CellphonesSpider(CrawlSpider):
         products['images'] = product_images
 
         yield products
+        # pass
+
+    # Scrape product from hoanghamobile.com
+    def parse_hoanghamobile(self, response):
+
+        logger.debug('Parsing url: %s', response.url)
+
+        for link_product in response.css('div.mosaic-block>a::attr(href)'):
+            if link_product is not None:
+                yield response.follow(link_product, self.parse_hoanghamobile_product_detail)
+
+        # Following all pagingtation pages
+        paging_pages = response.xpath(
+            '//div[@class="paging"]/a[not(contains(@class,"current"))]/@href').getall()
+
+        if len(paging_pages) > 0:
+            for next_link in paging_pages:
+                #domain_name = self.extract_domain_name
+                next_link = 'https://hoanghamobile.com' + next_link
+                yield response.follow(next_link, callback=self.parse_hoanghamobile)
+                pass
         pass
 
     def parse_hoanghamobile_product_detail(self, response):
@@ -141,18 +160,6 @@ class CellphonesSpider(CrawlSpider):
         #XPATH_PRODUCT_SPECIFICATIONS = '//div[@class="simple-prop"]'
 
         product_link = response.url
-
-        # product_title = self.extract_with_css(response, 'title::text')
-        # product_desc = self.extract_with_xpath(
-        #     response, '//meta[@name="description"]/@content')
-        # product_price = self.extract_with_css(
-        #     response, 'div.product-price>p>span::text')
-        # product_swatchcolors = response.css(
-        #     'a.color-quad>span::text').getall()
-        # product_images = self.extract_with_xpath(
-        #     response, '//meta[@itemprop="image"]/@content')
-        # product_specifications = response.xpath(
-        #     '//div[@class="simple-prop"]/p/*/text()').getall()
 
         product_title = self.extract_with_xpath(response, XPATH_PRODUCT_TITLE)
         product_desc = self.extract_with_xpath(
@@ -187,15 +194,15 @@ class CellphonesSpider(CrawlSpider):
         products['images'] = product_images
 
         yield products
-        pass
+        # pass
 
     def extract_with_css(self, response, query):
         return response.css(query).get(default='').strip()
 
     def extract_with_xpath(self, response, query):
         return response.xpath(query).get(default='').strip()
-    
-    def extract_domain_name(self,response):
+
+    def extract_domain_name(self, response):
         parsed_uri = urlparser.urlparse(response.url)
         domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
         return domain
