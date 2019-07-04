@@ -6,6 +6,9 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError, TCPTimedOutError
+from urlparser import urlparser
+
+
 from ..items import ProductItem
 
 logger = logging.getLogger('cellphones_logger')
@@ -15,8 +18,8 @@ class CellphonesSpider(CrawlSpider):
     name = 'cellphones'
     # custom_settings = {
     #     "DEPTH_LIMIT": 4,
-    #     "DOWNLOAD_DELAY": 2,
-    #     "CONCURRENT_REQUESTS_PER_DOMAIN": 1
+    #     "DOWNLOAD_DELAY": 3,
+    #     "CONCURRENT_REQUESTS_PER_DOMAIN": 32
     # }
     allowed_domains = ['cellphones.com.vn', 'hoanghamobile.com']
     # sitemap_urls = ['https://cellphones.com.vn/sitemap.xml']
@@ -48,7 +51,7 @@ class CellphonesSpider(CrawlSpider):
     #         pass
 
     def parse_cellphones(self, response):
-        # logger.info('Parse url: %s',response.url)
+        # logger.info('Parsing url: %s',response.url)
         # Get all product links on current page
         for link_product in response.css('div.lt-product-group-image>a::attr(href)'):
             if link_product is not None:
@@ -73,7 +76,8 @@ class CellphonesSpider(CrawlSpider):
             '//div[@class="paging"]/a[not(contains(@class,"current"))]/@href').getall()
         if len(paging_pages) > 0:
             for next_link in paging_pages:
-                next_link = "https://hoanghamobile.com" + next_link
+                #next_link = "https://hoanghamobile.com" + next_link
+                next_link = self.extract_domain_name + next_link
                 yield response.follow(next_link, callback=self.parse_hoanghamobile)
                 pass
         pass
@@ -190,10 +194,15 @@ class CellphonesSpider(CrawlSpider):
 
     def extract_with_xpath(self, response, query):
         return response.xpath(query).get(default='').strip()
+    
+    def extract_domain_name(self,response):
+        parsed_uri = urlparser.urlparse(response.url)
+        domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+        return domain
 
     def errback_httpbin(self, failure):
         # log all failures
-        self.logger.error(repr(failure))
+        logger.error(repr(failure))
 
         # in case you want to do something special for some errors,
         # you may need the failure's type:
@@ -202,13 +211,13 @@ class CellphonesSpider(CrawlSpider):
             # these exceptions come from HttpError spider middleware
             # you can get the non-200 response
             response = failure.value.response
-            self.logger.error('HttpError on %s', response.url)
+            logger.error('HttpError on %s', response.url)
 
         elif failure.check(DNSLookupError):
             # this is the original request
             request = failure.request
-            self.logger.error('DNSLookupError on %s', request.url)
+            logger.error('DNSLookupError on %s', request.url)
 
         elif failure.check(TimeoutError, TCPTimedOutError):
             request = failure.request
-            self.logger.error('TimeoutError on %s', request.url)
+            logger.error('TimeoutError on %s', request.url)
