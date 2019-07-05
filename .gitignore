@@ -5,3 +5,5 @@ webcrawler/spiders/__pycache__
 # Do not track these files
 cellphones.json
 cellphones_items.json
+phonespider_items.json
+logs/*

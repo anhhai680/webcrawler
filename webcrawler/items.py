@@ -11,6 +11,9 @@ import scrapy
 class WebcrawlerItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    # visit_id = scrapy.Field()
+    # visit_status = scrapy.Field()
+    
     pass
 
 class ProductItem(scrapy.Item):
@@ -21,4 +24,6 @@ class ProductItem(scrapy.Item):
     specifications = scrapy.Field()
     link = scrapy.Field()
     images = scrapy.Field()
+    visit_id = scrapy.Field()
+    visit_status = scrapy.Field()
     pass
