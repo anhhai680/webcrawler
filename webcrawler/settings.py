@@ -13,11 +13,18 @@ BOT_NAME = 'webcrawler'
 
 SPIDER_MODULES = ['webcrawler.spiders']
 NEWSPIDER_MODULE = 'webcrawler.spiders'
+
+#Configure to formate encoding to export json file
 FEED_EXPORT_ENCODING = 'utf-8'
 FEED_FORMAT = 'json'
 
+# Log configurations
+LOG_ENABLED = True
 LOG_FILE = 'logs/phonespider.log'
-LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO' #Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
+#LOG_FORMAT = '%(asctime)s %(message)s'
+LOG_DATEFORMAT = '%m/%d/%Y %I:%M:%S %p'
+
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'webcrawler (+http://www.yourdomain.com)'
@@ -55,6 +62,9 @@ CONCURRENT_REQUESTS = 32
 #SPIDER_MIDDLEWARES = {
 #    'webcrawler.middlewares.WebcrawlerSpiderMiddleware': 543,
 #}
+SPIDER_MIDDLEWARES = {
+   'webcrawler.middlewares.IgnoreVisitedItems': 600,
+}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
@@ -107,3 +117,7 @@ ITEM_PIPELINES = {
 
 # Disable redirects
 REDIRECT_ENABLED = False
+
+# Show all duplicate items while debug enviroment
+DUPEFILTER_DEBUG = True
+#DUPEFILTER_CLASS = 'webcrawler.dupefilters.MyRFPDupeFilter'

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import logging
+import re
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
+from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError
 from twisted.internet.error import TimeoutError, TCPTimedOutError
@@ -17,56 +18,35 @@ logger = logging.getLogger(__name__)
 
 
 class CellphonesSpider(CrawlSpider):
-    name = 'phonespider'
+    name = 'cellphones'
     # custom_settings = {
     #     "DEPTH_LIMIT": 4,
     #     "DOWNLOAD_DELAY": 3,
     #     "CONCURRENT_REQUESTS_PER_DOMAIN": 32
     # }
-    allowed_domains = ['cellphones.com.vn', 'hoanghamobile.com']
+    allowed_domains = ['cellphones.com.vn']
 
     start_urls = [
         'https://cellphones.com.vn/mobile.html',
-        'https://hoanghamobile.com/dien-thoai-di-dong-c14.html',
         # 'https://cellphones.com.vn/tablet.html',
         # 'https://cellphones.com.vn/hang-cu.html',
-        # 'https://cellphones.com.vn/do-choi-cong-nghe/fitbit.html',
     ]
     rules = (
-        Rule(LinkExtractor(allow=('mobile.html'), deny=(
+        Rule(LxmlLinkExtractor(allow=(
+            'mobile.html',
+            'mobile.html?p=[0-9]',
+            'https://cellphones.com.vn/mobile/[\\w-]+/[\\w-]+$',
+        ), deny=(
+            'itel-it2123v.html',
+            'dien-thoai-pho-thong.html',
             'timkiem.html',
+            '/sforum/'
             'mobile.html#top',
-            'mobile.html?operating_system=181'
-            )), callback='parse_cellphones'),
-        # Extract links matching 'item.php' and parse them with the spider's method parse_item
-        Rule(LinkExtractor(allow=('dien-thoai-di-dong-c14.html'), deny=(
-            '?sort=0&brand=(.*?)',
-            '.*.html?sort=(.*?)&brand=(.*?)',
-            '.*.html?sort=(.*?)&type=(.*?)',
-            '.*.html?sort=(.*?)&min=(.*?)&max=(.*?)',
-            '.*.html?sort=(.*?)&min=(.*?)',
-            '.*.html?sort=(.*?)&max=(.*?)',
-            '.*.html?brand=(.*?)',
-            )
-        ), callback='parse_hoanghamobile'),
+        )), callback='parse_cellphones'),
     )
 
-    # def start_requests(self):
-    #     for url in self.start_urls:
-    #         parsed_uri = urlparser.urlparse(url)
-    #         domain = '{uri.netloc}'.format(uri=parsed_uri)
-    #         if domain in 'cellphones.com.vn':
-    #             yield scrapy.Request(url, callback=self.parse_cellphones,
-    #                                 errback=self.errback_httpbin,
-    #                                 dont_filter=True)
-    #         elif domain in 'hoanghamobile.com':
-    #             yield scrapy.Request(url, callback=self.parse_hoanghamobile,
-    #                                 errback=self.errback_httpbin,
-    #                                 dont_filter=True)
-    #         pass
-
     def parse_cellphones(self, response):
-        logger.debug('Parsing url: %s', response.url)
+        logger.info('Parsing url: %s', response.url)
         # Get all product links on current page
         for link_product in response.css('div.lt-product-group-image>a::attr(href)'):
             if link_product is not None:
@@ -106,10 +86,15 @@ class CellphonesSpider(CrawlSpider):
             if other_model_link is not None and other_model_link != product_link:
                 yield response.follow(other_model_link, self.parse_cellphones_product_detail)
 
+        # Validate price with pattern
+        price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
+        product_price = extract_price()
+        if re.match(price_pattern,product_price) is None:
+            return
+
         product_title = self.extract_with_css(response, 'h1::text')
         product_desc = self.extract_with_xpath(
             response, '//meta[@name="description"]/@content')
-        product_price = extract_price()
         product_swatchcolors = response.css(
             'label.opt-label>span::text').getall()
         product_images = extract_product_gallery()
@@ -126,12 +111,11 @@ class CellphonesSpider(CrawlSpider):
         products['images'] = product_images
 
         yield products
-        # pass
 
     # Scrape product from hoanghamobile.com
     def parse_hoanghamobile(self, response):
 
-        logger.debug('Parsing url: %s', response.url)
+        logger.info('Parsing url: %s', response.url)
 
         for link_product in response.css('div.mosaic-block>a::attr(href)'):
             if link_product is not None:
