@@ -27,35 +27,39 @@ class HnammobileSpider(CrawlSpider):
         def extract_with_xpath(query):
             return response.xpath(query).get(default='').strip()
 
-        def extract_price():
-            price = response.css(
-                'p.special-price>span::text').get(default='').strip()
-            if price == '':
-                price = response.css(
-                    'span.regular-price>span::text').get(default='').strip()
+        def extract_price(query):
+            price = response.xpath(query).get(default='').strip()
             return price
 
-        def extract_product_gallery():
-            gallery = response.css(
-                'div.product-image-gallery>img::attr(src)').getall()
-            if len(gallery) <= 0:
-                gallery = response.css(
-                    'div.product-img-box>img::attr(src)').get()
+        def extract_product_gallery(query):
+            gallery = response.xpath(query).getall()
+            return gallery
+        
+        def extract_swatchcolors(query):
+            gallery = response.xpath(query).getall()
             return gallery
 
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
-        product_price = extract_price()
+        product_price = extract_price('//h3[contains(@class,"price")]/font/font[@class="numberprice"]/text()')
         if re.match(price_pattern,product_price) is None:
             return
 
-        product_title = extract_with_css('h1::text')
+        product_title = extract_with_xpath('//h2[@class="title"]/text()')
         product_desc = extract_with_xpath('//meta[@name="description"]/@content')
-        product_swatchcolors = response.css(
-            'label.opt-label>span::text').getall()
-        product_images = extract_product_gallery()
-        product_specifications = response.xpath(
-            '//*[@id="tskt"]/tr/*/text()').re('(\\w+[^\n]+)')
+        product_swatchcolors = extract_swatchcolors('//div[@class="picker-color row"]/ul/li/div/text()')
+        product_images = extract_product_gallery('//div[@class="gallery"]/div[contains(@class,"item")]/@data-src')
+        #product_specifications = response.xpath('//*[@id="tskt"]/tr/*/text()').re('(\\w+[^\n]+)')
+        product_specifications = []
+
+        for spec_info in response.css('div.content-body>div'):
+            if spec_info is not None:
+                try:
+                    spec_key = spec_info.css('label::text').get().strip()
+                    spec_value = spec_info.css('p::text').get().strip()
+                    product_specifications.append({spec_key, spec_value})
+                except:
+                    pass
 
         product_link = response.url
         products = ProductItem()
