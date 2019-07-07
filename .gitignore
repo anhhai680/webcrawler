@@ -1,9 +1,13 @@
 # Don't track content of these folders
 webcrawler/__pycache__
 webcrawler/spiders/__pycache__
+logs/*
 
 # Do not track these files
+webcrawler/__pycache__/*
+webcrawler/spiders/__pycache__/*
 cellphones.json
 cellphones_items.json
 phonespider_items.json
-logs/*
+hnammobile.json
+
