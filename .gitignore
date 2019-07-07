@@ -10,8 +10,5 @@ webcrawler/spiders/__pycache__
 logs/*
 webcrawler/__pycache__/*
 webcrawler/spiders/__pycache__/*
-cellphones.json
-cellphones_items.json
-phonespider_items.json
-hnammobile.json
+*.json
 
