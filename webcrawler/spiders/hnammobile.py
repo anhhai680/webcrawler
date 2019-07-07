@@ -75,6 +75,7 @@ class HnammobileSpider(CrawlSpider):
             '//div[@class="picker-color row"]/ul/li/div//text()')
         product_images = extract_product_gallery(
             '//div[@class="gallery"]/div[contains(@class,"item")]/@data-src')
+        #product_specifications = '//div[@class="gallery"]/div[contains(@class,"item")]/@data-src'
         product_specifications = []
 
         for spec_info in response.css('div.content-body>div'):
