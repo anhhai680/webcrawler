@@ -20,7 +20,6 @@ class FptshopSpider(CrawlSpider):
                 '/dien-thoai/[\\w-]+/[\\w-]+$'
             ),
             deny=(
-                '/dien-thoai/#',
                 '/tin-tuc/',
                 '/ctkm/(.*?)',
                 '/phu-kien/',
@@ -46,8 +45,9 @@ class FptshopSpider(CrawlSpider):
 
     def parse_fptshop(self, response):
         logger.info('Scrape url: %s' % response.url)
-        for link in response.xpath('//div[@class="owl-item active"]/div[@class="item"]/a/@href'):
+        for link in response.xpath('//div[@class="item"]/a/@href').getall():
             product_link = "https://fptshop.com.vn/%s" % link
+            logger.info('Product Link %s' % product_link)
             yield response.follow(product_link, callback=self.parse_product_detail)
         
         next_page = response.xpath(
@@ -76,7 +76,8 @@ class FptshopSpider(CrawlSpider):
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
         product_price = extract_price(
-            '//div[contains(@class,"fs-pr-box")]/p[@class="fs-dtprice"]/text()')
+            '//div[contains(@class,"fs-pr-box")]/p[contains(@class,"fs-dtprice")]/text()')
+        logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:
             return
 
@@ -86,7 +87,7 @@ class FptshopSpider(CrawlSpider):
         product_swatchcolors = extract_swatchcolors(
             '//div[@class="fs-dticolor fs-dticolor-img"]/ul/li/span/@title')
         product_images = extract_product_gallery(
-            '//div[@class="owl-stage-outer"]/div[@class="owl-stage"]/div[@class="owl-item active"]/div[@class="item"]/div/a/img/@src')
+            '//div[@class="easyzoom"]/a/@href')
         product_specifications = response.xpath('//div[@class="fs-tsright"]/ul/li/*/text()').getall()
 
 
