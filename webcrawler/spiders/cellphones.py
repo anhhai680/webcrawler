@@ -12,8 +12,8 @@ from urlparser import urlparser
 
 from ..items import ProductItem
 
-logging.basicConfig(format='%(asctime)s %(message)s',
-                    datefmt='%m/%d/%Y %I:%M:%S %p')
+# logging.basicConfig(format='%(asctime)s %(message)s',
+#                     datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger(__name__)
 
 
@@ -46,18 +46,22 @@ class CellphonesSpider(CrawlSpider):
     )
 
     def parse_cellphones(self, response):
-        logger.info('Parsing url: %s', response.url)
+        logger.info('Scrape url: %s' % response.url)
         # Get all product links on current page
         for link_product in response.css('div.lt-product-group-image>a::attr(href)'):
             if link_product is not None:
                 yield response.follow(link_product, self.parse_cellphones_product_detail)
 
         # Following to scrape for next page
-        links = response.xpath(
-            '//ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/@href').getall()
-        if len(links) > 0:
-            for next_page in links:
-                yield response.follow(next_page, callback=self.parse_cellphones)
+        # links = response.xpath(
+        #     '//ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/@href').getall()
+        # if len(links) > 0:
+        #     for next_page in links:
+        #         yield response.follow(next_page, callback=self.parse_cellphones)
+        next_page = response.xpath(
+            '//ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/@href').get()
+        if next_page is not None:
+            yield response.follow(next_page, callback=self.parse_cellphones)
         pass
 
     # Following product detail to scrape all information of each product
@@ -82,14 +86,17 @@ class CellphonesSpider(CrawlSpider):
         product_link = response.url
 
         # Continues scrape other product model's link on this page
-        for other_model_link in response.css('div.linked>div>a::attr(href)'):
-            if other_model_link is not None and other_model_link != product_link:
-                yield response.follow(other_model_link, self.parse_cellphones_product_detail)
+        # for other_model_link in response.css('div.linked>div>a::attr(href)'):
+        #     if other_model_link is not None and other_model_link != product_link:
+        #         yield response.follow(other_model_link, self.parse_cellphones_product_detail)
+        other_model_link = response.css('div.linked>div>a::attr(href)').get()
+        if other_model_link is not None and other_model_link != product_link:
+            yield response.follow(other_model_link, self.parse_cellphones_product_detail)
 
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
         product_price = extract_price()
-        if re.match(price_pattern,product_price) is None:
+        if re.match(price_pattern, product_price) is None:
             return
 
         product_title = self.extract_with_css(response, 'h1::text')

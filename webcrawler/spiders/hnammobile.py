@@ -25,14 +25,16 @@ class HnammobileSpider(CrawlSpider):
                 '/kho-sim',
                 '/event/',
                 '/loai-dien-thoai/',
-                '/mua-tra-gop/',
-                'https://www.hnammobile.com/dien-thoai/tel:19002012'
+                '/mua-tra-gop',
+                'https://www.hnammobile.com/dien-thoai/tel:19002012',
+                'https://www.hnammobile.com/dien-thoai/tel:01234303000'
             )
         ), callback='parse_hnammobile'),
     )
     #handle_httpstatus_list = [404, 504]
 
     def parse_hnammobile(self, response):
+        logger.info('Scrape url: %s' % response.url)
         for product_link in response.css('div.image>a::attr(href)'):
             yield response.follow(product_link, callback=self.parse_product_detail)
 
@@ -82,17 +84,16 @@ class HnammobileSpider(CrawlSpider):
             '//div[@class="picker-color row"]/ul/li/div//text()')
         product_images = extract_product_gallery(
             '//div[@class="gallery"]/div[contains(@class,"item")]/@data-src')
-        #product_specifications = '//div[@class="gallery"]/div[contains(@class,"item")]/@data-src'
-        product_specifications = []
+        product_specifications = response.xpath('//div[@class="content-body"]/div[@class="row size-screen"]//text()').getall()
 
-        for spec_info in response.css('div.content-body>div'):
-            if spec_info is not None:
-                try:
-                    spec_key = spec_info.css('label::text').get().strip()
-                    spec_value = spec_info.css('p::text').get().strip()
-                    product_specifications.append({spec_key, spec_value})
-                except:
-                    pass
+        # for spec_info in response.css('div.content-body>div'):
+        #     if spec_info is not None:
+        #         try:
+        #             spec_key = spec_info.css('label::text').get().strip()
+        #             spec_value = spec_info.css('p::text').get().strip()
+        #             product_specifications.append({spec_key, spec_value})
+        #         except:
+        #             pass
 
         product_link = response.url
         products = ProductItem()

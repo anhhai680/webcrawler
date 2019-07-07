@@ -19,9 +19,8 @@ class PricePipeline(object):
     def process_item(self, item, spider):
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
         is_price = bool(re.match(price_pattern, item.get('price')))
-        spider.logger.info(item.get('price') + ' checked %s' % str(is_price))
+        #spider.logger.info(item.get('price') + ' checked %s' % str(is_price))
         if is_price is True:
-            # if item.get('price') not in ('', 'Đăng ký nhận tin', 'Giá liên hệ'):
             return item
         else:
             raise DropItem('Missing item price in %s' % item)
