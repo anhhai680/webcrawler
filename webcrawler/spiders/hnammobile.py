@@ -1,15 +1,5 @@
 # -*- coding: utf-8 -*-
 import scrapy
-<<<<<<< HEAD
-
-
-class HnammobileSpider(scrapy.Spider):
-    name = 'hnammobile'
-    allowed_domains = ['www.hnammobile.com']
-    start_urls = ['http://www.hnammobile.com/']
-
-    def parse(self, response):
-=======
 import logging
 import re
 from scrapy.spiders import CrawlSpider, Rule
@@ -85,7 +75,6 @@ class HnammobileSpider(CrawlSpider):
             '//div[@class="picker-color row"]/ul/li/div//text()')
         product_images = extract_product_gallery(
             '//div[@class="gallery"]/div[contains(@class,"item")]/@data-src')
-        #product_specifications = response.xpath('//*[@id="tskt"]/tr/*/text()').re('(\\w+[^\n]+)')
         product_specifications = []
 
         for spec_info in response.css('div.content-body>div'):
@@ -108,5 +97,3 @@ class HnammobileSpider(CrawlSpider):
         products['images'] = product_images
 
         yield products
->>>>>>> f486b19eba55cfd7ebe6dbc3b71d1da9b9052f5c
-        pass
