@@ -62,9 +62,9 @@ CONCURRENT_REQUESTS = 32
 #SPIDER_MIDDLEWARES = {
 #    'webcrawler.middlewares.WebcrawlerSpiderMiddleware': 543,
 #}
-SPIDER_MIDDLEWARES = {
-   'webcrawler.middlewares.IgnoreVisitedItems': 600,
-}
+# SPIDER_MIDDLEWARES = {
+#    'webcrawler.middlewares.IgnoreVisitedItems': 600,
+# }
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
@@ -119,5 +119,7 @@ ITEM_PIPELINES = {
 REDIRECT_ENABLED = False
 
 # Show all duplicate items while debug enviroment
-DUPEFILTER_DEBUG = True
+#DUPEFILTER_DEBUG = True
 #DUPEFILTER_CLASS = 'webcrawler.dupefilters.MyRFPDupeFilter'
+
+#HTTPERROR_ALLOWED_CODES  =[404]

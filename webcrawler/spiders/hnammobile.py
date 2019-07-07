@@ -24,21 +24,28 @@ class HnammobileSpider(CrawlSpider):
                 '/dong-ho-thong-minh/',
                 '/kho-sim',
                 '/event/',
-                '/loai-dien-thoai/'
+                '/loai-dien-thoai/',
+                '/mua-tra-gop/',
+                'https://www.hnammobile.com/dien-thoai/tel:19002012'
             )
         ), callback='parse_hnammobile'),
     )
+    #handle_httpstatus_list = [404, 504]
 
     def parse_hnammobile(self, response):
         for product_link in response.css('div.image>a::attr(href)'):
             yield response.follow(product_link, callback=self.parse_product_detail)
 
         # following pagination next page to scrape
-        links = response.xpath(
-            '//li[contains(@class,"pagination-item") and (not(contains(@class,"active")))]/a/@href').getall()
-        if len(links) > 0:
-            for next_page in links:
-                yield response.follow(next_page, callback=self.parse_hnammobile)
+        # links = response.xpath(
+        #     '//li[contains(@class,"pagination-item") and (not(contains(@class,"active")))]/a/@href').getall()
+        # if len(links) > 0:
+        #     for next_page in links:
+        #         yield response.follow(next_page, callback=self.parse_hnammobile)
+        next_page = response.xpath(
+            '//li[contains(@class,"pagination-item") and (not(contains(@class,"active")))]/a/@href').get()
+        if next_page is not None:
+            yield response.follow(next_page, callback=self.parse_hnammobile)
         pass
 
     def parse_product_detail(self, response):
