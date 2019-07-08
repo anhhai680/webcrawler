@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 class FptshopSpider(CrawlSpider):
     name = 'fptshop'
     allowed_domains = ['fptshop.com.vn']
-    start_urls = ['https://fptshop.com.vn/dien-thoai']
+    start_urls = [
+        'https://fptshop.com.vn/dien-thoai?sort=ban-chay-nhat',
+    ]
     rules = (
         Rule(LxmlLinkExtractor(
             allow=(
@@ -42,17 +44,19 @@ class FptshopSpider(CrawlSpider):
             ),
         ), callback='parse_fptshop'),
     )
+    handle_httpstatus_list = [301]
+    
 
     def parse_fptshop(self, response):
         logger.info('Scrape url: %s' % response.url)
-        for link in response.xpath('//div[@class="item"]/a/@href').getall():
-            product_link = "https://fptshop.com.vn/%s" % link
+        for link in response.xpath('//div[@class="fs-lpil"]/a[@class="fs-lpil-img"]/@href').getall():
+            product_link = "https://fptshop.com.vn%s" % link
             logger.info('Product Link %s' % product_link)
             yield response.follow(product_link, callback=self.parse_product_detail)
         
-        next_page = response.xpath(
-            '//li[contains(@class,"pagination-item") and (not(contains(@class,"active")))]/a/@href').get()
+        next_page = response.xpath('//div[@class="f-cmtpaging"]/ul/li[not(@class="active")]/a/@data-page').get()
         if next_page is not None:
+            next_page = 'https://fptshop.com.vn/dien-thoai?sort=ban-chay-nhat&trang=%s' % next_page
             yield response.follow(next_page, callback=self.parse_fptshop)
         pass
 
