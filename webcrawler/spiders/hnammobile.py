@@ -52,9 +52,6 @@ class HnammobileSpider(CrawlSpider):
 
     def parse_product_detail(self, response):
 
-        def extract_with_css(query):
-            return response.css(query).get(default='').strip()
-
         def extract_with_xpath(query):
             return response.xpath(query).get(default='').strip()
 
