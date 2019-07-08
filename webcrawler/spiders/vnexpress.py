@@ -4,6 +4,7 @@ import logging
 import re
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
+import w3lib.html
 
 
 from ..items import ProductItem
@@ -83,9 +84,12 @@ class VnexpressSpider(CrawlSpider):
             '//div[@class="similar-products"]/span/@rel')
         product_images = extract_product_gallery(
             '//div[@id="images_pro"]/a/@href')
-        product_specifications = response.xpath(
-            '//div[@id="information"]/div/table[@class="table"]/tbody/tr/td//text()').getall()
-
+        #product_specifications = response.xpath('//div[@id="information"]/div/table[@class="table"]/tbody/tr/td//text()').getall()
+        product_specifications = []
+        specs = response.xpath('//div[@class="box-body box-information"]/text()').getall()
+        if len(specs) > 0:
+            product_specifications = [sp.strip() for sp in specs]
+            
         product_link = response.url
         products = ProductItem()
         products['title'] = product_title
