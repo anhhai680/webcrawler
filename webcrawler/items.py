@@ -24,6 +24,7 @@ class ProductItem(scrapy.Item):
     specifications = scrapy.Field()
     link = scrapy.Field()
     images = scrapy.Field()
-    visit_id = scrapy.Field()
-    visit_status = scrapy.Field()
+    # visit_id = scrapy.Field()
+    # visit_status = scrapy.Field()
+    last_updated = scrapy.Field(serializer=str)
     pass
