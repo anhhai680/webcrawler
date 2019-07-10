@@ -62,7 +62,7 @@ class LazadaSpider(CrawlSpider):
         logger.info('Item: %s' % item)
         product_title = item["name"]
         product_desc = [st.strip() for st in item["description"]]
-        product_price = item["priceShow"]
+        product_price = item["price"]
         product_swatchcolors = []
         product_specifications = ''
         product_link = item["productUrl"]
