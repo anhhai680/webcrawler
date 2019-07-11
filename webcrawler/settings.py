@@ -21,7 +21,7 @@ FEED_FORMAT = 'json'
 # Log configurations
 LOG_ENABLED = True
 LOG_FILE = 'logs/phonespider.log'
-LOG_LEVEL = 'INFO' #Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
+LOG_LEVEL = 'DEBUG' #Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
 #LOG_FORMAT = '%(asctime)s %(message)s'
 LOG_DATEFORMAT = '%m/%d/%Y %I:%M:%S %p'
 
@@ -119,7 +119,7 @@ ITEM_PIPELINES = {
 REDIRECT_ENABLED = False
 
 # Show all duplicate items while debug enviroment
-#DUPEFILTER_DEBUG = True
+DUPEFILTER_DEBUG = True
 #DUPEFILTER_CLASS = 'webcrawler.dupefilters.MyRFPDupeFilter'
 
 #HTTPERROR_ALLOWED_CODES  =[404]
