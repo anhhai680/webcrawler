@@ -2,10 +2,20 @@
 import scrapy
 import logging
 import re
+from datetime import datetime
+from time import sleep
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.shell import inspect_response
-from scrapy import signals
+from scrapy.selector import Selector
+
+import selenium
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
 
 from ..items import ProductItem
 
@@ -13,34 +23,15 @@ logger = logging.getLogger(__name__)
 
 
 class ShopeeSpider(CrawlSpider):
-    custom_settings = {
-        "DEPTH_LIMIT": 5,
-        "DOWNLOAD_DELAY": 2,
-    }
+    # custom_settings = {
+    #     "DEPTH_LIMIT": 5,
+    #     "DOWNLOAD_DELAY": 2,
+    # }
     name = 'shopee'
     allowed_domains = ['shopee.vn']
+    dowload_delay = 1
     start_urls = [
         'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=1&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=2&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=3&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=4&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=5&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=6&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=7&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=8&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=9&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=10&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=11&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=12&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=13&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=14&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=15&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=16&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=17&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=18&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=19&sortBy=pop',
-        # 'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979?page=20&sortBy=pop',
     ]
     rules = (
         Rule(LxmlLinkExtractor(
@@ -59,19 +50,35 @@ class ShopeeSpider(CrawlSpider):
         ), callback='parse_shopee'),
     )
 
-    # @classmethod
-    # def from_crawler(cls, crawler, *args, **kwargs):
-    #     spider = super(ShopeeSpider, cls).from_crawler(
-    #         crawler, *args, **kwargs)
-    #     crawler.signals.connect(spider.spider_closed,
-    #                             signal=signals.spider_closed)
-    #     return spider
+    def __init__(self):
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        options.add_argument("--disable-notifications")
+        options.add_argument("--incognito")
+        options.add_argument("--disable-extensions")
+        options.add_argument(" --disable-gpu")
+        options.add_argument(" --disable-infobars")
+        options.add_argument(" -–disable-web-security")
+        options.add_argument("--no-sandbox")
 
-    # def spider_closed(self, spider):
-    #     logger.info('Spider closed: %s', spider.name)
+        self.driver = webdriver.Chrome(chrome_options=options)
+        #self.driver.set_window_size(1120, 550)
+        # self.driver = webdriver.Chrome("C:\Users\Daniel\Desktop\Sonstiges\chromedriver.exe")
+        self.driver.wait = WebDriverWait(self.driver, 5)
 
     def parse_shopee(self, response):
         logger.info('Page Url: %s', response.url)
+        self.driver.get(response.url)
+
+        try:
+            
+            self.driver.wait.until(EC.presence_of_element_located(
+                (By.XPATH, '//link[@rel="canonical"]/@href')))
+
+        except TimeoutException:
+            self.driver.close()
+            print(" block-content NOT FOUND IN TECHCRUNCH !!!")
+
         links = response.xpath(
             '//div[@class="row shopee-search-item-result__items"]/div[@class="col-xs-2-4 shopee-search-item-result__item"]/div/a/@href').getall()
         for product_link in links:
@@ -81,13 +88,17 @@ class ShopeeSpider(CrawlSpider):
         # Following next page to scrape
         # pages = response.xpath(
         #     '//div[@class="shopee-page-controller"]/button/text()').getall()
-        next_page = response.xpath('//link[@rel="next"]/@href').get()
-        logger.info('Next Page: %s', next_page)
-        if next_page is not None:
-            yield response.follow(next_page, callback=self.parse_shopee)
-        else:
-            inspect_response(response, self)
-        pass
+        try:
+            next_page = response.xpath('//link[@rel="next"]/@href').get()
+            logger.info('Next Page: %s', next_page)
+            if next_page is not None:
+                yield response.follow(next_page, callback=self.parse_shopee)
+            # else:
+            #     inspect_response(response, self)
+            # pass
+        except TimeoutException:
+            self.driver.close()
+            logger.info('NEXT NOT FOUND(OR EOF) IM CLOSING MYSELF !!!')
 
     def parse_product_detail(self, response):
 
@@ -132,6 +143,7 @@ class ShopeeSpider(CrawlSpider):
                     break
                 product_specifications.append({key, value})
             except:
+                logger.info('Item: %s', str(item))
                 pass
 
         product_link = response.url
@@ -143,6 +155,7 @@ class ShopeeSpider(CrawlSpider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
+        products['last_updated'] = datetime.now()
 
         yield products
 

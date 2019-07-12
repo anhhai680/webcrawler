@@ -88,10 +88,11 @@ CONCURRENT_REQUESTS = 32
 #    'webcrawler.middlewares.WebcrawlerDownloaderMiddleware': 543,
 #}
 
-# DOWNLOADER_MIDDLEWARES = {
-#     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-#     'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
-# }
+DOWNLOADER_MIDDLEWARES = {
+    # 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+    # 'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
+    'webcrawler.middlewares.ShopeeSpiderDownloaderMiddleware' : 400,
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
