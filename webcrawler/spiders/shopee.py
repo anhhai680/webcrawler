@@ -14,7 +14,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common import exceptions
 
 
 from ..items import ProductItem
@@ -22,33 +22,33 @@ from ..items import ProductItem
 logger = logging.getLogger(__name__)
 
 
-class ShopeeSpider(CrawlSpider):
+class ShopeeSpider(scrapy.Spider):
     # custom_settings = {
     #     "DEPTH_LIMIT": 5,
     #     "DOWNLOAD_DELAY": 2,
     # }
     name = 'shopee'
     allowed_domains = ['shopee.vn']
-    dowload_delay = 1
+    # dowload_delay = 1
     start_urls = [
         'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979',
     ]
-    rules = (
-        Rule(LxmlLinkExtractor(
-            allow=(
-                '/(.*?)-cat.84.1979',
-                '/(.*?)-cat.84.1979?page=[0-9]&sortBy=pop'
-            ),
-            deny=(
-                '/tin-tuc/',
-                '/phu-kien/',
-                '/huong-dan/',
-                '/ho-tro/',
-                '/tra-gop/',
-                '/khuyen-mai/',
-            ),
-        ), callback='parse_shopee'),
-    )
+    # rules = (
+    #     Rule(LxmlLinkExtractor(
+    #         allow=(
+    #             '/(.*?)-cat.84.1979',
+    #             '/(.*?)-cat.84.1979?page=[0-9]&sortBy=pop'
+    #         ),
+    #         deny=(
+    #             '/tin-tuc/',
+    #             '/phu-kien/',
+    #             '/huong-dan/',
+    #             '/ho-tro/',
+    #             '/tra-gop/',
+    #             '/khuyen-mai/',
+    #         ),
+    #     ), callback='parse_shopee'),
+    # )
 
     def __init__(self):
         options = webdriver.ChromeOptions()
@@ -62,80 +62,100 @@ class ShopeeSpider(CrawlSpider):
         options.add_argument("--no-sandbox")
 
         self.driver = webdriver.Chrome(chrome_options=options)
-        #self.driver.set_window_size(1120, 550)
-        # self.driver = webdriver.Chrome("C:\Users\Daniel\Desktop\Sonstiges\chromedriver.exe")
-        self.driver.wait = WebDriverWait(self.driver, 5)
+        #self.driver.set_page_load_timeout(1)
+        # self.driver.set_window_size(1120, 550)
+        self.driver.wait = WebDriverWait(self.driver, 3)
 
-    def parse_shopee(self, response):
+    def parse(self, response):
         logger.info('Page Url: %s', response.url)
+
         self.driver.get(response.url)
-
         try:
-            
+
             self.driver.wait.until(EC.presence_of_element_located(
-                (By.XPATH, '//link[@rel="canonical"]/@href')))
+                (By.XPATH, '//link[@rel="next"]/@href')))
 
-        except TimeoutException:
-            self.driver.close()
-            print(" block-content NOT FOUND IN TECHCRUNCH !!!")
+        except:
+            # self.driver.close()
+            logger.info('link[@rel="next"] NOT FOUND IN TECHCRUNCH !!!')
 
-        links = response.xpath(
+        sel = Selector(text=self.driver.page_source)
+        links = sel.xpath(
             '//div[@class="row shopee-search-item-result__items"]/div[@class="col-xs-2-4 shopee-search-item-result__item"]/div/a/@href').getall()
+
+        logger.info('There is a total of ' + str(len(links)) + ' links')
+
         for product_link in links:
-            product_link = "https://shopee.vn%s" % product_link
-            yield response.follow(product_link, callback=self.parse_product_detail)
+            try:
+                product_link = "https://shopee.vn%s" % product_link
+                yield response.follow(product_link, callback=self.parse_product_detail)
+            except:
+                pass
 
         # Following next page to scrape
-        # pages = response.xpath(
-        #     '//div[@class="shopee-page-controller"]/button/text()').getall()
         try:
-            next_page = response.xpath('//link[@rel="next"]/@href').get()
-            logger.info('Next Page: %s', next_page)
+            next_page = sel.xpath('//link[@rel="next"]/@href').get()
+            logger.info('Next page: %s', next_page)
             if next_page is not None:
-                yield response.follow(next_page, callback=self.parse_shopee)
-            # else:
-            #     inspect_response(response, self)
-            # pass
-        except TimeoutException:
+                yield scrapy.Request(next_page, callback=self.parse)
+            else:
+                self.driver.close()
+                logger.info('Next Page was not find on page %s', response.url)
+        except:
             self.driver.close()
             logger.info('NEXT NOT FOUND(OR EOF) IM CLOSING MYSELF !!!')
+        finally:
+            self.driver.quit()
 
     def parse_product_detail(self, response):
 
+        try:
+            self.driver.get(response.url)
+            self.driver.wait.until(
+                EC.presence_of_element_located(
+                    (By.XPATH, '//link[@rel="canonical"]/@href')
+                )
+            )
+        except exceptions.TimeoutException as e:
+            logger.error(
+                '{}: TimeoutException waiting for loaded page: {}'.format(response.url, e))
+        except exceptions.InvalidSelectorException as e:
+            logger.error(
+                '{}: InvalidSelectorException waiting for loaded page: {}'.format(response.url, e))
+
+        sel = Selector(text=self.driver.page_source)
+
         def extract_with_xpath(query):
-            return response.xpath(query).get(default='').strip()
+            return sel.xpath(query).get(default='').strip()
 
         def extract_with_xpath_by_item(query, item):
             return item.xpath(query).get(default='').strip()
 
         def extract_price(query):
-            price = response.xpath(query).get(default='').strip()
+            price = sel.xpath(query).get(default='').strip()
             return price
 
-        logger.info('Product Url: %s', response.url)
+        #logger.info('Product Url: %s', response.url)
         # Validate price with pattern
         price_pattern = re.compile(r'(\S*[0-9](\w+?))')
-        # product_price = extract_price(
-        #     '//div[@class="items-center"]/div[@class="_3n5NQx"]/text()')
         product_price = extract_price(
             '//div[contains(@class,"items-center")]/div[@class="_3n5NQx"]/text()')
-        logger.info('Product Price: %s' % product_price)
+        #logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:
             return
 
         product_title = extract_with_xpath('//div[@class="qaNIZv"]/text()')
         product_desc = extract_with_xpath(
             '//div[@class="_2aZyWI"]/div[@class="_2u0jt9"]/span/text()')
-        product_swatchcolors = response.xpath(
+        product_swatchcolors = sel.xpath(
             '//div[@class="flex items-center crl7WW"]/button/text()').getall()
-        product_images = response.xpath(
-            '//div[@class="_2MDwq_"]/div[@class="ZPN9uD"]/div[@class="_3ZDC1p"]/div/@style').re(r'background-image:url(.*?);')
+        product_images = sel.xpath(
+            '//div[@class="_2MDwq_"]/div[@class="ZPN9uD"]/div[@class="_3ZDC1p"]/div/@style').re(r'background-image: url(.*?);')
 
-        # product_specifications = response.xpath(
-        #     '//table[@class="productSpecification_table"]/tbody/tr/td/text()').getall()
+        # product_specifications
         product_specifications = []
         backlist = ('Danh Mục', 'Kho hàng', 'Gửi từ', 'Shopee')
-        for item in response.xpath('//div[@class="_2aZyWI"]/div[@class="kIo6pj"]'):
+        for item in sel.xpath('//div[@class="_2aZyWI"]/div[@class="kIo6pj"]'):
             try:
                 key = extract_with_xpath_by_item('.//label/text()', item)
                 value = extract_with_xpath_by_item('.//a/text()', item)

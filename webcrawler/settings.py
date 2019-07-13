@@ -21,7 +21,7 @@ FEED_FORMAT = 'json'
 # Log configurations
 LOG_ENABLED = True
 LOG_FILE = 'logs/phonespider.log'
-LOG_LEVEL = 'DEBUG' #Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
+LOG_LEVEL = 'ERROR' #Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
 #LOG_FORMAT = '%(asctime)s %(message)s'
 LOG_DATEFORMAT = '%m/%d/%Y %I:%M:%S %p'
 
@@ -91,7 +91,7 @@ CONCURRENT_REQUESTS = 32
 DOWNLOADER_MIDDLEWARES = {
     # 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     # 'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
-    'webcrawler.middlewares.ShopeeSpiderDownloaderMiddleware' : 400,
+    #'webcrawler.middlewares.ShopeeSpiderDownloaderMiddleware' : 400,
 }
 
 # Enable or disable extensions
