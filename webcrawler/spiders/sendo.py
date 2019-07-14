@@ -32,6 +32,7 @@ class SendoSpider(scrapy.Spider):
                             str(len(data)) + ' items.')
                 if len(data) > 0:
                     for product_link in data["url_key"]:
+                        # An example link: https://www.sendo.vn/m/wap_v2/full/san-pham/samsung-galaxy-s7-edge-13399478?platform=web
                         product_link = 'https://www.sendo.vn/m/wap_v2/full/san-pham/' + product_link + '?platform=web'
                         yield response.follow(product_link, callback=self.parse_product_detail)
 
@@ -41,6 +42,7 @@ class SendoSpider(scrapy.Spider):
                 logger.info('There is a total of ' + str(total_pages) + ' links.')
                 while page_number <= total_pages:
                     page_number += 1
+                    # https://www.sendo.vn/m/wap_v2/category/product?category_id=2354&listing_algo=algo5&p=1&platform=web&s=60&sortType=default_listing_desc
                     next_page = 'https://www.sendo.vn/m/wap_v2/category/product?category_id=2354&listing_algo=algo5&p=%s&platform=web&s=60&sortType=default_listing_desc' % page_number
                     yield response.follow(next_page, callback=self.parse)
         except:
