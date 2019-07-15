@@ -17,7 +17,8 @@ class WebcrawlerPipeline(object):
 
 class PricePipeline(object):
     def process_item(self, item, spider):
-        price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
+        #price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
+        price_pattern = re.compile(r'\d+')
         is_price = bool(re.search(price_pattern, item.get('price')))
         #spider.logger.info(item.get('price') + ' checked %s' % str(is_price))
         if is_price is True:
