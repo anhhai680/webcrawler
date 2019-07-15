@@ -20,7 +20,6 @@ class SendoSpider(scrapy.Spider):
     dowload_delay = 1
     start_urls = [
         'https://www.sendo.vn/m/wap_v2/category/product?category_id=2354&listing_algo=algo5&p=1&platform=web&s=60&sortType=default_listing_desc',
-        # 'https://www.sendo.vn/iphone/'
     ]
 
     def parse(self, response):
@@ -70,7 +69,7 @@ class SendoSpider(scrapy.Spider):
                     product_title = str(data["name"]).strip()
                     product_desc = str(data["short_description"]).strip()
                     product_price = str(data["final_price"])
-                    product_images = [item["image"] for item in data["media"]]
+                    product_images = [item["image"] for item in data["media"] if item["type"] == 'image']
                     product_swatchcolors = [att["name"]
                                             for att in data["attribute"][0]["value"]]
                     product_link = 'https://www.sendo.vn/' + data["cat_path"]
