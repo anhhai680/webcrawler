@@ -55,7 +55,7 @@ CONCURRENT_REQUESTS = 32
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 1
 
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
@@ -88,11 +88,11 @@ CONCURRENT_REQUESTS = 32
 #    'webcrawler.middlewares.WebcrawlerDownloaderMiddleware': 543,
 #}
 
-DOWNLOADER_MIDDLEWARES = {
-    # 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    # 'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
-    #'webcrawler.middlewares.ShopeeSpiderDownloaderMiddleware' : 400,
-}
+# DOWNLOADER_MIDDLEWARES = {
+#     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+#     'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
+#     'webcrawler.middlewares.ShopeeSpiderDownloaderMiddleware' : 400,
+# }
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
@@ -106,8 +106,9 @@ DOWNLOADER_MIDDLEWARES = {
 #    'webcrawler.pipelines.WebcrawlerPipeline': 300,
 #}
 ITEM_PIPELINES = {
+    'webcrawler.pipelines.WebcrawlerPipeline': 300,
     'webcrawler.pipelines.PricePipeline' : 300,
-    'webcrawler.pipelines.DuplicatesPipeline' : 600,
+    'webcrawler.pipelines.DuplicatesPipeline' : 400,
     #'webcrawler.pipelines.JsonWriterPipeline' : 800,
 }
 
@@ -140,3 +141,12 @@ DUPEFILTER_DEBUG = True
 #DUPEFILTER_CLASS = 'webcrawler.dupefilters.MyRFPDupeFilter'
 
 #HTTPERROR_ALLOWED_CODES  =[404]
+
+CONNECTION_STRING = "{drivername}://{user}:{passwd}@{host}:{port}/{db_name}?charset=utf8".format(
+    drivername="mysql",
+    user="root",
+    passwd="Admin@123",
+    host="localhost",
+    port="3306",
+    db_name="ecrawdb",
+)

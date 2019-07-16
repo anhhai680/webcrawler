@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class SendoSpider(scrapy.Spider):
     name = 'sendo'
     allowed_domains = ['www.sendo.vn']
-    dowload_delay = 1
+    #dowload_delay = 1
     start_urls = [
         'https://www.sendo.vn/m/wap_v2/category/product?category_id=2354&listing_algo=algo5&p=1&platform=web&s=60&sortType=default_listing_desc',
     ]
@@ -88,6 +88,7 @@ class SendoSpider(scrapy.Spider):
                             product_specifications.append({key, value})
 
                     products = ProductItem()
+                    products['cid'] = 1 # 1: Smart Phone
                     products['title'] = product_title
                     products['description'] = product_desc
                     products['price'] = product_price
@@ -95,6 +96,8 @@ class SendoSpider(scrapy.Spider):
                     products['specifications'] = product_specifications
                     products['link'] = product_link
                     products['images'] = product_images
+                    products["shop"] = 'sendo'
+                    products["domain"] = 'sendo.vn'
                     products['last_updated'] = datetime.now()
                     yield products
 

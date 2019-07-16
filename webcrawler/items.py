@@ -18,13 +18,15 @@ class WebcrawlerItem(scrapy.Item):
 
 class ProductItem(scrapy.Item):
     title = scrapy.Field()
+    cid = scrapy.Field()
     description = scrapy.Field()
     price = scrapy.Field()
     swatchcolors = scrapy.Field()
     specifications = scrapy.Field()
     link = scrapy.Field()
     images = scrapy.Field()
-    # visit_id = scrapy.Field()
-    # visit_status = scrapy.Field()
+    brand = scrapy.Field()
+    shop = scrapy.Field()
+    domain = scrapy.Field()
     last_updated = scrapy.Field(serializer=str)
     pass

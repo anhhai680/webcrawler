@@ -9,9 +9,48 @@ import codecs
 import re
 from scrapy.exceptions import DropItem
 
+from sqlalchemy.orm import sessionmaker
+from webcrawler.models import EcrawlDB, db_connect, create_table
+
 
 class WebcrawlerPipeline(object):
+    def __init__(self):
+        """
+        Initializes database connection and sessionmaker.
+        Creates deals table.
+        """
+        engine = db_connect()
+        create_table(engine)
+        self.Session = sessionmaker(bind=engine)
+
     def process_item(self, item, spider):
+        """Save deals in the database.
+        This method is called for every item pipeline component.
+        """
+        session = self.Session()
+        db = EcrawlDB()
+        db.title = item["title"]
+        db.cid = item["cid"]
+        db.description = item["description"]
+        db.swatchcolors = item["swatchcolors"]
+        db.specifications = item["specifications"]
+        db.price = item["price"]
+        db.images = item["images"]
+        db.link = item["link"]
+        db.brand = item["brand"]
+        db.shop = item["shop"]
+        db.domain = item["domain"]
+        db.last_update = item["last_update"]
+
+        try:
+            session.add(db)
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
         return item
 
 
