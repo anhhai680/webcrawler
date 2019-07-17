@@ -62,44 +62,47 @@ class WebcrawlerPipeline(object):
         Creates deals table.
         """
         try:
-            self.mydb = mysql.connector.connect(
+            self.db = mysql.connector.connect(
                 host="localhost",
                 user="root",
                 passwd="Admin@123",
                 database="ecrawdb"
             )
-            self.mycursor = self.mydb.cursor()
-        except Exception:
-            raise
+            self.mycursor = self.db.cursor()
+        except:
+            raise ConnectionError('Could not connect to mysql server.')
 
     def process_item(self, item, spider):
         """Save deals in the database.
         This method is called for every item pipeline component.
         """
-        sql = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-        val = (
+        query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        params = (
             item["cid"],
             item["title"],
             item["description"],
-            item["swatchcolors"],
-            item["specifications"],
+            json.dumps(list(item["swatchcolors"]), ensure_ascii=False),
+            json.dumps(dict(item["specifications"]), ensure_ascii=False),
             item["price"],
-            item["images"],
+            json.dumps(list(item["images"]), ensure_ascii=False),
             item["link"],
             item["shop"],
             item["domain"]
         )
 
         try:
-            self.mycursor.execute(sql, val)
-            self.mydb.commit()
+            self.mycursor.execute(query, params)
+            self.db.commit()
         except:
-            self.mydb.rollback()
+            self.db.rollback()
+            spider.logger.info(
+                '{} INSERT INTO craw_products failed.'.format(spider.name))
             raise
-        finally:
-            self.mydb.close()
 
         return item
+
+    def close_spider(self, spider):
+        self.db.close()
 
 
 class PricePipeline(object):

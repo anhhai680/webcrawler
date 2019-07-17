@@ -25,13 +25,13 @@ DROP TABLE IF EXISTS `craw_products`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `craw_products` (
-  `id` int NOT NULL auto_increment,
-  `category_id` int NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `category_id` int(11) NOT NULL,
   `title` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `short_description` varchar(4000) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `short_description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `swatch_colors` json DEFAULT NULL,
   `specifications` json DEFAULT NULL,
-  `price` decimal(18,9) NOT NULL,
+  `price` decimal(18,2) NOT NULL,
   `images` json NOT NULL,
   `link` varchar(1000) NOT NULL,
   `brand` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
@@ -40,18 +40,9 @@ CREATE TABLE `craw_products` (
   `status` tinyint(4) NOT NULL DEFAULT '1',
   `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=719 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `craw_products`
---
-
-LOCK TABLES `craw_products` WRITE;
-/*!40000 ALTER TABLE `craw_products` DISABLE KEYS */;
-/*!40000 ALTER TABLE `craw_products` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -62,4 +53,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-07-17  0:17:51
+-- Dump completed on 2019-07-18  0:20:24

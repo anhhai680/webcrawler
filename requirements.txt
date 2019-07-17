@@ -2,3 +2,4 @@ selenium
 SQLAlchemy
 libmysqlclient-dev
 mysqlclient
+mysql-connector-python
