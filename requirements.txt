@@ -1,2 +1,4 @@
 selenium
 SQLAlchemy
+libmysqlclient-dev
+mysqlclient

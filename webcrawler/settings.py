@@ -14,14 +14,14 @@ BOT_NAME = 'webcrawler'
 SPIDER_MODULES = ['webcrawler.spiders']
 NEWSPIDER_MODULE = 'webcrawler.spiders'
 
-#Configure to formate encoding to export json file
+# Configure to formate encoding to export json file
 FEED_EXPORT_ENCODING = 'utf-8'
 FEED_FORMAT = 'json'
 
 # Log configurations
 LOG_ENABLED = True
 LOG_FILE = 'logs/phonespider.log'
-LOG_LEVEL = 'ERROR' #Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
+LOG_LEVEL = 'ERROR'  # Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
 #LOG_FORMAT = '%(asctime)s %(message)s'
 LOG_DATEFORMAT = '%m/%d/%Y %I:%M:%S %p'
 
@@ -68,25 +68,25 @@ DOWNLOAD_DELAY = 1
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
+# DEFAULT_REQUEST_HEADERS = {
 #   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 #   'Accept-Language': 'en',
-#}
+# }
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
+# SPIDER_MIDDLEWARES = {
 #    'webcrawler.middlewares.WebcrawlerSpiderMiddleware': 543,
-#}
+# }
 # SPIDER_MIDDLEWARES = {
 #    'webcrawler.middlewares.IgnoreVisitedItems': 600,
 # }
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
+# DOWNLOADER_MIDDLEWARES = {
 #    'webcrawler.middlewares.WebcrawlerDownloaderMiddleware': 543,
-#}
+# }
 
 # DOWNLOADER_MIDDLEWARES = {
 #     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
@@ -96,20 +96,20 @@ DOWNLOAD_DELAY = 1
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
+# EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
-#}
+# }
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
+# ITEM_PIPELINES = {
 #    'webcrawler.pipelines.WebcrawlerPipeline': 300,
-#}
+# }
 ITEM_PIPELINES = {
     'webcrawler.pipelines.WebcrawlerPipeline': 300,
-    'webcrawler.pipelines.PricePipeline' : 300,
-    'webcrawler.pipelines.DuplicatesPipeline' : 400,
-    #'webcrawler.pipelines.JsonWriterPipeline' : 800,
+    'webcrawler.pipelines.PricePipeline': 300,
+    'webcrawler.pipelines.DuplicatesPipeline': 400,
+    # 'webcrawler.pipelines.JsonWriterPipeline' : 800,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

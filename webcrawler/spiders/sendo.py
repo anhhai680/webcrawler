@@ -35,7 +35,7 @@ class SendoSpider(scrapy.Spider):
                         path = item["cat_path"]
                         if path is not None:
                             url_key = path.split('.html/')[0]
-                            # An example link: https://www.sendo.vn/m/wap_v2/full/san-pham/samsung-galaxy-s7-edge-13399478?platform=web
+                            # https://www.sendo.vn/m/wap_v2/full/san-pham/samsung-galaxy-s7-edge-13399478?platform=web
                             product_link = 'https://www.sendo.vn/m/wap_v2/full/san-pham/' + \
                                 url_key + '?platform=web'
                             yield response.follow(product_link, callback=self.parse_product_detail)
@@ -88,7 +88,7 @@ class SendoSpider(scrapy.Spider):
                             product_specifications.append({key, value})
 
                     products = ProductItem()
-                    products['cid'] = 1 # 1: Smart Phone
+                    products['cid'] = 1 # 1: Smartphone
                     products['title'] = product_title
                     products['description'] = product_desc
                     products['price'] = product_price
@@ -98,7 +98,7 @@ class SendoSpider(scrapy.Spider):
                     products['images'] = product_images
                     products["shop"] = 'sendo'
                     products["domain"] = 'sendo.vn'
-                    products['last_updated'] = datetime.now()
+                    # products['last_updated'] = datetime.now()
                     yield products
 
         except:

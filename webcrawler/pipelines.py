@@ -8,9 +8,51 @@ import json
 import codecs
 import re
 from scrapy.exceptions import DropItem
+import mysql.connector
 
-from sqlalchemy.orm import sessionmaker
-from webcrawler.models import EcrawlDB, db_connect, create_table
+# from sqlalchemy.orm import sessionmaker
+# from webcrawler.models import EcrawlDB, db_connect, create_table
+
+
+# class WebcrawlerPipeline(object):
+#     def __init__(self):
+#         """
+#         Initializes database connection and sessionmaker.
+#         Creates deals table.
+#         """
+#         engine = db_connect()
+#         create_table(engine)
+#         self.Session = sessionmaker(bind=engine)
+
+#     def process_item(self, item, spider):
+#         """Save deals in the database.
+#         This method is called for every item pipeline component.
+#         """
+#         session = self.Session()
+#         db = EcrawlDB()
+#         db.title = item["title"]
+#         db.cid = item["cid"]
+#         db.description = item["description"]
+#         db.swatchcolors = item["swatchcolors"]
+#         db.specifications = item["specifications"]
+#         db.images = item["images"]
+#         db.price = item["price"]
+#         db.link = item["link"]
+#         #db.brand = item["brand"]
+#         db.shop = item["shop"]
+#         db.domain = item["domain"]
+#         #db.last_update = item["last_update"]
+
+#         try:
+#             session.add(db)
+#             session.commit()
+#         except:
+#             session.rollback()
+#             raise
+#         finally:
+#             session.close()
+
+#         return item
 
 
 class WebcrawlerPipeline(object):
@@ -19,37 +61,43 @@ class WebcrawlerPipeline(object):
         Initializes database connection and sessionmaker.
         Creates deals table.
         """
-        engine = db_connect()
-        create_table(engine)
-        self.Session = sessionmaker(bind=engine)
+        try:
+            self.mydb = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                passwd="Admin@123",
+                database="ecrawdb"
+            )
+            self.mycursor = self.mydb.cursor()
+        except Exception:
+            raise
 
     def process_item(self, item, spider):
         """Save deals in the database.
         This method is called for every item pipeline component.
         """
-        session = self.Session()
-        db = EcrawlDB()
-        db.title = item["title"]
-        db.cid = item["cid"]
-        db.description = item["description"]
-        db.swatchcolors = item["swatchcolors"]
-        db.specifications = item["specifications"]
-        db.price = item["price"]
-        db.images = item["images"]
-        db.link = item["link"]
-        db.brand = item["brand"]
-        db.shop = item["shop"]
-        db.domain = item["domain"]
-        db.last_update = item["last_update"]
+        sql = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        val = (
+            item["cid"],
+            item["title"],
+            item["description"],
+            item["swatchcolors"],
+            item["specifications"],
+            item["price"],
+            item["images"],
+            item["link"],
+            item["shop"],
+            item["domain"]
+        )
 
         try:
-            session.add(db)
-            session.commit()
+            self.mycursor.execute(sql, val)
+            self.mydb.commit()
         except:
-            session.rollback()
+            self.mydb.rollback()
             raise
         finally:
-            session.close()
+            self.mydb.close()
 
         return item
 
