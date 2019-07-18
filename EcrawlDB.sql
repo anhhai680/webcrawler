@@ -17,13 +17,15 @@ USE `ecrawdb`;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+ALTER SCHEMA `ecrawdb`  DEFAULT CHARACTER SET utf8mb4  DEFAULT COLLATE utf8mb4_unicode_ci ;
+
 --
 -- Table structure for table `craw_products`
 --
 
 DROP TABLE IF EXISTS `craw_products`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
+ SET character_set_client = utf8mb4;
 CREATE TABLE `craw_products` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `category_id` int(11) NOT NULL,

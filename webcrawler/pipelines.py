@@ -8,7 +8,9 @@ import json
 import codecs
 import re
 from scrapy.exceptions import DropItem
+
 import mysql.connector
+from mysql.connector import Error
 
 # from sqlalchemy.orm import sessionmaker
 # from webcrawler.models import EcrawlDB, db_connect, create_table
@@ -66,18 +68,20 @@ class WebcrawlerPipeline(object):
                 host="localhost",
                 user="root",
                 passwd="Admin@123",
-                database="ecrawdb"
+                database="ecrawdb",
+                collation='utf8mb4_unicode_ci'
             )
-            self.mycursor = self.db.cursor()
-        except:
-            raise ConnectionError('Could not connect to mysql server.')
+            if self.db.is_connected():
+                self.mycursor = self.db.cursor()
+        except Error as ex:
+            raise ConnectionError('Error while connecting to MySQL', ex)
 
     def process_item(self, item, spider):
         """Save deals in the database.
         This method is called for every item pipeline component.
         """
         query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-        
+
         params = (
             item["cid"],
             item["title"],
@@ -92,18 +96,25 @@ class WebcrawlerPipeline(object):
         )
 
         try:
-            self.mycursor.execute(query, params)
-            self.db.commit()
-        except:
+            if self.db.is_connected():
+                self.mycursor.execute(query, params)
+                self.db.commit()
+        except Error as ex:
             self.db.rollback()
             spider.logger.info(
-                '{} INSERT INTO craw_products failed.'.format(spider.name))
+                '{} INSERT INTO craw_products failed. {}'.format(spider.name, ex))
             raise
+        finally:
+            self.mycursor.close()
 
         return item
 
     def close_spider(self, spider):
-        self.db.close()
+        # closing database connection
+        if(self.db.is_connected()):
+            self.mycursor.close()
+            self.db.close()
+            spider.logger.info('MySQL connection is closed')
 
 
 class PricePipeline(object):
