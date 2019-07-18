@@ -77,6 +77,7 @@ class WebcrawlerPipeline(object):
         This method is called for every item pipeline component.
         """
         query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        
         params = (
             item["cid"],
             item["title"],
