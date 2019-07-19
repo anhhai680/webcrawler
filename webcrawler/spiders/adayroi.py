@@ -110,13 +110,18 @@ class AdayroiSpider(CrawlSpider):
                     pass
 
         products = ProductItem()
+        products['cid'] = 1 # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
-        products['price'] = product_price
+        products['price'] = self.parse_money(product_price)
         products['swatchcolors'] = product_swatchcolors
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products['last_updated'] = datetime.now()
+        products["shop"] = 'adayroi'
+        products["domain"] = 'www.adayroi.com'
 
         yield products
+    
+    def parse_money(self, value):
+        return re.sub(r'[^\d]', '', value)

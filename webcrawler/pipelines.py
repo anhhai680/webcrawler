@@ -72,7 +72,7 @@ class WebcrawlerPipeline(object):
                 collation='utf8mb4_unicode_ci'
             )
             if self.db.is_connected():
-                self.mycursor = self.db.cursor()
+                self.mycursor = self.db.cursor(buffered=True)
         except Error as ex:
             raise ConnectionError('Error while connecting to MySQL', ex)
 
@@ -80,29 +80,49 @@ class WebcrawlerPipeline(object):
         """Save deals in the database.
         This method is called for every item pipeline component.
         """
-        query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
-        params = (
-            item["cid"],
-            item["title"],
-            item["description"],
-            json.dumps(list(item["swatchcolors"]), ensure_ascii=False),
-            json.dumps(dict(item["specifications"]), ensure_ascii=False),
-            item["price"],
-            json.dumps(list(item["images"]), ensure_ascii=False),
-            item["link"],
-            item["shop"],
-            item["domain"]
-        )
+        cat_id = item["cid"]
+        shop = item["shop"]
+        link = item["link"]
+        domain = item["domain"]
+        price = item["price"]
+
+        query = 'SELECT id FROM craw_products WHERE category_id= %s and shop=%s and link=%s'
+        params = (cat_id, shop, link)
 
         try:
-            if self.db.is_connected():
-                self.mycursor.execute(query, params)
-                self.db.commit()
+            self.mycursor.execute(query, params)
+            myresult = self.mycursor.fetchone()
+            if myresult is None:
+                query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                params = (
+                    item["cid"],
+                    item["title"],
+                    item["description"],
+                    json.dumps(list(item["swatchcolors"]), ensure_ascii=False),
+                    json.dumps(dict(item["specifications"]),
+                               ensure_ascii=False),
+                    price,
+                    json.dumps(list(item["images"]), ensure_ascii=False),
+                    link,
+                    shop,
+                    domain
+                )
+            else:
+                query = 'UPDATE craw_products SET price = %s WHERE id = %s'
+                params = (price, myresult[0])
+        except Error as ex:
+            spider.logger.info(
+                '{} mysql query failed. {}'.format(spider.name, ex))
+            pass
+
+        try:
+            self.mycursor.execute(query, params)
+            self.db.commit()
         except Error as ex:
             self.db.rollback()
             spider.logger.info(
-                '{} INSERT INTO craw_products failed. {}'.format(spider.name, ex))
+                '{} mysql query failed. {}'.format(spider.name, ex))
             raise
 
         return item

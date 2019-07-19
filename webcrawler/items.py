@@ -13,7 +13,6 @@ class WebcrawlerItem(scrapy.Item):
     # name = scrapy.Field()
     # visit_id = scrapy.Field()
     # visit_status = scrapy.Field()
-    
     pass
 
 class ProductItem(scrapy.Item):
