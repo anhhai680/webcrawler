@@ -104,8 +104,6 @@ class WebcrawlerPipeline(object):
             spider.logger.info(
                 '{} INSERT INTO craw_products failed. {}'.format(spider.name, ex))
             raise
-        finally:
-            self.mycursor.close()
 
         return item
 
