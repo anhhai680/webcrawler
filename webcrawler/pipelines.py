@@ -82,6 +82,8 @@ class WebcrawlerPipeline(object):
         """
 
         cat_id = item["cid"]
+        title = item["title"]
+        desc = item["description"]
         shop = item["shop"]
         link = item["link"]
         domain = item["domain"]
@@ -91,19 +93,23 @@ class WebcrawlerPipeline(object):
         params = (cat_id, shop, link)
 
         try:
+
+            swatchcolors = json.dumps(list(item["swatchcolors"]), ensure_ascii=False)
+            specifications = json.dumps(dict(item["specifications"]), ensure_ascii=False)
+            images = json.dumps(list(item["images"]), ensure_ascii=False)
+
             self.mycursor.execute(query, params)
             myresult = self.mycursor.fetchone()
             if myresult is None:
                 query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                 params = (
-                    item["cid"],
-                    item["title"],
-                    item["description"],
-                    json.dumps(list(item["swatchcolors"]), ensure_ascii=False),
-                    json.dumps(dict(item["specifications"]),
-                               ensure_ascii=False),
+                    cat_id,
+                    title,
+                    desc,
+                    swatchcolors,
+                    specifications,
                     price,
-                    json.dumps(list(item["images"]), ensure_ascii=False),
+                    images,
                     link,
                     shop,
                     domain

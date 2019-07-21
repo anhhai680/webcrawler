@@ -77,24 +77,24 @@ class AdayroiSpider(CrawlSpider):
             '//link[@rel="canonical"]/@href')
         product_title = extract_with_xpath(
             '//div[@class="product-detail__title"]/h1/text()')
-        # product_desc = extract_xpath_all(
-        #     '//div[@class="short-des__content"]/ul/li//text()')
-        product_desc = extract_with_xpath('//meta[@property="description"]/@content')
+
+        short_desc = extract_xpath_all(
+            '//div[@class="short-des__content"]/ul/li/p/text()')
+        product_desc = ''.join(short_desc)
+        #product_desc = extract_with_xpath('//meta[@property="description"]/@content')
+
         product_swatchcolors = extract_xpath_all(
             '//div[@class="product-variant__list"]/a//text()')
-        product_images = extract_with_xpath(
-            '//meta[@property="image"]/@content')
 
-        # parse json data from response
-        # script = response.xpath(
-        #     '//script/text()').re('var productJsonMedias = (.+)\s*')
-        # if len(script) > 0:
-        #     json_data = json.loads(script[0])
-        #     product_swatchcolors = [
-        #         color["label"] for color in json_data["configurable_options"][0]["values"]]
-
-        # product_specifications = response.xpath(
-        #     '//div[@class="product-specs__table"]/table/tbody/tr/td/text()').getall()
+        # product_images = extract_with_xpath('//meta[@property="image"]/@content')
+        product_images = []
+        media_script = extract_with_xpath(
+            '//div[@class="col-sm-6 product-detail__info-block"]/script/text()')
+        media_pattern = re.compile(r'^var productJsonMedias = (.*?);\s*')
+        medias = media_pattern.findall(media_script)
+        if medias is not None and len(medias) > 0:
+            json_data = json.loads(medias[0])
+            product_images = [item["zoomUrl"] for item in json_data]
 
         # Specifications product
         product_specifications = []
@@ -102,15 +102,15 @@ class AdayroiSpider(CrawlSpider):
             if spec_row is not None:
                 try:
                     spec_key = spec_row.xpath(
-                        './/td[@class="specs-table__property"]/text()').get()
+                        './/td[@class="specs-table__property"]/text()').get().strip()
                     spec_value = spec_row.xpath(
-                        './/td[@class="specs-table__value"]/text()').get()
+                        './/td[@class="specs-table__value"]/text()').get().strip()
                     product_specifications.append({spec_key, spec_value})
                 except:
                     pass
 
         products = ProductItem()
-        products['cid'] = 1 # 1: Smartphone
+        products['cid'] = 1  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
         products['price'] = self.parse_money(product_price)
@@ -119,9 +119,9 @@ class AdayroiSpider(CrawlSpider):
         products['link'] = product_link
         products['images'] = product_images
         products["shop"] = 'adayroi'
-        products["domain"] = 'www.adayroi.com'
+        products["domain"] = 'adayroi.com'
 
         yield products
-    
+
     def parse_money(self, value):
         return re.sub(r'[^\d]', '', value)
