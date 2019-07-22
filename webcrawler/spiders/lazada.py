@@ -60,15 +60,17 @@ class LazadaSpider(CrawlSpider):
 
     def parse_product_detail(self, item):
         logger.info('Item: %s' % item)
+
         product_title = item["name"]
         product_desc = [st.strip() for st in item["description"]]
         product_price = item["price"]
         product_swatchcolors = []
-        product_specifications = ''
+        product_specifications = []
         product_link = item["productUrl"]
         product_images = [st["image"] for st in item["thumbs"]]
 
         products = ProductItem()
+        products['cid'] = 1 # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
         products['price'] = product_price
@@ -76,5 +78,7 @@ class LazadaSpider(CrawlSpider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products['last_updated'] = datetime.now()
+        products["shop"] = 'lazada'
+        products["domain"] = 'lazada.vn'
+
         yield products

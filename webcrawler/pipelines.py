@@ -87,16 +87,23 @@ class WebcrawlerPipeline(object):
         shop = item["shop"]
         link = item["link"]
         domain = item["domain"]
-        price = item["price"]
+        price = self.parse_money(item["price"])
 
         query = 'SELECT id FROM craw_products WHERE category_id= %s and shop=%s and link=%s'
         params = (cat_id, shop, link)
 
         try:
-
-            swatchcolors = json.dumps(list(item["swatchcolors"]), ensure_ascii=False)
-            specifications = json.dumps(dict(item["specifications"]), ensure_ascii=False)
-            images = json.dumps(list(item["images"]), ensure_ascii=False)
+            swatchcolors=[]
+            if item["swatchcolors"] is not None:
+                swatchcolors = json.dumps(list(item["swatchcolors"]), ensure_ascii=False)
+            
+            specifications = []
+            if item["specifications"] is not None:
+                specifications = json.dumps(dict(item["specifications"]), ensure_ascii=False)
+            
+            images = []
+            if item["images"] is not None:
+                images = json.dumps(list(item["images"]), ensure_ascii=False)
 
             self.mycursor.execute(query, params)
             myresult = self.mycursor.fetchone()
@@ -139,16 +146,22 @@ class WebcrawlerPipeline(object):
             self.mycursor.close()
             self.db.close()
             spider.logger.info('MySQL connection is closed')
+    
+    def parse_money(self, value):
+        return re.sub(r'[^\d]', '', value)
 
 
 class PricePipeline(object):
     def process_item(self, item, spider):
-        #price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
-        price_pattern = re.compile(r'\d+')
-        is_price = bool(re.search(price_pattern, item.get('price')))
-        #spider.logger.info(item.get('price') + ' checked %s' % str(is_price))
-        if is_price is True:
-            return item
+        if item.get('price'):
+            price_pattern = re.compile(r'\d+')
+            is_price = bool(re.search(price_pattern, item.get('price')))
+            #price = self.parse_money(item.get('price'))
+            #spider.logger.info(item.get('price') + ' parsed to %s' % str(price))
+            if is_price:
+                return item
+            else:
+                raise DropItem('Missing item price in %s' % item)
         else:
             raise DropItem('Missing item price in %s' % item)
 

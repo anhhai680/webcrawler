@@ -113,7 +113,7 @@ class AdayroiSpider(CrawlSpider):
         products['cid'] = 1  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
-        products['price'] = self.parse_money(product_price)
+        products['price'] = product_price
         products['swatchcolors'] = product_swatchcolors
         products['specifications'] = product_specifications
         products['link'] = product_link
@@ -122,6 +122,3 @@ class AdayroiSpider(CrawlSpider):
         products["domain"] = 'adayroi.com'
 
         yield products
-
-    def parse_money(self, value):
-        return re.sub(r'[^\d]', '', value)

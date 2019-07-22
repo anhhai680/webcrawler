@@ -21,7 +21,7 @@ FEED_FORMAT = 'json'
 # Log configurations
 LOG_ENABLED = True
 LOG_FILE = 'logs/spider.log'
-LOG_LEVEL = 'ERROR'  # Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
+LOG_LEVEL = 'INFO'  # Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
 #LOG_FORMAT = '%(asctime)s %(message)s's
 LOG_DATEFORMAT = '%m/%d/%Y %I:%M:%S %p'
 

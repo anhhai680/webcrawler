@@ -98,7 +98,7 @@ class SendoSpider(scrapy.Spider):
                     products['images'] = product_images
                     products["shop"] = 'sendo'
                     products["domain"] = 'sendo.vn'
-                    # products['last_updated'] = datetime.now()
+
                     yield products
 
         except:
