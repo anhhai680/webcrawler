@@ -93,14 +93,16 @@ class WebcrawlerPipeline(object):
         params = (cat_id, shop, link)
 
         try:
-            swatchcolors=[]
+            swatchcolors = []
             if item["swatchcolors"] is not None:
-                swatchcolors = json.dumps(list(item["swatchcolors"]), ensure_ascii=False)
-            
+                swatchcolors = json.dumps(
+                    list(item["swatchcolors"]), ensure_ascii=False)
+
             specifications = []
             if item["specifications"] is not None:
-                specifications = json.dumps(dict(item["specifications"]), ensure_ascii=False)
-            
+                specifications = json.dumps(
+                    dict(item["specifications"]), ensure_ascii=False)
+
             images = []
             if item["images"] is not None:
                 images = json.dumps(list(item["images"]), ensure_ascii=False)
@@ -122,7 +124,7 @@ class WebcrawlerPipeline(object):
                     domain
                 )
             else:
-                query = 'UPDATE craw_products SET price = %s WHERE id = %s'
+                query = 'UPDATE craw_products SET price = %s, last_update=now() WHERE id = %s'
                 params = (price, myresult[0])
         except Error as ex:
             spider.logger.info(
@@ -146,7 +148,7 @@ class WebcrawlerPipeline(object):
             self.mycursor.close()
             self.db.close()
             spider.logger.info('MySQL connection is closed')
-    
+
     def parse_money(self, value):
         return re.sub(r'[^\d]', '', value)
 

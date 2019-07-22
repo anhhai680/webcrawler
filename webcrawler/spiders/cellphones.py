@@ -43,10 +43,18 @@ class CellphonesSpider(CrawlSpider):
                 yield response.follow(link_product, self.parse_product_detail)
 
         # Following to scrape for next page
-        next_page = response.xpath(
-            '//ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/@href').get()
-        if next_page is not None:
-            yield response.follow(next_page, callback=self.parse_cellphones)
+        # next_page = response.xpath(
+        #     '//ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/@href').get()
+        # if next_page is not None:
+        #     yield response.follow(next_page, callback=self.parse_cellphones)
+        num_page = response.xpath('//div[@class="pages"]/ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/text()').re(r'\d+')[-1]
+        total_of_page = int(num_page)
+        if total_of_page > 0:
+            next_page = 1
+            while (next_page <= total_of_page):
+                next_page += 1
+                next_link = 'https://cellphones.com.vn/mobile.html?p=%s' % next_page
+                yield response.follow(next_link, callback=self.parse_cellphones)
         pass
 
     # Following product detail to scrape all information of each product
@@ -100,9 +108,9 @@ class CellphonesSpider(CrawlSpider):
             '//meta[@name="description"]/@content')
         product_swatchcolors = extract_xpath_all(
             '//label[@class="opt-label"]/span/text()')
-        product_images = response.xpath(
-            '//div[@id="product-more-images"]/div[@class="lt-product-more-image"]/a/@onclick').re(r'(https\S+)\'')
-        #product_images = extract_product_gallery()
+        # product_images = response.xpath(
+        #     '//div[@id="product-more-images"]/div[@class="lt-product-more-image"]/a/@onclick').re(r'(https\S+)\'')
+        product_images = extract_xpath_all('//div[@class="product-image"]/div[@class="product-image-gallery"]/img/@src')
         logger.info('Gallery: {} of product link: {}'.format(
             product_images, product_link))
 
@@ -114,8 +122,9 @@ class CellphonesSpider(CrawlSpider):
             if spec_row is not None:
                 try:
                     spec_key = spec_row.xpath('.//td/text()').get().strip()
-                    spec_value = spec_row.xpath('.//td/text()')[1].get().strip()
-                    product_specifications.append({spec_key,spec_value})
+                    spec_value = spec_row.xpath(
+                        './/td/text()')[1].get().strip()
+                    product_specifications.append({spec_key, spec_value})
                 except:
                     pass
 
