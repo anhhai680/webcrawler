@@ -111,8 +111,7 @@ class CellphonesSpider(CrawlSpider):
         # product_images = response.xpath(
         #     '//div[@id="product-more-images"]/div[@class="lt-product-more-image"]/a/@onclick').re(r'(https\S+)\'')
         product_images = extract_xpath_all('//div[@class="product-image"]/div[@class="product-image-gallery"]/img/@src')
-        logger.info('Gallery: {} of product link: {}'.format(
-            product_images, product_link))
+        #logger.info('Gallery: {} of product link: {}'.format(product_images, product_link))
 
         # product_specifications = response.xpath(
         #     '//table[@id="tskt"]/tr/*/text()').re('(\\w+[^\n]+)')

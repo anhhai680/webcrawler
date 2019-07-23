@@ -96,12 +96,12 @@ class WebcrawlerPipeline(object):
             swatchcolors = []
             if item["swatchcolors"] is not None:
                 swatchcolors = json.dumps(
-                    list(item["swatchcolors"]), ensure_ascii=False)
+                    list(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
 
             specifications = []
             if item["specifications"] is not None:
                 specifications = json.dumps(
-                    dict(item["specifications"]), ensure_ascii=False)
+                    list(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
 
             images = []
             if item["images"] is not None:
