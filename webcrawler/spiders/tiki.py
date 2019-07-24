@@ -72,8 +72,10 @@ class TikiSpider(CrawlSpider):
 
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
+        # product_price = extract_price(
+        #     '//div[@class="price-block show-border"]/p[@class="special-price-item"]/span[@id="span-price"]/text()')
         product_price = extract_price(
-            '//div[@class="price-block show-border"]/p[@class="special-price-item"]/span[@id="span-price"]/text()')
+            '//span[@id="span-price"]/text()')
         #logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:
             return
@@ -85,13 +87,14 @@ class TikiSpider(CrawlSpider):
             '//h1[@class="item-name"]/span/text()')
         product_desc = extract_xpath_all(
             '//div[@class="top-feature-item bullet-wrap"]/p/text()')
-        ''.join(product_desc)
+        product_desc = ''.join(product_desc)
         # product_swatchcolors = extract_swatchcolors(
         #     '//div[@class="product_pick_color"]/div[contains(@class,"prco_content")]/div[contains(@class,"color color_cover")]/a//text()')
 
         product_swatchcolors = []
-        product_images = extract_xpath_all(
-            '//img[@class="product-magiczoom"]/@src')
+        product_images = []
+        # product_images = extract_xpath_all(
+        #     '//img[@class="product-magiczoom"]/@src')
 
         # parse json data from response
         script = response.xpath(
@@ -105,19 +108,20 @@ class TikiSpider(CrawlSpider):
 
         # product_images = extract_product_gallery(
         #     '//ul[@class="nk-product-bigImg"]/li/div[@class="wrap-img-tag-pdp"]/span/img/@src')
-        # product_specifications = response.xpath(
-        #     '//table[@class="productSpecification_table"]/tbody/tr/td/text()').getall()
 
         # Specifications product
-        product_specifications = []
-        for spec_row in response.xpath('//table[@id="chi-tiet"]/tbody'):
-            if spec_row is not None:
-                try:
-                    spec_values = spec_row.xpath('//tr//text()').getall()
-                    spec_info = [st.strip() for st in spec_values]
-                    product_specifications.append({spec_info})
-                except:
-                    pass
+        product_specifications = extract_xpath_all(
+            '//table[@id="chi-tiet"]/tbody/tr/td/text()')
+
+        # product_specifications = []
+        # for spec_row in response.xpath('//table[@id="chi-tiet"]/tbody'):
+        #     if spec_row is not None:
+        #         try:
+        #             spec_values = spec_row.xpath('.//tr//text()').getall()
+        #             spec_info = [st.strip() for st in spec_values]
+        #             product_specifications.append({spec_info})
+        #         except:
+        #             pass
 
         products = ProductItem()
         products['cid'] = 1  # 1: Smartphone
@@ -130,6 +134,6 @@ class TikiSpider(CrawlSpider):
         products['images'] = product_images
         products['shop'] = 'tiki'
         products['domain'] = 'tiki.vn'
-        products['body'] = response.text
+        products['body'] = ''
 
         yield products
