@@ -163,9 +163,9 @@ class PricePipeline(object):
             if is_price:
                 return item
             else:
-                raise DropItem('Missing item price in %s' % item)
+                raise DropItem('Missing item price in %s' % item['link'])
         else:
-            raise DropItem('Missing item price in %s' % item)
+            raise DropItem('Missing item price in %s' % item['link'])
 
 
 class DuplicatesPipeline(object):

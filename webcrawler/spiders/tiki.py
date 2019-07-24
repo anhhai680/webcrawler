@@ -70,10 +70,6 @@ class TikiSpider(CrawlSpider):
             price = response.xpath(query).get(default='').strip()
             return price
 
-        def extract_product_gallery(query):
-            gallery = response.xpath(query).getall()
-            return gallery
-
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
         product_price = extract_price(
@@ -89,13 +85,12 @@ class TikiSpider(CrawlSpider):
             '//h1[@class="item-name"]/span/text()')
         product_desc = extract_xpath_all(
             '//div[@class="top-feature-item bullet-wrap"]/p/text()')
-        if len(product_desc) > 0:
-            ''.join(product_desc)
+        ''.join(product_desc)
         # product_swatchcolors = extract_swatchcolors(
         #     '//div[@class="product_pick_color"]/div[contains(@class,"prco_content")]/div[contains(@class,"color color_cover")]/a//text()')
 
         product_swatchcolors = []
-        product_images = extract_product_gallery(
+        product_images = extract_xpath_all(
             '//img[@class="product-magiczoom"]/@src')
 
         # parse json data from response
@@ -105,8 +100,8 @@ class TikiSpider(CrawlSpider):
             json_data = json.loads(script[0])
             product_swatchcolors = [
                 color["label"] for color in json_data["configurable_options"][0]["values"]]
-            product_images = product_images = [
-                item["medium_url"] for item in json_data["configurable_products"][0]["images"]]
+            product_images = [item["medium_url"]
+                              for item in json_data["configurable_products"][0]["images"]]
 
         # product_images = extract_product_gallery(
         #     '//ul[@class="nk-product-bigImg"]/li/div[@class="wrap-img-tag-pdp"]/span/img/@src')
