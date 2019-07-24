@@ -43,18 +43,19 @@ class CellphonesSpider(CrawlSpider):
                 yield response.follow(link_product, self.parse_product_detail)
 
         # Following to scrape for next page
-        # next_page = response.xpath(
-        #     '//ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/@href').get()
-        # if next_page is not None:
-        #     yield response.follow(next_page, callback=self.parse_cellphones)
-        num_page = response.xpath('//div[@class="pages"]/ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/text()').re(r'\d+')[-1]
-        total_of_page = int(num_page)
-        if total_of_page > 0:
-            next_page = 1
-            while (next_page <= total_of_page):
-                next_page += 1
-                next_link = 'https://cellphones.com.vn/mobile.html?p=%s' % next_page
-                yield response.follow(next_link, callback=self.parse_cellphones)
+        next_page = response.xpath(
+            '//link[@rel="next"]/@href').get()
+        if next_page is not None:
+            yield response.follow(next_page, callback=self.parse_cellphones)
+        # num_page = response.xpath(
+        #     '//div[@class="pages"]/ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/text()').re(r'\d+')[-1]
+        # total_of_page = int(num_page)
+        # if total_of_page > 0:
+        #     next_page = 1
+        #     while (next_page <= total_of_page):
+        #         next_page += 1
+        #         next_link = 'https://cellphones.com.vn/mobile.html?p=%s' % next_page
+        #         yield response.follow(next_link, callback=self.parse_cellphones)
         pass
 
     # Following product detail to scrape all information of each product
@@ -110,22 +111,27 @@ class CellphonesSpider(CrawlSpider):
             '//label[@class="opt-label"]/span/text()')
         # product_images = response.xpath(
         #     '//div[@id="product-more-images"]/div[@class="lt-product-more-image"]/a/@onclick').re(r'(https\S+)\'')
-        product_images = extract_xpath_all('//div[@class="product-image"]/div[@class="product-image-gallery"]/img/@src')
+        product_images = extract_xpath_all(
+            '//div[@class="product-image"]/div[@class="product-image-gallery"]/img/@src | //div[@class="product-img-box left"]/img/@src')
+        if len(product_images) <= 0:
+            product_images = response.xpath(
+                '//div[@id="product-more-images"]/div[@class="lt-product-more-image"]/a/@onclick').re(r'(https\S+)\'')
         #logger.info('Gallery: {} of product link: {}'.format(product_images, product_link))
 
-        # product_specifications = response.xpath(
-        #     '//table[@id="tskt"]/tr/*/text()').re('(\\w+[^\n]+)')
         # Specifications product
-        product_specifications = []
-        for spec_row in response.xpath('//table[@id="tskt"]/tr'):
-            if spec_row is not None:
-                try:
-                    spec_key = spec_row.xpath('.//td/text()').get().strip()
-                    spec_value = spec_row.xpath(
-                        './/td/text()')[1].get().strip()
-                    product_specifications.append({spec_key, spec_value})
-                except:
-                    pass
+        product_specifications = response.xpath(
+            '//table[@id="tskt"]/tr/*/text()').re('(\\w+[^\n]+)')
+
+        # product_specifications = []
+        # for spec_row in response.xpath('//table[@id="tskt"]/tr'):
+        #     if spec_row is not None:
+        #         try:
+        #             spec_key = spec_row.xpath('.//td/text()').get().strip()
+        #             spec_value = spec_row.xpath(
+        #                 './/td/text()')[1].get().strip()
+        #             product_specifications.append({spec_key, spec_value})
+        #         except:
+        #             pass
 
         products = ProductItem()
         products['cid'] = 1  # 1: Smartphone
@@ -136,8 +142,9 @@ class CellphonesSpider(CrawlSpider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products["shop"] = 'cellphones'
-        products["domain"] = 'cellphones.com.vn'
+        products['shop'] = 'cellphones'
+        products['domain'] = 'cellphones.com.vn'
+        products['body'] = response.text
 
         yield products
 

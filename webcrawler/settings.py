@@ -22,7 +22,7 @@ FEED_FORMAT = 'json'
 LOG_ENABLED = True
 LOG_FILE = 'logs/spider.log'
 LOG_LEVEL = 'INFO'  # Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
-#LOG_FORMAT = '%(asctime)s %(message)s's
+# LOG_FORMAT = '%(asctime)s %(message)s's
 LOG_DATEFORMAT = '%m/%d/%Y %I:%M:%S %p'
 
 
@@ -107,9 +107,9 @@ CONCURRENT_REQUESTS = 100
 # }
 ITEM_PIPELINES = {
     'webcrawler.pipelines.WebcrawlerPipeline': 300,
-    'webcrawler.pipelines.PricePipeline': 300,
-    'webcrawler.pipelines.DuplicatesPipeline': 400,
-    # 'webcrawler.pipelines.JsonWriterPipeline' : 800,
+    'webcrawler.pipelines.PricePipeline': 400,
+    'webcrawler.pipelines.DuplicatesPipeline': 500,
+    'webcrawler.pipelines.FilesPipeline' : 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -127,11 +127,11 @@ ITEM_PIPELINES = {
 
 # Enable and configure HTTP caching (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
-#HTTPCACHE_ENABLED = True
-#HTTPCACHE_EXPIRATION_SECS = 0
-#HTTPCACHE_DIR = 'httpcache'
-#HTTPCACHE_IGNORE_HTTP_CODES = []
-#HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+# HTTPCACHE_ENABLED = True
+# HTTPCACHE_EXPIRATION_SECS = 0
+# HTTPCACHE_DIR = 'httpcache'
+# HTTPCACHE_IGNORE_HTTP_CODES = [404, 500, 504]
+# HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # Disable redirects
 REDIRECT_ENABLED = False
@@ -142,11 +142,11 @@ DUPEFILTER_DEBUG = True
 
 #HTTPERROR_ALLOWED_CODES  =[404]
 
-CONNECTION_STRING = "{drivername}://{user}:{passwd}@{host}:{port}/{db_name}?charset=utf8".format(
-    drivername="mysql",
-    user="root",
-    passwd="Admin@123",
-    host="localhost",
-    port="3306",
-    db_name="ecrawdb",
-)
+# CONNECTION_STRING = "{drivername}://{user}:{passwd}@{host}:{port}/{db_name}?charset=utf8".format(
+#     drivername="mysql",
+#     user="root",
+#     passwd="Admin@123",
+#     host="localhost",
+#     port="3306",
+#     db_name="ecrawdb",
+# )

@@ -48,10 +48,12 @@ class TikiSpider(CrawlSpider):
             yield response.follow(product_link, callback=self.parse_product_detail)
 
         # Following next page to scrape
+        # next_page = response.xpath(
+        #     '//div[@class="list-pager"]/ul/li/a/@href').get()
         next_page = response.xpath(
-            '//div[@class="list-pager"]/ul/li/a/@href').get()
+            '//link[@rel="next"]/@href').get()
         if next_page is not None:
-            next_page = "https://tiki.vn%s" % next_page
+            #next_page = "https://tiki.vn%s" % next_page
             yield response.follow(next_page, callback=self.parse_tiki)
         pass
 
@@ -59,6 +61,10 @@ class TikiSpider(CrawlSpider):
 
         def extract_with_xpath(query):
             return response.xpath(query).get(default='').strip()
+
+        def extract_xpath_all(query):
+            gallery = response.xpath(query).getall()
+            return gallery
 
         def extract_price(query):
             price = response.xpath(query).get(default='').strip()
@@ -76,17 +82,21 @@ class TikiSpider(CrawlSpider):
         if re.match(price_pattern, product_price) is None:
             return
 
-        product_link = extract_with_xpath(
-            '//meta[@property="og:url"]/@content')
+        # product_link = extract_with_xpath(
+        #     '//meta[@property="og:url"]/@content')
+        product_link = response.url
         product_title = extract_with_xpath(
             '//h1[@class="item-name"]/span/text()')
-        product_desc = extract_with_xpath(
+        product_desc = extract_xpath_all(
             '//div[@class="top-feature-item bullet-wrap"]/p/text()')
+        if len(product_desc) > 0:
+            ''.join(product_desc)
         # product_swatchcolors = extract_swatchcolors(
         #     '//div[@class="product_pick_color"]/div[contains(@class,"prco_content")]/div[contains(@class,"color color_cover")]/a//text()')
 
         product_swatchcolors = []
-        product_images = extract_product_gallery('//img[@class="product-magiczoom"]/@src')
+        product_images = extract_product_gallery(
+            '//img[@class="product-magiczoom"]/@src')
 
         # parse json data from response
         script = response.xpath(
@@ -97,7 +107,7 @@ class TikiSpider(CrawlSpider):
                 color["label"] for color in json_data["configurable_options"][0]["values"]]
             product_images = product_images = [
                 item["medium_url"] for item in json_data["configurable_products"][0]["images"]]
-            
+
         # product_images = extract_product_gallery(
         #     '//ul[@class="nk-product-bigImg"]/li/div[@class="wrap-img-tag-pdp"]/span/img/@src')
         # product_specifications = response.xpath(
@@ -115,6 +125,7 @@ class TikiSpider(CrawlSpider):
                     pass
 
         products = ProductItem()
+        products['cid'] = 1  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
         products['price'] = product_price
@@ -122,6 +133,8 @@ class TikiSpider(CrawlSpider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products['last_updated'] = datetime.now()
+        products['shop'] = 'tiki'
+        products['domain'] = 'tiki.vn'
+        products['body'] = response.text
 
         yield products

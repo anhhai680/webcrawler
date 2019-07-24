@@ -1,6 +1,7 @@
 # Don't track content of these folders
 webcrawler/__pycache__
 webcrawler/spiders/__pycache__
+files
 
 # Do not track these files
 .DS_Store
@@ -9,6 +10,7 @@ webcrawler/spiders/__pycache__
 
 build/*
 logs/*
+files/*
 webcrawler/__pycache__/*
 webcrawler/spiders/__pycache__/*
 *.json

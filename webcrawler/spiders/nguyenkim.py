@@ -78,7 +78,8 @@ class NguyenkimSpider(CrawlSpider):
         # product_images = extract_xpath_all(
         #     '//ul[@class="nk-product-bigImg"]/li/div[@class="wrap-img-tag-pdp"]/span/img/@src')
         product_images = extract_xpath_all(
-            '//div[@class="nk-product-total"]/ul/li/img/@data-full')
+            '//div[@class="nk-product-total"]/ul/li/img/@data-full | //div[@class="nk-product-total"]/li/img/@data-full')
+
         product_specifications = response.xpath(
             '//table[@class="productSpecification_table"]/tbody/tr/td/text()').getall()
 
@@ -93,7 +94,8 @@ class NguyenkimSpider(CrawlSpider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products["shop"] = 'nguyenkim'
-        products["domain"] = 'nguyenkim.com'
+        products['shop'] = 'nguyenkim'
+        products['domain'] = 'nguyenkim.com'
+        products['body'] = response.text
 
         yield products

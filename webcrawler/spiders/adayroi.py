@@ -44,8 +44,9 @@ class AdayroiSpider(CrawlSpider):
             yield response.follow(product_link, callback=self.parse_product_detail)
 
         # Following next page to scrape
-        next_page = response.css('section.section__pagination>nav.navigation>ul.hidden-xs').xpath(
-            './/li[not(contains(@class,"active"))]/a[not(contains(@class,"btn disabled"))]/@href').get()
+        # next_page = response.css('section.section__pagination>nav.navigation>ul.hidden-xs').xpath(
+        #     './/li[not(contains(@class,"active"))]/a[not(contains(@class,"btn disabled"))]/@href').get()
+        next_page = response.xpath('//a[@rel="next"]/@href').get()
         if next_page is not None:
             next_page = "https://www.adayroi.com%s" % next_page
             yield response.follow(next_page, callback=self.parse_adayroi)
@@ -97,17 +98,20 @@ class AdayroiSpider(CrawlSpider):
             product_images = [item["zoomUrl"] for item in json_data]
 
         # Specifications product
-        product_specifications = []
-        for spec_row in response.xpath('//div[@class="product-specs__table"]/table/tbody/tr'):
-            if spec_row is not None:
-                try:
-                    spec_key = spec_row.xpath(
-                        './/td[@class="specs-table__property"]/text()').get().strip()
-                    spec_value = spec_row.xpath(
-                        './/td[@class="specs-table__value"]/text()').get().strip()
-                    product_specifications.append({spec_key, spec_value})
-                except:
-                    pass
+        product_specifications = extract_xpath_all(
+            '//div[@class="product-specs__table"]/table/tbody/tr/td/text()')
+            
+        # product_specifications = []
+        # for spec_row in response.xpath('//div[@class="product-specs__table"]/table/tbody/tr'):
+        #     if spec_row is not None:
+        #         try:
+        #             spec_key = spec_row.xpath(
+        #                 './/td[@class="specs-table__property"]/text()').get().strip()
+        #             spec_value = spec_row.xpath(
+        #                 './/td[@class="specs-table__value"]/text()').get().strip()
+        #             product_specifications.append({spec_key, spec_value})
+        #         except:
+        #             pass
 
         products = ProductItem()
         products['cid'] = 1  # 1: Smartphone
@@ -118,7 +122,8 @@ class AdayroiSpider(CrawlSpider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products["shop"] = 'adayroi'
-        products["domain"] = 'adayroi.com'
+        products['shop'] = 'adayroi'
+        products['domain'] = 'adayroi.com'
+        products['body'] = response.text
 
         yield products

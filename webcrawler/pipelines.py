@@ -175,7 +175,7 @@ class DuplicatesPipeline(object):
 
     def process_item(self, item, spider):
         if item['link'] in self.ids_seen:
-            raise DropItem("Duplicate item found: %s" % item)
+            raise DropItem("Duplicate item found: %s" % item['link'])
         else:
             self.ids_seen.add(item['link'])
             return item
@@ -193,4 +193,42 @@ class JsonWriterPipeline(object):
     def process_item(self, item, spider):
         line = json.dumps(dict(item), ensure_ascii=False) + "\n"
         self.file.write(line)
+        return item
+
+
+class FilesPipeline(object):
+    def process_item(self, item, spider):
+
+        save_path = 'files/%s' % spider.name
+
+        try:
+            import os
+        except:
+            raise ImportError('Could not find name in module')
+
+        try:
+            if item["images"] is None or len(item["images"]) <= 0:
+                if not os.path.exists(save_path):
+                    os.makedirs(save_path)
+
+                page = item['link'].split('/')[-1]
+                if not '.' in page:
+                    filename = '%s.html' % page
+                else:
+                    filename = page
+                path_file = os.path.join(save_path, filename)
+                with open(path_file, 'w', encoding='utf-8') as html_file:
+                    html_file.write(item["body"])
+            else:
+                pass
+
+        except OSError as ex:
+            spider.logger.info(
+                '{} could not create directory.Errors: {}'.format(spider.name, ex))
+            pass
+        except Exception as ex:
+            spider.logger.info(
+                '{} could not save html to file.Errors: {}'.format(spider.name, ex))
+            pass
+
         return item

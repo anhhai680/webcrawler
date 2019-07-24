@@ -41,7 +41,8 @@ class SendoSpider(scrapy.Spider):
                             yield response.follow(product_link, callback=self.parse_product_detail)
 
                 # Following pagination to scrape next page
-                total_pages = int(json_data["result"]["meta_data"]["total_page"])
+                total_pages = int(
+                    json_data["result"]["meta_data"]["total_page"])
                 page_number = 1
                 logger.info('There is a total of ' +
                             str(total_pages) + ' links.')
@@ -69,7 +70,8 @@ class SendoSpider(scrapy.Spider):
                     product_title = str(data["name"]).strip()
                     product_desc = str(data["short_description"]).strip()
                     product_price = str(data["final_price"])
-                    product_images = [item["image"] for item in data["media"] if item["type"] == 'image']
+                    product_images = [item["image"]
+                                      for item in data["media"] if item["type"] == 'image']
                     product_swatchcolors = [att["name"]
                                             for att in data["attribute"][0]["value"]]
                     product_link = 'https://www.sendo.vn/' + data["cat_path"]
@@ -88,7 +90,7 @@ class SendoSpider(scrapy.Spider):
                             product_specifications.append({key, value})
 
                     products = ProductItem()
-                    products['cid'] = 1 # 1: Smartphone
+                    products['cid'] = 1  # 1: Smartphone
                     products['title'] = product_title
                     products['description'] = product_desc
                     products['price'] = product_price
@@ -98,6 +100,7 @@ class SendoSpider(scrapy.Spider):
                     products['images'] = product_images
                     products["shop"] = 'sendo'
                     products["domain"] = 'sendo.vn'
+                    products['body'] = response.text
 
                     yield products
 
