@@ -60,19 +60,15 @@ class VnexpressSpider(CrawlSpider):
             price = response.xpath(query).get(default='').strip()
             return price
 
-        def extract_product_gallery(query):
+        def extract_xpath_all(query):
             gallery = response.xpath(query).getall()
             return gallery
-
-        def extract_swatchcolors(query):
-            swatchcolors = response.xpath(query).getall()
-            return swatchcolors
 
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
         product_price = extract_price(
             '//span[@class="price-current price_sp_detail"]/text()')
-        logger.info('Product Price: %s' % product_price)
+        #logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:
             return
 
@@ -80,18 +76,20 @@ class VnexpressSpider(CrawlSpider):
             'normalize-space(//h1[@class="product-title clearfix"]/text())')
         product_desc = extract_with_xpath(
             'normalize-space(//meta[@name="description"]/@content)')
-        product_swatchcolors = extract_swatchcolors(
+        product_swatchcolors = extract_xpath_all(
             '//div[@class="similar-products"]/span/@rel')
-        product_images = extract_product_gallery(
+        product_images = extract_xpath_all(
             '//div[@id="images_pro"]/a/@href')
         #product_specifications = response.xpath('//div[@id="information"]/div/table[@class="table"]/tbody/tr/td//text()').getall()
         product_specifications = []
-        specs = response.xpath('//div[@class="box-body box-information"]/text()').getall()
+        specs = extract_xpath_all('//div[@class="box-body box-information"]/text()')
         if len(specs) > 0:
             product_specifications = [sp.strip() for sp in specs]
             
         product_link = response.url
+
         products = ProductItem()
+        products['cid'] = 1  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
         products['price'] = product_price
@@ -99,5 +97,8 @@ class VnexpressSpider(CrawlSpider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
+        products["shop"] = 'vnexpress'
+        products["domain"] = 'shop.vnexpress.net'
+        products['body'] = response.text
 
         yield products

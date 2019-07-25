@@ -54,9 +54,10 @@ class LazadaSpider(CrawlSpider):
                 "<script>window.pageData=({.+?})</script>", response.body.decode("utf-8"), re.S)
             data = json.loads(pageData[0])
             if data is not None:
-                for item in data["mods"]["listItems"]:
-                    for product in self.parse_product_detail(item):
-                        yield product
+                if data["mods"]["listItems"] is not None:
+                    for item in data["mods"]["listItems"]:
+                        for product in self.parse_product_detail(item):
+                            yield product
 
             # Follow the next page to scrape data
             next_page = response.xpath('//link[@rel="next"]/@href').get()
@@ -88,7 +89,8 @@ class LazadaSpider(CrawlSpider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products["shop"] = 'lazada'
-        products["domain"] = 'lazada.vn'
+        products['shop'] = 'lazada'
+        products['domain'] = 'lazada.vn'
+        products['body'] = ''
 
         yield products

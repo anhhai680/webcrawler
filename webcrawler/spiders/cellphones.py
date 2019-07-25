@@ -61,9 +61,6 @@ class CellphonesSpider(CrawlSpider):
     # Following product detail to scrape all information of each product
     def parse_product_detail(self, response):
 
-        def extract_with_css(query):
-            return response.css(query).get(default='').strip()
-
         def extract_with_xpath(query):
             return response.xpath(query).get(default='').strip()
 
@@ -78,14 +75,6 @@ class CellphonesSpider(CrawlSpider):
                 price = response.css(
                     'span.regular-price>span::text').get(default='').strip()
             return price
-
-        def extract_product_gallery():
-            gallery = response.css(
-                'div.product-image-gallery>img::attr(src)').getall()
-            if len(gallery) <= 0:
-                gallery = response.css(
-                    'div.product-img-box>img::attr(src)').get()
-            return gallery
 
         product_link = response.url
 

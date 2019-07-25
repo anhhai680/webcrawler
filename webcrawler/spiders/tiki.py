@@ -101,10 +101,16 @@ class TikiSpider(CrawlSpider):
             '//script/text()').re('var configuration = ({.*?});')
         if len(script) > 0:
             json_data = json.loads(script[0])
-            product_swatchcolors = [
-                color["label"] for color in json_data["configurable_options"][0]["values"]]
-            product_images = [item["medium_url"]
-                              for item in json_data["configurable_products"][0]["images"]]
+            if len(json_data["configurable_options"]) > 0:
+                product_swatchcolors = [
+                    color["label"] for color in json_data["configurable_options"][0]["values"]]
+            if len(json_data["configurable_products"]) > 0:
+                product_images = [item["medium_url"]
+                                for item in json_data["configurable_products"][0]["images"]]
+
+        if len(product_images) <= 0:
+            product_images = extract_xpath_all(
+                '//img[@class="product-magiczoom"]/@src')
 
         # product_images = extract_product_gallery(
         #     '//ul[@class="nk-product-bigImg"]/li/div[@class="wrap-img-tag-pdp"]/span/img/@src')
@@ -134,6 +140,6 @@ class TikiSpider(CrawlSpider):
         products['images'] = product_images
         products['shop'] = 'tiki'
         products['domain'] = 'tiki.vn'
-        products['body'] = ''
+        products['body'] = response.text
 
         yield products

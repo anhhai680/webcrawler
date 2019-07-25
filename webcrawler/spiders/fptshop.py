@@ -113,5 +113,6 @@ class FptshopSpider(CrawlSpider):
         products['images'] = product_images
         products["shop"] = 'fptshop'
         products["domain"] = 'fptshop.com.vn'
+        products['body'] = response.text
 
         yield products

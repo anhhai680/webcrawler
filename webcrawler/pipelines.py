@@ -81,27 +81,37 @@ class WebcrawlerPipeline(object):
         This method is called for every item pipeline component.
         """
 
-        cat_id = item["cid"]
-        title = item["title"]
-        desc = item["description"]
-        shop = item["shop"]
-        link = item["link"]
-        domain = item["domain"]
-        price = self.parse_money(item["price"])
-
-        query = 'SELECT id FROM craw_products WHERE category_id= %s and shop=%s and link=%s'
-        params = (cat_id, shop, link)
-
         try:
+            cat_id = item["cid"]
+            title = item["title"]
+            desc = item["description"]
+            shop = item["shop"]
+            link = item["link"]
+            domain = item["domain"]
+            price = self.parse_money(item["price"])
+
+            query = 'SELECT id FROM craw_products WHERE category_id= %s and shop=%s and link=%s'
+            params = (cat_id, shop, link)
+
             swatchcolors = []
             if item["swatchcolors"] is not None:
-                swatchcolors = json.dumps(
-                    list(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
+                try:
+                    swatchcolors = json.dumps(
+                        list(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
+                except:
+                    swatchcolors = json.dumps(
+                        dict(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
+                    pass
 
             specifications = []
             if item["specifications"] is not None:
-                specifications = json.dumps(
-                    list(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+                try:
+                    specifications = json.dumps(
+                        list(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+                except:
+                    specifications = json.dumps(
+                        dict(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+                    pass
 
             images = []
             if item["images"] is not None:
@@ -126,21 +136,16 @@ class WebcrawlerPipeline(object):
             else:
                 query = 'UPDATE craw_products SET price = %s, last_update=now() WHERE id = %s'
                 params = (price, myresult[0])
-        except Error as ex:
-            spider.logger.info(
-                '{} mysql query failed. {}'.format(spider.name, ex))
-            pass
 
-        try:
             self.mycursor.execute(query, params)
             self.db.commit()
+
+            return item
         except Error as ex:
             self.db.rollback()
-            spider.logger.info(
-                '{} mysql query failed. {}'.format(spider.name, ex))
-            raise
+            raise Error('{} mysql query failed. {}'.format(spider.name, ex))
 
-        return item
+        return None
 
     def close_spider(self, spider):
         # closing database connection
@@ -158,8 +163,8 @@ class PricePipeline(object):
         if item.get('price'):
             price_pattern = re.compile(r'\d+')
             is_price = bool(re.search(price_pattern, item.get('price')))
-            #price = self.parse_money(item.get('price'))
-            #spider.logger.info(item.get('price') + ' parsed to %s' % str(price))
+            # price = self.parse_money(item.get('price'))
+            # spider.logger.info(item.get('price') + ' parsed to %s' % str(price))
             if is_price:
                 return item
             else:

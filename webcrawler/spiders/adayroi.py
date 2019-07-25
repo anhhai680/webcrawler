@@ -8,11 +8,10 @@ from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.selector import Selector
 from datetime import datetime
 
-
 from ..items import ProductItem
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class AdayroiSpider(CrawlSpider):
     name = 'adayroi'
@@ -65,12 +64,12 @@ class AdayroiSpider(CrawlSpider):
             gallery = response.xpath(query).getall()
             return gallery
 
-        logger.info('Product Url: %s' % response.url)
+        #logger.info('Product Url: %s' % response.url)
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
         product_price = extract_price(
             '//div[@class="product-detail__price"]/div[@class="product-detail__price-info"]/div[@class="price-info__sale"]/text()')
-        logger.info('Product Price: %s' % product_price)
+        #logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:
             return
 
@@ -80,7 +79,7 @@ class AdayroiSpider(CrawlSpider):
             '//div[@class="product-detail__title"]/h1/text()')
 
         short_desc = extract_xpath_all(
-            '//div[@class="short-des__content"]/ul/li/p/text()')
+            '//div[@class="short-des__content"]/ul/li/p/text() | //div[@class="short-des__content"]/ul/li/p/span/text()')
         product_desc = ''.join(short_desc)
         #product_desc = extract_with_xpath('//meta[@property="description"]/@content')
 
@@ -124,6 +123,6 @@ class AdayroiSpider(CrawlSpider):
         products['images'] = product_images
         products['shop'] = 'adayroi'
         products['domain'] = 'adayroi.com'
-        products['body'] = response.text
+        products['body'] = ''
 
         yield products

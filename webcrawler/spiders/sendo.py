@@ -100,7 +100,7 @@ class SendoSpider(scrapy.Spider):
                     products['images'] = product_images
                     products["shop"] = 'sendo'
                     products["domain"] = 'sendo.vn'
-                    products['body'] = response.text
+                    products['body'] = ''
 
                     yield products
 

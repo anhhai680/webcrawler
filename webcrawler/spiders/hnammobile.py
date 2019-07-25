@@ -90,6 +90,7 @@ class HnammobileSpider(CrawlSpider):
                     pass
 
         product_link = response.url
+        
         products = ProductItem()
         products['cid'] = 1  # 1: Smartphone
         products['title'] = product_title
@@ -101,5 +102,6 @@ class HnammobileSpider(CrawlSpider):
         products['images'] = product_images
         products["shop"] = 'hnammobile'
         products["domain"] = 'hnammobile.com'
+        products['body'] = response.text
 
         yield products
