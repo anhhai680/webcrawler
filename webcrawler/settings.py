@@ -109,7 +109,7 @@ ITEM_PIPELINES = {
     'webcrawler.pipelines.WebcrawlerPipeline': 300,
     'webcrawler.pipelines.PricePipeline': 400,
     'webcrawler.pipelines.DuplicatesPipeline': 500,
-    'webcrawler.pipelines.FilesPipeline' : 300,
+    #'webcrawler.pipelines.FilesPipeline' : 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -150,3 +150,6 @@ DUPEFILTER_DEBUG = True
 #     port="3306",
 #     db_name="ecrawdb",
 # )
+
+# Register a command module
+COMMANDS_MODULE = 'webcrawler.commands'

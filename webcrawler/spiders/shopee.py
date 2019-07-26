@@ -23,15 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 class ShopeeSpider(scrapy.Spider):
-    # custom_settings = {
-    #     "DEPTH_LIMIT": 5,
-    #     "DOWNLOAD_DELAY": 2,
-    # }
+
     name = 'shopee'
     allowed_domains = ['shopee.vn']
     # dowload_delay = 1
     start_urls = [
-        'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979',
+        'https://shopee.vn/Smartphone-%C4%90i%E1%BB%87n-tho%E1%BA%A1i-th%C3%B4ng-minh-cat.84.1979.19042',
+        #'https://shopee.vn/%C4%90i%E1%BB%87n-tho%E1%BA%A1i-cat.84.1979',
     ]
     # rules = (
     #     Rule(LxmlLinkExtractor(
@@ -62,7 +60,7 @@ class ShopeeSpider(scrapy.Spider):
         options.add_argument("--no-sandbox")
 
         self.driver = webdriver.Chrome(chrome_options=options)
-        #self.driver.set_page_load_timeout(1)
+        # self.driver.set_page_load_timeout(1)
         # self.driver.set_window_size(1120, 550)
         self.driver.wait = WebDriverWait(self.driver, 3)
 
@@ -76,7 +74,6 @@ class ShopeeSpider(scrapy.Spider):
                 (By.XPATH, '//link[@rel="next"]/@href')))
 
         except:
-            # self.driver.close()
             logger.info('link[@rel="next"] NOT FOUND IN TECHCRUNCH !!!')
 
         sel = Selector(text=self.driver.page_source)
@@ -84,7 +81,6 @@ class ShopeeSpider(scrapy.Spider):
             '//div[@class="row shopee-search-item-result__items"]/div[@class="col-xs-2-4 shopee-search-item-result__item"]/div/a/@href').getall()
 
         logger.info('There is a total of ' + str(len(links)) + ' links')
-
         for product_link in links:
             try:
                 product_link = "https://shopee.vn%s" % product_link
@@ -135,12 +131,12 @@ class ShopeeSpider(scrapy.Spider):
             price = sel.xpath(query).get(default='').strip()
             return price
 
-        #logger.info('Product Url: %s', response.url)
+        # logger.info('Product Url: %s', response.url)
         # Validate price with pattern
         price_pattern = re.compile(r'(\S*[0-9](\w+?))')
         product_price = extract_price(
             '//div[contains(@class,"items-center")]/div[@class="_3n5NQx"]/text()')
-        #logger.info('Product Price: %s' % product_price)
+        # logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:
             return
 
@@ -167,7 +163,9 @@ class ShopeeSpider(scrapy.Spider):
                 pass
 
         product_link = response.url
+
         products = ProductItem()
+        products['cid'] = 1  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
         products['price'] = self.parse_money(product_price)
@@ -175,7 +173,9 @@ class ShopeeSpider(scrapy.Spider):
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products['last_updated'] = datetime.now()
+        products['shop'] = 'shopee'
+        products['domain'] = 'shopee.vn'
+        products['body'] = ''
 
         yield products
 
