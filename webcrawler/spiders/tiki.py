@@ -66,15 +66,11 @@ class TikiSpider(CrawlSpider):
             gallery = response.xpath(query).getall()
             return gallery
 
-        def extract_price(query):
-            price = response.xpath(query).get(default='').strip()
-            return price
-
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
         # product_price = extract_price(
         #     '//div[@class="price-block show-border"]/p[@class="special-price-item"]/span[@id="span-price"]/text()')
-        product_price = extract_price(
+        product_price = extract_with_xpath(
             '//span[@id="span-price"]/text()')
         #logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:

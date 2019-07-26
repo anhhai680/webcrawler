@@ -1,8 +1,8 @@
 urlparser
-selenium
-SQLAlchemy
+selenium==3.141.0
 libmysqlclient-dev
 mysqlclient
 mysql-connector-python
 requests==2.22.0
 urllib3==1.25.3
+scrapy-selenium

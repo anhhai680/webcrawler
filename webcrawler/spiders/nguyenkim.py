@@ -53,17 +53,13 @@ class NguyenkimSpider(CrawlSpider):
         def extract_with_xpath(query):
             return response.xpath(query).get(default='').strip()
 
-        def extract_price(query):
-            price = response.xpath(query).get(default='').strip()
-            return price
-
         def extract_xpath_all(query):
             gallery = response.xpath(query).getall()
             return gallery
 
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
-        product_price = extract_price(
+        product_price = extract_with_xpath(
             '//div[@class="product_info_price_value-final"]/span[@class="nk-price-final"]/text()')
         #logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:
