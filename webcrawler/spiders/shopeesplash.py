@@ -1,37 +1,92 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import logging
 import re
+import logging
+from scrapy_splash import SplashRequest
 
 from ..items import ProductItem
 
 logger = logging.getLogger(__name__)
 
 
-class ShopeeSpider(scrapy.Spider):
-    name = 'shopee'
+script = """
+function main(splash)
+    splash:init_cookies(splash.args.cookies)
+    local url = splash.args.url
+    assert(splash:go(url))
+    assert(splash:wait(0.5))
+    return {
+        cookies = splash:get_cookies(),
+        html = splash:html()
+    }
+end
+"""
+
+script2 = """
+function main(splash)
+    splash:init_cookies(splash.args.cookies)
+    local url = splash.args.url
+    assert(splash:go(url))
+    assert(splash:wait(0.5))
+    return {
+        cookies = splash:get_cookies(),
+        html = splash:html()
+    }
+end
+"""
+
+script3 = """
+function main(splash, args)
+  splash:go(args.url)
+  splash:wait(1)
+  local scroll_to = splash:jsfunc("window.scrollTo")
+  scroll_to(0, 'document.body.scrollHeight')
+  splash:wait(0.5)
+  local result, error = splash:wait_for_resume([[
+    function main(splash) {
+      var checkExist = setInterval(function(){
+          var next_page = document.querySelector('link[rel="next"]')
+          if (next_page){
+            clearInterval(checkExist);
+            splash.resume();
+          }
+        },3000)
+    	}
+    ]],30)
+  return {
+    html=splash:html()
+  }
+end
+"""
+
+
+class ShopeesplashSpider(scrapy.Spider):
+    name = 'shopeesplash'
     allowed_domains = ['shopee.vn']
     start_urls = [
         'https://shopee.vn/Smartphone-%C4%90i%E1%BB%87n-tho%E1%BA%A1i-th%C3%B4ng-minh-cat.84.1979.19042']
 
+    def start_requests(self):
+        for url in self.start_urls:
+            yield SplashRequest(url, self.parse, endpoint='execute', args={'lua_source': script3})
 
     def parse(self, response):
         logger.info('Scrape Url: %s', response.url)
         links = response.xpath(
             '//div[@class="row shopee-search-item-result__items"]/div[@class="col-xs-2-4 shopee-search-item-result__item"]/div/a/@href').getall()
         logger.info('There is a total of ' + str(len(links)) + ' links')
-        
+
         for product_link in links:
             try:
                 product_link = "https://shopee.vn%s" % product_link
-                yield response.follow(product_link, callback=self.parse_product_detail)
+                yield SplashRequest(product_link, callback=self.parse_product_detail, args={'lua_source': script3})
             except:
                 pass
 
         next_page = response.xpath('//link[@rel="next"]/@href').get()
         logger.info('Next page: %s', next_page)
         if next_page is not None:
-            yield scrapy.Request(next_page, callback=self.parse)
+            yield SplashRequest(next_page, self.parse, endpoint='execute', args={'lua_source': script3})
         else:
             logger.info('Next Page was not find on page %s', response.url)
 
@@ -61,8 +116,10 @@ class ShopeeSpider(scrapy.Spider):
             return
 
         product_title = extract_with_xpath('//div[@class="qaNIZv"]/text()')
+        # product_desc = extract_with_xpath(
+        #     '//div[@class="_2aZyWI"]/div[@class="_2u0jt9"]/span/text()')
         product_desc = extract_with_xpath(
-            '//div[@class="_2aZyWI"]/div[@class="_2u0jt9"]/span/text()')
+            '//meta[name="description"]/@content')
         product_swatchcolors = extract_xpath_all(
             '//div[@class="flex items-center crl7WW"]/button/text()')
         product_images = response.xpath(

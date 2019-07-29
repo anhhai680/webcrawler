@@ -119,6 +119,8 @@ class WebcrawlerPipeline(object):
 
             self.mycursor.execute(query, params)
             myresult = self.mycursor.fetchone()
+
+            #spider.logger.info('MySQL result: %s' % myresult)
             if myresult is None:
                 query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                 params = (
@@ -134,7 +136,7 @@ class WebcrawlerPipeline(object):
                     domain
                 )
             else:
-                query = 'UPDATE craw_products SET price = %s, last_update=now() WHERE id = %s'
+                query = 'UPDATE craw_products SET price=%s, last_update=now() WHERE id=%s'
                 params = (price, myresult[0])
 
             self.mycursor.execute(query, params)
