@@ -37,22 +37,23 @@ end
 
 script3 = """
 function main(splash, args)
-  splash:go(args.url)
-  splash:wait(1)
+  splash.resource_timeout = 10.0
+  assert(splash:go(args.url))
+  assert(splash:wait(1))
   local scroll_to = splash:jsfunc("window.scrollTo")
   scroll_to(0, 'document.body.scrollHeight')
   splash:wait(0.5)
   local result, error = splash:wait_for_resume([[
     function main(splash) {
-      var checkExist = setInterval(function(){
-          var next_page = document.querySelector('link[rel="next"]')
-          if (next_page){
-            clearInterval(checkExist);
-            splash.resume();
-          }
-        },3000)
-    	}
+      var checkExist = setInterval(function() {
+        if (document.querySelector(".shopee-page-controller").innerText) {
+          clearInterval(checkExist);
+          splash.resume();
+        }
+      }, 1000);
+    }
     ]],30)
+  assert(result)
   return {
     html=splash:html()
   }
@@ -79,7 +80,7 @@ class ShopeesplashSpider(scrapy.Spider):
         for product_link in links:
             try:
                 product_link = "https://shopee.vn%s" % product_link
-                yield SplashRequest(product_link, callback=self.parse_product_detail, args={'lua_source': script3})
+                yield SplashRequest(product_link, callback=self.parse_product_detail, args={'wait': 3})
             except:
                 pass
 
