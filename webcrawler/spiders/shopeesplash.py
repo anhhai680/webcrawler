@@ -38,7 +38,8 @@ end
 script3 = """
 function main(splash, args)
   splash.resource_timeout = 10.0
-  assert(splash:go(args.url))
+  splash.images_enabled = false
+  assert(splash:go(splash.args.url))
   splash:wait(1)
   local scroll_to = splash:jsfunc("window.scrollTo")
   scroll_to(0, 'document.body.scrollHeight')
@@ -61,7 +62,9 @@ end
 
 script4 = """
 function main(splash, args)
-  assert(splash:go(args.url))
+  splash.resource_timeout = 10.0
+  splash.images_enabled = false
+  assert(splash:go(splash.args.url))
   splash:wait(1)
   local scroll_to = splash:jsfunc("window.scrollTo")
   scroll_to(0, 'document.body.scrollHeight')
@@ -82,6 +85,7 @@ class ShopeesplashSpider(scrapy.Spider):
     custom_settings = {
         'SPLASH_URL': 'http://0.0.0.0:8050',
         'SPLASH_COOKIES_DEBUG': False,
+        'DOWNLOAD_DELAY': 1,
         'HTTPCACHE_STORAGE': 'scrapy_splash.SplashAwareFSCacheStorage',
         'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
         'DOWNLOADER_MIDDLEWARES': {
