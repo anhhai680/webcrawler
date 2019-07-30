@@ -5,7 +5,6 @@ import re
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.spidermiddlewares.httperror import HttpError
-from urlparser import urlparser
 
 
 from ..items import ProductItem
@@ -136,8 +135,3 @@ class CellphonesSpider(CrawlSpider):
         products['body'] = response.text
 
         yield products
-
-    def extract_domain_name(self, response):
-        parsed_uri = urlparser.urlparse(response.url)
-        domain = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
-        return domain

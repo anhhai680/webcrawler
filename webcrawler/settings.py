@@ -21,7 +21,7 @@ FEED_FORMAT = 'json'
 # Log configurations
 LOG_ENABLED = True
 LOG_FILE = 'logs/spider.log'
-LOG_LEVEL = 'INFO'  # Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
+LOG_LEVEL = 'ERROR'  # Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBUG
 # LOG_FORMAT = '%(asctime)s %(message)s's
 LOG_DATEFORMAT = '%m/%d/%Y %I:%M:%S %p'
 
@@ -78,10 +78,9 @@ CONCURRENT_REQUESTS = 100
 # SPIDER_MIDDLEWARES = {
 #    'webcrawler.middlewares.WebcrawlerSpiderMiddleware': 543,
 # }
-SPIDER_MIDDLEWARES = {
-   #'webcrawler.middlewares.IgnoreVisitedItems': 600,
-   'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
-}
+# SPIDER_MIDDLEWARES = {
+#    #'webcrawler.middlewares.IgnoreVisitedItems': 600,
+# }
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
@@ -89,14 +88,11 @@ SPIDER_MIDDLEWARES = {
 #    'webcrawler.middlewares.WebcrawlerDownloaderMiddleware': 543,
 # }
 
-DOWNLOADER_MIDDLEWARES = {
-    # 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-    # 'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
-    # 'webcrawler.middlewares.ShopeeSpiderDownloaderMiddleware' : 543,
-    'scrapy_splash.SplashCookiesMiddleware': 723,
-    'scrapy_splash.SplashMiddleware': 725,
-    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
-}
+# DOWNLOADER_MIDDLEWARES = {
+#     # 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+#     # 'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
+#     # 'webcrawler.middlewares.ShopeeSpiderDownloaderMiddleware' : 543,
+# }
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
@@ -136,7 +132,6 @@ ITEM_PIPELINES = {
 # HTTPCACHE_DIR = 'httpcache'
 # HTTPCACHE_IGNORE_HTTP_CODES = [404, 500, 504]
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
-HTTPCACHE_STORAGE = 'scrapy_splash.SplashAwareFSCacheStorage'
 
 # Disable redirects
 REDIRECT_ENABLED = False
@@ -144,7 +139,6 @@ REDIRECT_ENABLED = False
 # Show all duplicate items while debug enviroment
 DUPEFILTER_DEBUG = True
 #DUPEFILTER_CLASS = 'webcrawler.dupefilters.MyRFPDupeFilter'
-DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
 
 #HTTPERROR_ALLOWED_CODES  =[404]
 
@@ -159,7 +153,3 @@ DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
 
 # Register a command module
 COMMANDS_MODULE = 'webcrawler.commands'
-
-# Scrapy Splash
-SPLASH_URL = 'http://0.0.0.0:8050'
-SPLASH_COOKIES_DEBUG = False

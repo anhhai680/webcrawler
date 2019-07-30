@@ -12,5 +12,6 @@ curl http://149.28.148.6:6800/schedule.json -d project=webcrawler -d spider=hnam
 curl http://149.28.148.6:6800/schedule.json -d project=webcrawler -d spider=lazada
 curl http://149.28.148.6:6800/schedule.json -d project=webcrawler -d spider=nguyenkim
 curl http://149.28.148.6:6800/schedule.json -d project=webcrawler -d spider=sendo
+curl http://149.28.148.6:6800/schedule.json -d project=webcrawler -d spider=shopee
 curl http://149.28.148.6:6800/schedule.json -d project=webcrawler -d spider=tiki
 curl http://149.28.148.6:6800/schedule.json -d project=webcrawler -d spider=vnexpress

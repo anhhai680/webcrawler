@@ -39,7 +39,7 @@ script3 = """
 function main(splash, args)
   splash.resource_timeout = 10.0
   assert(splash:go(args.url))
-  assert(splash:wait(1))
+  splash:wait(1)
   local scroll_to = splash:jsfunc("window.scrollTo")
   scroll_to(0, 'document.body.scrollHeight')
   splash:wait(0.5)
@@ -53,7 +53,19 @@ function main(splash, args)
       }, 1000);
     }
     ]],30)
-  assert(result)
+  return {
+    html=splash:html()
+  }
+end
+"""
+
+script4 = """
+function main(splash, args)
+  assert(splash:go(args.url))
+  splash:wait(1)
+  local scroll_to = splash:jsfunc("window.scrollTo")
+  scroll_to(0, 'document.body.scrollHeight')
+  splash:wait(0.5)
   return {
     html=splash:html()
   }
@@ -62,10 +74,25 @@ end
 
 
 class ShopeesplashSpider(scrapy.Spider):
-    name = 'shopeesplash'
+    name = 'shopee'
     allowed_domains = ['shopee.vn']
     start_urls = [
         'https://shopee.vn/Smartphone-%C4%90i%E1%BB%87n-tho%E1%BA%A1i-th%C3%B4ng-minh-cat.84.1979.19042']
+
+    custom_settings = {
+        'SPLASH_URL': 'http://0.0.0.0:8050',
+        'SPLASH_COOKIES_DEBUG': False,
+        'HTTPCACHE_STORAGE': 'scrapy_splash.SplashAwareFSCacheStorage',
+        'DUPEFILTER_CLASS': 'scrapy_splash.SplashAwareDupeFilter',
+        'DOWNLOADER_MIDDLEWARES': {
+            'scrapy_splash.SplashCookiesMiddleware': 723,
+            'scrapy_splash.SplashMiddleware': 725,
+            'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
+        },
+        'SPIDER_MIDDLEWARES': {
+            'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
+        }
+    }
 
     def start_requests(self):
         for url in self.start_urls:
@@ -73,17 +100,8 @@ class ShopeesplashSpider(scrapy.Spider):
 
     def parse(self, response):
         logger.info('Scrape Url: %s', response.url)
-        links = response.xpath(
-            '//div[@class="row shopee-search-item-result__items"]/div[@class="col-xs-2-4 shopee-search-item-result__item"]/div/a/@href').getall()
-        logger.info('There is a total of ' + str(len(links)) + ' links')
 
-        for product_link in links:
-            try:
-                product_link = "https://shopee.vn%s" % product_link
-                yield SplashRequest(product_link, callback=self.parse_product_detail, args={'wait': 3})
-            except:
-                pass
-
+        # Get the next page and yield Request
         next_page = response.xpath('//link[@rel="next"]/@href').get()
         logger.info('Next page: %s', next_page)
         if next_page is not None:
@@ -91,7 +109,16 @@ class ShopeesplashSpider(scrapy.Spider):
         else:
             logger.info('Next Page was not find on page %s', response.url)
 
-        pass
+        # Get product URL in page and yield Request
+        links = response.xpath(
+            '//div[@class="row shopee-search-item-result__items"]/div[@class="col-xs-2-4 shopee-search-item-result__item"]/div/a/@href').getall()
+        logger.info('There is a total of ' + str(len(links)) + ' links')
+        for product_link in links:
+            try:
+                product_link = "https://shopee.vn%s" % product_link
+                yield SplashRequest(product_link,  callback=self.parse_product_detail, args={'wait': 3})
+            except:
+                pass
 
     def parse_product_detail(self, response):
 
@@ -119,8 +146,8 @@ class ShopeesplashSpider(scrapy.Spider):
         product_title = extract_with_xpath('//div[@class="qaNIZv"]/text()')
         # product_desc = extract_with_xpath(
         #     '//div[@class="_2aZyWI"]/div[@class="_2u0jt9"]/span/text()')
-        product_desc = extract_with_xpath(
-            '//meta[name="description"]/@content')
+        product_desc = response.css(
+            'meta[name="description"]::attr("content")').get()
         product_swatchcolors = extract_xpath_all(
             '//div[@class="flex items-center crl7WW"]/button/text()')
         product_images = response.xpath(
