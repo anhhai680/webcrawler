@@ -10,7 +10,9 @@ from scrapy.http import Request
 from scrapy.http import HtmlResponse
 from scrapy.item import BaseItem
 from scrapy.utils.request import request_fingerprint
+from scrapy.exceptions import DontCloseSpider
 import re
+
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -68,6 +70,31 @@ class WebcrawlerSpiderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
+class ShopeeSpiderMiddleware(object):
+    # Not all methods need to be defined. If a method is not defined,
+    # scrapy acts as if the spider middleware does not modify the
+    # passed objects.
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        # This method is used by Scrapy to create your spiders.
+        s = cls()
+        crawler.signals.connect(s.spider_idle, signal=signals.spider_idle)
+        return s
+
+    def spider_idle(self, spider):
+        spider.logger.info('===> Spider idle: %s.' % spider.name)
+
+        spider.logger.info('I am alive. Request more data...')
+        # spider.crawler.engine.crawl(spider.create_more_requests(), spider)
+        reqs = spider.start_requests()
+        if not reqs:
+            return
+        for req in reqs:
+            spider.crawler.engine.schedule(req, spider)
+        raise DontCloseSpider
+
+
 class WebcrawlerDownloaderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
@@ -114,6 +141,7 @@ class WebcrawlerDownloaderMiddleware(object):
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 
+
 # Define Chrome Options
 options = webdriver.ChromeOptions()
 
@@ -131,6 +159,7 @@ options.add_argument('--disable-web-security')
 options.add_argument('--no-sandbox')
 
 driver = webdriver.Chrome(options=options)
+
 
 class ShopeeSpiderDownloaderMiddleware(object):
 
