@@ -12,50 +12,6 @@ from scrapy.exceptions import DropItem
 import mysql.connector
 from mysql.connector import Error
 
-# from sqlalchemy.orm import sessionmaker
-# from webcrawler.models import EcrawlDB, db_connect, create_table
-
-
-# class WebcrawlerPipeline(object):
-#     def __init__(self):
-#         """
-#         Initializes database connection and sessionmaker.
-#         Creates deals table.
-#         """
-#         engine = db_connect()
-#         create_table(engine)
-#         self.Session = sessionmaker(bind=engine)
-
-#     def process_item(self, item, spider):
-#         """Save deals in the database.
-#         This method is called for every item pipeline component.
-#         """
-#         session = self.Session()
-#         db = EcrawlDB()
-#         db.title = item["title"]
-#         db.cid = item["cid"]
-#         db.description = item["description"]
-#         db.swatchcolors = item["swatchcolors"]
-#         db.specifications = item["specifications"]
-#         db.images = item["images"]
-#         db.price = item["price"]
-#         db.link = item["link"]
-#         #db.brand = item["brand"]
-#         db.shop = item["shop"]
-#         db.domain = item["domain"]
-#         #db.last_update = item["last_update"]
-
-#         try:
-#             session.add(db)
-#             session.commit()
-#         except:
-#             session.rollback()
-#             raise
-#         finally:
-#             session.close()
-
-#         return item
-
 
 class WebcrawlerPipeline(object):
     def __init__(self):
@@ -191,19 +147,21 @@ class DuplicatesPipeline(object):
 class JsonWriterPipeline(object):
 
     def open_spider(self, spider):
-        self.file = codecs.open('%s_items.json' %
+        self.file = codecs.open('%s_links.json' %
                                 spider.name, 'w', encoding='utf-8')
 
     def close_spider(self, spider):
         self.file.close()
 
     def process_item(self, item, spider):
-        line = json.dumps(dict(item), ensure_ascii=False) + "\n"
+        #line = json.dumps(dict(item), ensure_ascii=False) + "\n"
+        line = item['link'] + "\n"
         self.file.write(line)
         return item
 
 
 class FilesPipeline(object):
+
     def process_item(self, item, spider):
 
         save_path = 'files/%s' % spider.name

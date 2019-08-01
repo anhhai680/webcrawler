@@ -107,10 +107,10 @@ DOWNLOADER_MIDDLEWARES = {
 #    'webcrawler.pipelines.WebcrawlerPipeline': 300,
 # }
 ITEM_PIPELINES = {
-    'webcrawler.pipelines.WebcrawlerPipeline': 300,
+    # 'webcrawler.pipelines.WebcrawlerPipeline': 300,
     'webcrawler.pipelines.PricePipeline': 400,
     'webcrawler.pipelines.DuplicatesPipeline': 500,
-    #'webcrawler.pipelines.FilesPipeline' : 300,
+    'webcrawler.pipelines.JsonWriterPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

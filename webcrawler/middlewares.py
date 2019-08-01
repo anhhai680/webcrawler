@@ -163,6 +163,10 @@ driver = webdriver.Chrome(options=options)
 
 class ShopeeSpiderDownloaderMiddleware(object):
 
+    def spider_opened(self,spider):
+        spider.logger.info('Spider opened: %s' % spider.name)
+        pass
+
     def process_request(self, request, spider):
         # Called for each request that goes through the downloader
         # middleware.
