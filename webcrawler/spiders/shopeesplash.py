@@ -4,7 +4,6 @@ import re
 import logging
 import time
 from scrapy_splash import SplashRequest
-from scrapy.loader import ItemLoader
 
 
 from ..items import ProductItem
@@ -52,13 +51,14 @@ function main(splash, args)
   local result, error = splash:wait_for_resume([[
     function main(splash) {
       var checkExist = setInterval(function() {
-        if (document.querySelector('link[rel="next"]')) {
+        if (document.querySelector('div[id="main"]')) {
           clearInterval(checkExist);
-          splash.resume('link[rel="next"] found');
+          splash.resume('div[id="main"] found');
         }
       }, 1000);
     }
     ]],30)
+  assert(result)
   return {
     html=splash:html()
   }
@@ -118,10 +118,12 @@ class ShopeesplashSpider(scrapy.Spider):
             'Googlebot/2.1 (+http://www.google.com/bot.html)'
         }
     }
+    max_pages = 200
+    page_number = 1
 
     def start_requests(self):
         for url in self.start_urls:
-            yield SplashRequest(url, self.parse, endpoint='execute', args={'lua_source': script3})
+            yield SplashRequest(url, self.parse, endpoint='execute', cache_args=['lua_source'], args={'lua_source': script3})
 
     def parse(self, response):
         logger.info('Scrape Url: %s', response.url)
@@ -144,8 +146,11 @@ class ShopeesplashSpider(scrapy.Spider):
         next_page = response.xpath('//link[@rel="next"]/@href').get()
         logger.info('Next page: %s', next_page)
         if next_page is not None:
-            self.store_links(next_page)
-            yield SplashRequest(next_page, self.parse, endpoint='execute', args={'lua_source': script3})
+            try:
+                self.store_links(next_page)
+                yield SplashRequest(next_page, self.parse, endpoint='execute', cache_args=['lua_source'], args={'lua_source': script3})
+            except:
+                pass
         else:
             logger.info('Next Page was not find on page %s', response.url)
         logger.info('Being to make a new request. Currently url %s' %
@@ -222,7 +227,9 @@ class ShopeesplashSpider(scrapy.Spider):
 
     def store_links(self, link):
         logger.info('Stored %s' % link)
+        item = ProductItem()
         if link is not None:
             if link not in visited:
+                item['link'] = link
                 visited.append(link)
-        pass
+        yield item

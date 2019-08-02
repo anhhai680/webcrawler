@@ -107,10 +107,11 @@ DOWNLOADER_MIDDLEWARES = {
 #    'webcrawler.pipelines.WebcrawlerPipeline': 300,
 # }
 ITEM_PIPELINES = {
-    # 'webcrawler.pipelines.WebcrawlerPipeline': 300,
+    #'webcrawler.pipelines.MongoPipeline': 300,
+    'webcrawler.pipelines.MySQLPipeline': 400,
     'webcrawler.pipelines.PricePipeline': 400,
     'webcrawler.pipelines.DuplicatesPipeline': 500,
-    'webcrawler.pipelines.JsonWriterPipeline': 300,
+    #'webcrawler.pipelines.JsonWriterPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -153,4 +154,9 @@ DUPEFILTER_DEBUG = True
 # )
 
 # Register a command module
-COMMANDS_MODULE = 'webcrawler.commands'
+#COMMANDS_MODULE = 'webcrawler.commands'
+
+# Mongodb configuration
+MONGO_URI = 'mongodb://localhost:27017/'
+MONGO_DATABASE = 'ecrawlerdb'
+MONGO_COLLECTION_NAME = 'products'
