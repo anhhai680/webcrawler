@@ -24,7 +24,7 @@ class CellphonesSpider(CrawlSpider):
         Rule(LxmlLinkExtractor(allow=(
             'mobile.html',
             'mobile.html?p=[0-9]',
-            'https://cellphones.com.vn/mobile/[\\w-]+/[\\w-]+$',
+            #'https://cellphones.com.vn/mobile/[\\w-]+/[\\w-]+$',
         ), deny=(
             'itel-it2123v.html',
             'dien-thoai-pho-thong.html',
@@ -132,6 +132,6 @@ class CellphonesSpider(CrawlSpider):
         products['images'] = product_images
         products['shop'] = 'cellphones'
         products['domain'] = 'cellphones.com.vn'
-        products['body'] = response.text
+        products['body'] = '' #response.text
 
         yield products

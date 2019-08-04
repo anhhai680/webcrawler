@@ -14,6 +14,8 @@ from mysql.connector import Error
 
 import pymongo
 
+from woocommerce import API
+
 
 class MongoPipeline(object):
 
@@ -53,7 +55,7 @@ class MongoPipeline(object):
 
 
 class MySQLPipeline(object):
-    
+
     def __init__(self):
         """
         Initializes database connection and sessionmaker.
@@ -84,7 +86,7 @@ class MySQLPipeline(object):
             shop = item["shop"]
             link = item["link"]
             domain = item["domain"]
-            price = self.parse_money(item["price"])
+            price = parse_money(item["price"])
 
             query = 'SELECT id FROM craw_products WHERE category_id= %s and shop=%s and link=%s'
             params = (cat_id, shop, link)
@@ -152,8 +154,59 @@ class MySQLPipeline(object):
             self.db.close()
             spider.logger.info('MySQL connection is closed')
 
-    def parse_money(self, value):
-        return re.sub(r'[^\d]', '', value)
+
+class WoocommercePipeline(object):
+
+    def __init__(self):
+        try:
+            self.wcapi = API(
+                url="https://vivumuahang.com/",
+                consumer_key="ck_e7b56c6e85a00b80b41605548c63aeb5cfa54868",
+                consumer_secret="cs_83582ad6bcd50f08daef5e0033f1760582bd184a",
+                wp_api=True,
+                version="wc/v3"
+            )
+        except:
+            raise Error(msg='Could not connect to Woocommerce API')
+
+    def process_item(self, item, spider):
+
+        try:
+            specifications = []
+            if item["specifications"] is not None:
+                try:
+                    specifications = json.dumps(
+                        list(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+                except:
+                    specifications = json.dumps(
+                        dict(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+                    pass
+            price = parse_money(item["price"])
+            data = {
+                "name": item['title'],
+                "type": "simple",
+                "regular_price": price,
+                "description": specifications,
+                "short_description": item['description'],
+                "categories": [
+                    {
+                        "id": 70  # Smartphone
+                    }
+                ],
+                "images": [{'src': img} for img in item['images']],
+                "external_url": item['link']
+            }
+            result = self.wcapi.post("products", data).json()
+            if result is not None:
+                spider.logger.info('Result ID: %s' % str(result['id']))
+            else:
+                spider.logger.info('Post Result: %s' % str(result))
+
+            return item
+        except:
+            raise Error(msg='Could not insert new product by wcapi %s' % item)
+
+        return None
 
 
 class PricePipeline(object):
@@ -237,3 +290,7 @@ class FilesPipeline(object):
             pass
 
         return item
+
+
+def parse_money(value):
+    return re.sub(r'[^\d]', '', value)
