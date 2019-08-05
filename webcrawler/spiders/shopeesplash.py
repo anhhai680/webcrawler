@@ -87,7 +87,7 @@ visited = []
 
 
 class ShopeesplashSpider(scrapy.Spider):
-    name = 'shopee'
+    name = 'shopeesplash'
     allowed_domains = ['shopee.vn']
     start_urls = [
         'https://shopee.vn/Smartphone-%C4%90i%E1%BB%87n-tho%E1%BA%A1i-th%C3%B4ng-minh-cat.84.1979.19042']

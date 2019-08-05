@@ -163,14 +163,16 @@ class WoocommercePipeline(object):
                 url="https://vivumuahang.com/",
                 consumer_key="ck_e7b56c6e85a00b80b41605548c63aeb5cfa54868",
                 consumer_secret="cs_83582ad6bcd50f08daef5e0033f1760582bd184a",
-                wp_api=True,
-                version="wc/v3"
+                version="wc/v3",
+                timeout=20
             )
         except:
             raise Error(msg='Could not connect to Woocommerce API')
 
     def process_item(self, item, spider):
-
+        """
+        Product type. Options: simple, grouped, external and variable. Default is simple.
+        """
         try:
             specifications = []
             if item["specifications"] is not None:
@@ -184,7 +186,7 @@ class WoocommercePipeline(object):
             price = parse_money(item["price"])
             data = {
                 "name": item['title'],
-                "type": "simple",
+                "type": "external",
                 "regular_price": price,
                 "description": specifications,
                 "short_description": item['description'],

@@ -11,20 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class ShopeeSpider(scrapy.Spider):
-    name = 'shopeedata'
+    name = 'shopee'
     allowed_domains = ['shopee.vn']
     # start_urls = [l.strip() for l in open('shopee_links.jl').readlines()]
     # start_urls = ['https://shopee.vn/smartphone-cat.84.1979.19042']
     start_urls = [
-        'https://shopee.vn/api/v2/search_items/?by=relevancy&keyword=smartphone&limit=50&match_id=19042&newest=0&order=desc&page_type=search']
-    custom_settings = {
-        'DOWNLOAD_DELAY': 1,
-        'USER_AGENT': {
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
-            'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:35.0) Gecko/20100101 Firefox/35.0',
-        }
-    }
+        'https://shopee.vn/api/v2/search_items/?by=relevancy&keyword=smartphone&limit=100&match_id=19042&newest=0&order=desc&page_type=search']
 
     def __init__(self, limit_pages=None, *args, **kwargs):
         super(ShopeeSpider, self).__init__(*args, **kwargs)
@@ -33,7 +25,7 @@ class ShopeeSpider(scrapy.Spider):
         if limit_pages is not None:
             self.limit_pages = int(limit_pages)
         else:
-            self.limit_pages = 500
+            self.limit_pages = 300
 
     def parse(self, response):
         logger.info('Scrape Url: %s', response.url)
@@ -46,15 +38,19 @@ class ShopeeSpider(scrapy.Spider):
                 data = [product_link.format(item['itemid'], item['shopid'])
                         for item in items]
                 for url in data:
-                    yield scrapy.Request(url, callback=self.parse_product_detail)
+                    #yield scrapy.Request(url, callback=self.parse_product_detail)
+                    yield response.follow(url, callback=self.parse_product_detail)
+            else:
+                self.limit_pages = 0 # Stop at the end of link
 
         # Make a next page link to continues scrape
-        next_page_url = 'https://shopee.vn/api/v2/search_items/?by=relevancy&keyword=smartphone&limit=50&match_id=19042&newest={}&order=desc&page_type=search'
+        next_page_url = 'https://shopee.vn/api/v2/search_items/?by=relevancy&keyword=smartphone&limit=100&match_id=19042&newest={}&order=desc&page_type=search'
         if self.page_number <= self.limit_pages:
             self.total_records += 50
             next_page = next_page_url.format(self.total_records)
             logger.info('Next page: %s', next_page)
-            yield scrapy.Request(next_page, callback=self.parse)
+            #yield scrapy.Request(next_page, callback=self.parse)
+            yield response.follow(next_page, callback=self.parse)
             self.page_number += 1
         pass
 

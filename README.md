@@ -3,6 +3,8 @@
 curl http://localhost:6800/schedule.json -d project=default -d spider=adayroi
 curl http://localhost:6800/schedule.json -d project=default -d spider=cellphones
 curl http://localhost:6800/schedule.json -d project=default -d spider=fptshop
+# This command to cancel currently or specific job is running
+curl http://localhost:6800/cancel.json -d project=default -d job=6487ec79947edab326d6db28a2d86511e8247444
 
 # Shopee
 # To get all products by category id
