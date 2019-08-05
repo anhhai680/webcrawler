@@ -110,12 +110,13 @@ DOWNLOADER_MIDDLEWARES = {
 #    'webcrawler.pipelines.WebcrawlerPipeline': 300,
 # }
 ITEM_PIPELINES = {
-    #'webcrawler.pipelines.MongoPipeline': 300,
-    #'webcrawler.pipelines.MySQLPipeline': 400,
-    'webcrawler.pipelines.WoocommercePipeline': 400,
+    # 'webcrawler.pipelines.MongoPipeline': 300,
+    'webcrawler.pipelines.MySQLPipeline': 400,
+    # 'webcrawler.pipelines.WoocommercePipeline': 400,
     'webcrawler.pipelines.PricePipeline': 400,
     'webcrawler.pipelines.DuplicatesPipeline': 500,
-    #'webcrawler.pipelines.JsonWriterPipeline': 300,
+    # 'webcrawler.pipelines.JsonWriterPipeline': 300,
+    # 'webcrawler.pipelines.FilesPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

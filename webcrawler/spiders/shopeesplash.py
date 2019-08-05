@@ -129,15 +129,15 @@ class ShopeesplashSpider(scrapy.Spider):
         logger.info('Scrape Url: %s', response.url)
 
         # Get product URL in page and yield Request
-        # links = response.xpath(
-        #     '//div[@class="row shopee-search-item-result__items"]/div[@class="col-xs-2-4 shopee-search-item-result__item"]/div/a/@href').getall()
-        links = self.get_links(response)
+        links = response.xpath(
+            '//div[@class="row shopee-search-item-result__items"]/div[@class="col-xs-2-4 shopee-search-item-result__item"]/div/a/@href').getall()
+        #links = self.get_links(response)
         logger.info('There is a total of ' + str(len(links)) + ' links')
         if len(links) > 0:
             for product_link in links:
                 try:
                     product_link = "https://shopee.vn%s" % product_link
-                    self.store_links(product_link)
+                    # self.store_links(product_link)
                     yield SplashRequest(product_link,  callback=self.parse_product_detail, args={'wait': 3.0})
                 except:
                     pass
@@ -147,7 +147,7 @@ class ShopeesplashSpider(scrapy.Spider):
         logger.info('Next page: %s', next_page)
         if next_page is not None:
             try:
-                self.store_links(next_page)
+                # self.store_links(next_page)
                 yield SplashRequest(next_page, self.parse, endpoint='execute', cache_args=['lua_source'], args={'lua_source': script3})
             except:
                 pass
@@ -191,32 +191,32 @@ class ShopeesplashSpider(scrapy.Spider):
             '//div[@class="_2MDwq_"]/div[@class="ZPN9uD"]/div[@class="_3ZDC1p"]/div/@style').re(r'(?:https?://).*?[^\)]+')
 
         # product_specifications
+        # backlist_words = ['Danh Mục', 'Kho hàng', 'Gửi từ', 'Shopee']
         product_specifications = []
-        # backlist = ['Danh Mục', 'Kho hàng', 'Gửi từ', 'Shopee']
         for item in response.xpath('//div[@class="_2aZyWI"]/div[@class="kIo6pj"]'):
             try:
-                key = item.xpath('.//label/text()').get().strip()
+                key = item.xpath(
+                    './/label[not(contains(text(),"Danh Mục") or contains(text(),"Kho hàng") or contains(text(),"Gửi từ"))]/text()').get().strip()
                 value = item.xpath('.//a/text() | .//div/text()').get().strip()
-                # if (key == '' or value == '') or key in backlist:
-                #     break
                 product_specifications.append({key, value})
             except:
                 pass
 
-        product_link = response.url
+        body = extract_with_xpath('//div[@class="_2u0jt9"]/span/text()')
 
-        products = ProductItem()
-        products['cid'] = 1  # 1: Smartphone
-        products['title'] = product_title
-        products['description'] = product_desc
-        products['price'] = product_price
-        products['swatchcolors'] = product_swatchcolors
-        products['specifications'] = product_specifications
-        products['link'] = product_link
-        products['images'] = product_images
-        products['shop'] = 'shopee'
-        products['domain'] = 'shopee.vn'
-        products['body'] = ''
+        products = ProductItem(
+            cid=1,  # 1: Smartphone
+            title=product_title,
+            description=product_desc,
+            price=product_price,
+            swatchcolors=product_swatchcolors,
+            specifications=product_specifications,
+            link=response.url,
+            images=product_images,
+            shop='shopee',
+            domain='shopee.vn',
+            body=body
+        )
 
         yield products
 

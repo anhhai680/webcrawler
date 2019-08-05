@@ -1,5 +1,15 @@
 # webcrawler
-# These are commands to run multiple spiders at time
+# These are commands to run multiple spiders at time by scrapyd on local
 curl http://localhost:6800/schedule.json -d project=default -d spider=adayroi
 curl http://localhost:6800/schedule.json -d project=default -d spider=cellphones
 curl http://localhost:6800/schedule.json -d project=default -d spider=fptshop
+
+# Shopee
+# To get all products by category id
+https://shopee.vn/api/v2/search_items/?by=relevancy&keyword=Smartphone%20-%20%C4%90i%E1%BB%87n%20tho%E1%BA%A1i%20th%C3%B4ng%20minh&limit=50&match_id=19042&newest=0&order=desc&page_type=search
+# To get product detail by item id and shop id
+https://shopee.vn/api/v2/item/get?itemid=2183317956&shopid=54057688
+# To display images on website
+https://cf.shopee.vn/file/27d55303ff8b4bb546837b1d756bd904
+# Here's format to make a product detail's link
+https://shopee.vn/i%E1%BB%87n%20tho%E1%BA%A1i%20smartphone%20XS%20mini-i.54057688.2183317956
