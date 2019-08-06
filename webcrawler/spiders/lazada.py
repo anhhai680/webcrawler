@@ -20,7 +20,6 @@ class LazadaSpider(CrawlSpider):
     name = 'lazada'
     allowed_domains = ['www.lazada.vn']
     start_urls = ['https://www.lazada.vn/dien-thoai-di-dong/']
-    download_delay = 1
     rules = (
         Rule(LxmlLinkExtractor(
             allow=(
@@ -50,6 +49,13 @@ class LazadaSpider(CrawlSpider):
         ), callback='parse_lazada'),
     )
 
+    def __init__(self, limit_pages=None, *args, **kwargs):
+        super(LazadaSpider, self).__init__(*args, **kwargs)
+        if limit_pages is not None:
+            self.limit_pages = int(limit_pages)
+        else:
+            self.limit_pages = 200
+
     def parse_lazada(self, response):
         logger.info('Scrape Url: %s' % response.url)
         try:
@@ -59,17 +65,21 @@ class LazadaSpider(CrawlSpider):
             if data is not None:
                 if data["mods"]["listItems"] is not None:
                     for item in data["mods"]["listItems"]:
+                        product_link = 'https:%s' % item["productUrl"]
                         for product in self.parse_item(item):
-                            yield product
+                            yield scrapy.Request(product_link, callback=self.parse_product_detail, meta={'product_item': product})
 
             time.sleep(1)
             # Follow the next page to scrape data
             next_page = response.xpath('//link[@rel="next"]/@href').get()
-            if next_page is not None:
-                yield response.follow(next_page, callback=self.parse_lazada)
-            else:
-                logger.info(
-                    'Next page not found. Spider will be stop right now !!!')
+            match = re.match(r".*?page=(\d+)", next_page)
+            next_page_number = int(match.groups()[0])
+            if next_page_number <= self.limit_pages:
+                if next_page is not None:
+                    yield response.follow(next_page, callback=self.parse_lazada)
+                else:
+                    logger.info(
+                        'Next page not found. Spider will be stop right now !!!')
         except Exception as ex:
             logger.error(
                 'Could not parse url {} with errros: {}'.format(response.url, ex))
@@ -102,11 +112,12 @@ class LazadaSpider(CrawlSpider):
             body=''
         )
 
-        yield products
+        return products
 
     def parse_product_detail(self, response):
         logger.info('Product Url: %s' % response.url)
 
+        product_item = response.meta['product_item']
         product_swatchcolors = None
         product_specifications = None
 
@@ -128,13 +139,14 @@ class LazadaSpider(CrawlSpider):
         except Exception as ex:
             logger.error('Could not parse highlights selector. Errors %s', ex)
 
+        # products = ProductItem(
+        #     swatchcolors=product_swatchcolors,
+        #     specifications=product_specifications,
+        #     shop='lazada',
+        #     domain='lazada.vn',
+        #     body=''
+        # )
+        product_item['swatchcolors'] = product_swatchcolors
+        product_item['product_specifications'] = product_specifications
 
-        products = ProductItem(
-            swatchcolors=product_swatchcolors,
-            specifications=product_specifications,
-            shop='lazada',
-            domain='lazada.vn',
-            body=''
-        )
-
-        yield products
+        yield product_item
