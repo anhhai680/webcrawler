@@ -3,13 +3,15 @@ import scrapy
 import logging
 import re
 import json
+import time
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.selector import Selector
-from datetime import datetime
+from scrapy.loader import ItemLoader
 
 
 from ..items import ProductItem
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +25,8 @@ class LazadaSpider(CrawlSpider):
         Rule(LxmlLinkExtractor(
             allow=(
                 '/dien-thoai-di-dong/',
-                '/dien-thoai-di-dong/[\\w-]+/[\\w-]+$'
+                '/dien-thoai-di-dong/?page=[0-9]'
+                # '/dien-thoai-di-dong/[\\w-]+/[\\w-]+$'
             ),
             deny=(
                 '/tin-tuc/',
@@ -56,41 +59,82 @@ class LazadaSpider(CrawlSpider):
             if data is not None:
                 if data["mods"]["listItems"] is not None:
                     for item in data["mods"]["listItems"]:
-                        for product in self.parse_product_detail(item):
+                        for product in self.parse_item(item):
                             yield product
 
+            time.sleep(1)
             # Follow the next page to scrape data
             next_page = response.xpath('//link[@rel="next"]/@href').get()
             if next_page is not None:
                 yield response.follow(next_page, callback=self.parse_lazada)
+            else:
+                logger.info(
+                    'Next page not found. Spider will be stop right now !!!')
         except Exception as ex:
             logger.error(
                 'Could not parse url {} with errros: {}'.format(response.url, ex))
         pass
 
-    def parse_product_detail(self, item):
-        #logger.info('Item: %s' % item)
+    def parse_item(self, item):
 
+        # logger.info('Item: %s' % item)
         product_title = item["name"]
-        #product_desc = [st.strip() for st in item["description"]]
+        # product_desc = [st.strip() for st in item["description"]]
         product_desc = ''.join(item["description"])
         product_price = item["price"]
         product_swatchcolors = []
         product_specifications = []
         product_link = item["productUrl"]
-        product_images = [st["image"] for st in item["thumbs"]]
+        product_images = [st["image"]
+                          for st in item["thumbs"] if item['thumbs']]
 
-        products = ProductItem()
-        products['cid'] = 1  # 1: Smartphone
-        products['title'] = product_title
-        products['description'] = product_desc
-        products['price'] = product_price
-        products['swatchcolors'] = product_swatchcolors
-        products['specifications'] = product_specifications
-        products['link'] = product_link
-        products['images'] = product_images
-        products['shop'] = 'lazada'
-        products['domain'] = 'lazada.vn'
-        products['body'] = ''
+        products = ProductItem(
+            cid=1,  # 1: Smartphone
+            title=product_title,
+            description=product_desc,
+            price=product_price,
+            swatchcolors=product_swatchcolors,
+            specifications=product_specifications,
+            link=product_link,
+            images=product_images,
+            shop='lazada',
+            domain='lazada.vn',
+            body=''
+        )
+
+        yield products
+
+    def parse_product_detail(self, response):
+        logger.info('Product Url: %s' % response.url)
+
+        product_swatchcolors = None
+        product_specifications = None
+
+        try:
+            data_swatch = re.findall(r'.*?skuBase\":({.+?})\}\,',
+                                     response.body.decode('utf-8'), re.S)
+            json_data = json.loads(data_swatch[0], encoding='utf-8')
+            if json_data is not None:
+                product_swatchcolors = [item['name'] for item in json_data['properties']
+                                        [0]['values'] if json_data['properties'][0]['values']]
+        except Exception as ex:
+            logger.error('Could not parse skuBase selector. Errors %s', ex)
+
+        try:
+            data_specs = re.findall(r'.*?highlights\":\"(.+?)\"\,',
+                                    response.body.decode('utf-8'), re.S)
+            sel = Selector(text=data_specs[0])
+            product_specifications = sel.xpath('//ul/li/text()').getall()
+        except Exception as ex:
+            logger.error('Could not parse highlights selector. Errors %s', ex)
+
+
+        products = ProductItem(
+            swatchcolors=product_swatchcolors,
+            specifications=product_specifications,
+            shop='lazada',
+            domain='lazada.vn',
+            body=''
+        )
 
         yield products
