@@ -6,6 +6,9 @@
 # https://doc.scrapy.org/en/latest/topics/items.html
 
 import scrapy
+from scrapy.loader import ItemLoader
+from scrapy.loader.processors import TakeFirst, MapCompose, Join
+from w3lib.html import remove_tags
 
 
 class WebcrawlerItem(scrapy.Item):
@@ -31,3 +34,27 @@ class ProductItem(scrapy.Item):
     #last_updated = scrapy.Field(serializer=str)
     body = scrapy.Field()
     pass
+
+
+class ProductLoader(ItemLoader):
+    default_item_class = ProductItem()
+
+    cid_out = TakeFirst()
+
+    title_in = MapCompose(remove_tags)
+    title_out = Join()
+
+    description_in = MapCompose(remove_tags)
+    description_out = Join()
+
+    price_out = TakeFirst()
+    link_out = TakeFirst()
+    shop_out = TakeFirst()
+    domain_out = TakeFirst()
+    body_out = TakeFirst()
+    pass
+
+
+def filter_price(value):
+    if value.isdigit():
+        return value
