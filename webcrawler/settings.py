@@ -167,6 +167,6 @@ DUPEFILTER_DEBUG = True
 #COMMANDS_MODULE = 'webcrawler.commands'
 
 # Mongodb configuration
-MONGO_URI = 'mongodb://localhost:27017/'
-MONGO_DATABASE = 'ecrawlerdb'
-MONGO_COLLECTION_NAME = 'products'
+# MONGO_URI = 'mongodb://localhost:27017/'
+# MONGO_DATABASE = 'ecrawlerdb'
+# MONGO_COLLECTION_NAME = 'products'

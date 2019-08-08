@@ -7,9 +7,10 @@ import time
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.selector import Selector
+import numpy as np
 
 
-from ..items import ProductItem, ProductLoader
+from ..items import ProductItem
 
 
 logger = logging.getLogger(__name__)
@@ -58,18 +59,24 @@ class LazadaSpider(CrawlSpider):
     def parse_lazada(self, response):
         logger.info('Scrape Url: %s' % response.url)
         try:
-            pageData = re.findall(
-                "<script>window.pageData=({.+?})</script>", response.body.decode("utf-8"), re.M)
-            if pageData is not None:
-                data = json.loads(pageData[0])
-                if data["mods"]["listItems"] is not None:
-                    for item in data["mods"]["listItems"]:
-                        for product in self.parse_item(item):
-                            yield product
+            links = re.findall(r'\"productUrl\":\"(.+?)\"\,',
+                               response.body.decode('utf-8'), re.S)
+            # pageData = re.findall(
+            #     "<script>window.pageData=({.+?})</script>", response.body.decode("utf-8"), re.M)
+            if links is not None:
+                #data = json.loads(pageData[0])
+                # if data["mods"]["listItems"] is not None:
+                if len(links) > 0:
+                    # for item in data["mods"]["listItems"]:
+                    links = np.unique(links)
+                    for link in links:
+                        product_link = 'https:%s' % link
+                        # for product in self.parse_item(item):
+                        #     yield product
                         # cid = '1',  # 1: Smartphone
                         # product_link = 'https:%s' % item["productUrl"]
                         # product_title = item["name"]
-                        # product_desc = ''.join(item["description"])
+                        # #product_desc = ''.join(item["description"])
                         # product_price = item["price"]
                         # product_images = [st["image"]
                         #                   for st in item["thumbs"] if item['thumbs']]
@@ -79,7 +86,7 @@ class LazadaSpider(CrawlSpider):
                         # #il.default_output_processor = Join()
                         # il.add_value('cid', cid)
                         # il.add_value('title', product_title)
-                        # il.add_value('description', product_desc)
+                        # #il.add_value('description', product_desc)
                         # il.add_value('price', product_price)
                         # il.add_value('link', product_link)
                         # il.add_value('images', product_images)
@@ -87,13 +94,12 @@ class LazadaSpider(CrawlSpider):
                         # il.add_value('domain', 'lazada.vn')
                         # il.add_value('body', '')
 
-                        # yield scrapy.Request(product_link, callback=self.parse_product_detail,
-                        #                      cb_kwargs={'product_item': il.load_item()}, dont_filter=True)
+                        yield response.follow(product_link, callback=self.parse_product_detail, dont_filter=True)
+                        time.sleep(1)
+
             else:
                 logger.info('Parsed pageData has been failed.')
 
-            # Allow spider spleep in 1 millisecond before wake up
-            time.sleep(3)
             # Follow the next page to scrape data
             next_page = response.xpath('//link[@rel="next"]/@href').get()
             match = re.match(r".*?page=(\d+)", next_page)
@@ -110,19 +116,85 @@ class LazadaSpider(CrawlSpider):
                 'Could not parse url {} with errros: {}'.format(response.url, ex))
         pass
 
-        
     def parse_item(self, item):
 
         try:
             #logger.info('Item: %s' % item)
             product_title = item["name"]
-            product_desc = ''.join(item["description"])
+            #product_desc = ''.join(item["description"])
             product_price = item["price"]
-            product_swatchcolors = []
-            product_specifications = []
-            product_link = 'https:%s' % item["productUrl"]
+            # product_swatchcolors = []
+            # product_specifications = []
+            #product_link = 'https:%s' % item["productUrl"]
             product_images = [st["image"]
                               for st in item["thumbs"] if item['thumbs']]
+
+            products = ProductItem(
+                cid=1,  # 1: Smartphone
+                title=product_title,
+                # description=product_desc,
+                price=product_price,
+                # swatchcolors=product_swatchcolors,
+                # specifications=product_specifications,
+                # link=product_link,
+                images=product_images,
+                shop='lazada',
+                domain='lazada.vn',
+                body=''
+            )
+
+            yield products
+        except Exception as ex:
+            logger.error(
+                'Failed to load json {} item. Errors: {}'.format(item, ex))
+
+    def parse_product_detail(self, response):
+
+        def extract_with_css(query):
+            return response.css(query).get().strip()
+
+        def extract_with_xpath(query):
+            return response.xpath(query).get(default='').strip()
+
+        logger.info('Product Url: %s' % response.url)
+
+        #il = ProductLoader(item=product_item)
+
+        try:
+            product_title = extract_with_xpath(
+                '//span[@class="breadcrumb_item_text"]/span/text()')
+            product_desc = extract_with_css(
+                'meta[name="description"]::attr(content)')
+            product_link = response.url
+            product_price = None
+            product_images = None
+            product_swatchcolors = None
+            product_specifications = None
+
+            app = re.findall(r'app.run\((.+?)\)\;\n',
+                             response.body.decode('utf-8'), re.S)
+            if app is not None:
+                json_data = json.loads(app[0])
+                if json_data is not None:
+                    fields = json_data['data']['root']['fields']
+                    if len(fields) > 0:
+                        product_images = [
+                            item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
+                        product_swatchcolors = [
+                            item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values']]
+                        # product_specifications
+                        data_specs = fields['product']['highlights']
+                        sel = Selector(text=data_specs)
+                        if sel is not None:
+                            product_specifications = sel.xpath(
+                                '//ul/li/text()').getall()
+                        # price
+                        data_prices = fields['skuInfos']['0']['price']
+                        product_price = data_prices['salePrice']['value']
+                        if int(product_price) <= 0:
+                            product_price = data_prices['originalPrice']['value']
+            else:
+                logger.info('Could not found fields in json response.')
 
             products = ProductItem(
                 cid=1,  # 1: Smartphone
@@ -139,38 +211,14 @@ class LazadaSpider(CrawlSpider):
             )
 
             yield products
-        except Exception as ex:
-            logger.error(
-                'Failed to load json {} item. Errors: {}'.format(item, ex))
 
-    def parse_product_detail(self, response, product_item):
-        logger.info('Product Url: %s' % response.url)
-
-        il = ProductLoader(item=product_item)
-
-        product_swatchcolors = None
-        product_specifications = None
-
-        try:
-            data_swatch = re.findall(r'.*?skuBase\":({.+?})\}\,',
-                                     response.body.decode('utf-8'), re.M)
-            json_data = json.loads(data_swatch[0])
-            if json_data is not None:
-                product_swatchcolors = [item['name'] for item in json_data['properties']
-                                        [0]['values'] if json_data['properties'][0]['values']]
         except Exception as ex:
             logger.error('Could not parse skuBase selector. Errors %s', ex)
 
-        try:
-            data_specs = re.findall(r'.*?highlights\":\"(.+?)\"\,',
-                                    response.body.decode('utf-8'), re.M)
-            sel = Selector(text=data_specs[0])
-            product_specifications = sel.xpath('//ul/li/text()').getall()
-        except Exception as ex:
-            logger.error('Could not parse highlights selector. Errors %s', ex)
-
         # add product item to ItemLoader
-        il.add_value('swatchcolors', product_swatchcolors)
-        il.add_value('specifications', product_specifications)
+        # il.add_value('description', product_desc)
+        # il.add_value('swatchcolors', product_swatchcolors)
+        # il.add_value('specifications', product_specifications)
 
-        yield il.load_item()
+        # yield il.load_item()
+    pass

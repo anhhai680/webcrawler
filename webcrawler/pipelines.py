@@ -214,11 +214,11 @@ class WoocommercePipeline(object):
 class PricePipeline(object):
     def process_item(self, item, spider):
         if item.get('price'):
-            price_pattern = re.compile(r'\d+')
-            is_price = bool(re.search(price_pattern, item.get('price')))
-            # price = self.parse_money(item.get('price'))
+            # price_pattern = re.compile(r'\d+')
+            # is_price = bool(re.search(price_pattern, item.get('price')))
+            price = parse_money(item.get('price'))
             # spider.logger.info(item.get('price') + ' parsed to %s' % str(price))
-            if is_price:
+            if price is not None:
                 return item
             else:
                 raise DropItem('Missing item price in %s' % item['link'])
@@ -295,4 +295,6 @@ class FilesPipeline(object):
 
 
 def parse_money(value):
-    return re.sub(r'[^\d]', '', value)
+    if str(value).isdigit():
+        return value
+    return re.sub(r'[^\d]', '', str(value))
