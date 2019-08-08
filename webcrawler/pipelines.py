@@ -164,7 +164,7 @@ class WoocommercePipeline(object):
                 consumer_key="ck_e7b56c6e85a00b80b41605548c63aeb5cfa54868",
                 consumer_secret="cs_83582ad6bcd50f08daef5e0033f1760582bd184a",
                 version="wc/v3",
-                timeout=20
+                timeout=30
             )
         except:
             raise Error(msg='Could not connect to Woocommerce API')
@@ -199,11 +199,11 @@ class WoocommercePipeline(object):
                 "external_url": item['link']
             }
             result = self.wcapi.post("products", data).json()
-            if result is not None:
-                spider.logger.info('Result ID: %s' % str(result['id']))
+            if result['id'] is not None:
+                spider.logger.info('Successfull added a new product with Id: %s' % result['id'])
             else:
-                spider.logger.info('Post Result: %s' % str(result))
-
+                spider.logger.error(
+                    'Insert product failed with errors: %s' % resutl)
             return item
         except:
             raise Error(msg='Could not insert new product by wcapi %s' % item)

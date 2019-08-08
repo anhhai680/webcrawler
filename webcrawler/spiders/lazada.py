@@ -116,38 +116,6 @@ class LazadaSpider(CrawlSpider):
                 'Could not parse url {} with errros: {}'.format(response.url, ex))
         pass
 
-    def parse_item(self, item):
-
-        try:
-            #logger.info('Item: %s' % item)
-            product_title = item["name"]
-            #product_desc = ''.join(item["description"])
-            product_price = item["price"]
-            # product_swatchcolors = []
-            # product_specifications = []
-            #product_link = 'https:%s' % item["productUrl"]
-            product_images = [st["image"]
-                              for st in item["thumbs"] if item['thumbs']]
-
-            products = ProductItem(
-                cid=1,  # 1: Smartphone
-                title=product_title,
-                # description=product_desc,
-                price=product_price,
-                # swatchcolors=product_swatchcolors,
-                # specifications=product_specifications,
-                # link=product_link,
-                images=product_images,
-                shop='lazada',
-                domain='lazada.vn',
-                body=''
-            )
-
-            yield products
-        except Exception as ex:
-            logger.error(
-                'Failed to load json {} item. Errors: {}'.format(item, ex))
-
     def parse_product_detail(self, response):
 
         def extract_with_css(query):
@@ -179,7 +147,7 @@ class LazadaSpider(CrawlSpider):
                     fields = json_data['data']['root']['fields']
                     if len(fields) > 0:
                         product_images = [
-                            item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
+                            'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
                         product_swatchcolors = [
                             item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values']]
                         # product_specifications
@@ -214,11 +182,4 @@ class LazadaSpider(CrawlSpider):
 
         except Exception as ex:
             logger.error('Could not parse skuBase selector. Errors %s', ex)
-
-        # add product item to ItemLoader
-        # il.add_value('description', product_desc)
-        # il.add_value('swatchcolors', product_swatchcolors)
-        # il.add_value('specifications', product_specifications)
-
-        # yield il.load_item()
-    pass
+        pass

@@ -55,7 +55,7 @@ CONCURRENT_REQUESTS = 100
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 1
 
 # Reduce download timeout
 DOWNLOAD_TIMEOUT = 15
@@ -113,8 +113,8 @@ DOWNLOADER_MIDDLEWARES = {
 # }
 ITEM_PIPELINES = {
     # 'webcrawler.pipelines.MongoPipeline': 300,
-    'webcrawler.pipelines.MySQLPipeline': 400,
-    # 'webcrawler.pipelines.WoocommercePipeline': 400,
+    # 'webcrawler.pipelines.MySQLPipeline': 400,
+    'webcrawler.pipelines.WoocommercePipeline': 400,
     'webcrawler.pipelines.PricePipeline': 400,
     'webcrawler.pipelines.DuplicatesPipeline': 500,
     # 'webcrawler.pipelines.JsonWriterPipeline': 300,
