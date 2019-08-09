@@ -45,7 +45,7 @@ class LazadaSpider(CrawlSpider):
             ),
             deny_domains=(
                 'pages.lazada.vn'
-            )
+            ),
         ), callback='parse_lazada'),
     )
 
@@ -54,7 +54,8 @@ class LazadaSpider(CrawlSpider):
         if limit_pages is not None:
             self.limit_pages = int(limit_pages)
         else:
-            self.limit_pages = 200
+            self.limit_pages = 300
+        self.unique_urls = None
 
     def parse_lazada(self, response):
         logger.info('Scrape Url: %s' % response.url)
@@ -64,22 +65,12 @@ class LazadaSpider(CrawlSpider):
             # pageData = re.findall(
             #     "<script>window.pageData=({.+?})</script>", response.body.decode("utf-8"), re.M)
             if links is not None:
-                #data = json.loads(pageData[0])
+                # data = json.loads(pageData[0])
                 # if data["mods"]["listItems"] is not None:
                 if len(links) > 0:
                     # for item in data["mods"]["listItems"]:
-                    links = np.unique(links)
                     for link in links:
                         product_link = 'https:%s' % link
-                        # for product in self.parse_item(item):
-                        #     yield product
-                        # cid = '1',  # 1: Smartphone
-                        # product_link = 'https:%s' % item["productUrl"]
-                        # product_title = item["name"]
-                        # #product_desc = ''.join(item["description"])
-                        # product_price = item["price"]
-                        # product_images = [st["image"]
-                        #                   for st in item["thumbs"] if item['thumbs']]
 
                         # # add product item to ItemLoader
                         # il = ProductLoader(item=ProductItem())
@@ -104,7 +95,7 @@ class LazadaSpider(CrawlSpider):
             next_page = response.xpath('//link[@rel="next"]/@href').get()
             match = re.match(r".*?page=(\d+)", next_page)
             next_page_number = int(match.groups()[0])
-            #logger.info('next_page_number: %s', str(next_page_number))
+            # logger.info('next_page_number: %s', str(next_page_number))
             if next_page_number <= self.limit_pages:
                 if next_page is not None:
                     yield response.follow(next_page, callback=self.parse_lazada)
@@ -126,7 +117,7 @@ class LazadaSpider(CrawlSpider):
 
         logger.info('Product Url: %s' % response.url)
 
-        #il = ProductLoader(item=product_item)
+        # il = ProductLoader(item=product_item)
 
         try:
             product_title = extract_with_xpath(
@@ -183,3 +174,22 @@ class LazadaSpider(CrawlSpider):
         except Exception as ex:
             logger.error('Could not parse skuBase selector. Errors %s', ex)
         pass
+
+    def get_unique_links(self, links):
+        links = np.unique(links)
+        urls = []
+        if self.unique_urls is None:
+            self.unique_urls = links
+            urls = self.unique_urls
+        else:
+            # unique_urls = np.unique(np.concatenate(
+            #     (self.unique_urls, links), axis=None))
+            # self.unique_urls = unique_urls
+            for url in links:
+                if url not in self.unique_urls:
+                    np.append(self.unique_urls, url)
+                    urls = np.delete(links, np.argwhere(links == url))
+
+        logger.info('There are total of ' + str(len(
+            self.unique_urls)) + ' unique links and ' + str(len(urls)) + ' urls.')
+        return urls
