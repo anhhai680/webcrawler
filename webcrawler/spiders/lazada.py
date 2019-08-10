@@ -48,6 +48,9 @@ class LazadaSpider(CrawlSpider):
             ),
         ), callback='parse_lazada'),
     )
+    custom_settings = {
+        'DEPTH_LIMIT': 3,
+    }
 
     def __init__(self, limit_pages=None, *args, **kwargs):
         super(LazadaSpider, self).__init__(*args, **kwargs)
@@ -55,7 +58,7 @@ class LazadaSpider(CrawlSpider):
             self.limit_pages = int(limit_pages)
         else:
             self.limit_pages = 300
-        self.unique_urls = None
+        self.unique_urls = []
 
     def parse_lazada(self, response):
         logger.info('Scrape Url: %s' % response.url)
@@ -67,6 +70,7 @@ class LazadaSpider(CrawlSpider):
             if links is not None:
                 # data = json.loads(pageData[0])
                 # if data["mods"]["listItems"] is not None:
+                links = np.unique(links)
                 if len(links) > 0:
                     # for item in data["mods"]["listItems"]:
                     for link in links:
@@ -85,7 +89,7 @@ class LazadaSpider(CrawlSpider):
                         # il.add_value('domain', 'lazada.vn')
                         # il.add_value('body', '')
 
-                        yield response.follow(product_link, callback=self.parse_product_detail, dont_filter=True)
+                        yield response.follow(product_link, callback=self.parse_product_detail)
                         time.sleep(1)
 
             else:
@@ -129,6 +133,9 @@ class LazadaSpider(CrawlSpider):
             product_images = None
             product_swatchcolors = None
             product_specifications = None
+            product_brand = None
+            product_shop = None
+            product_rates = None
 
             app = re.findall(r'app.run\((.+?)\)\;\n',
                              response.body.decode('utf-8'), re.S)
@@ -137,6 +144,9 @@ class LazadaSpider(CrawlSpider):
                 if json_data is not None:
                     fields = json_data['data']['root']['fields']
                     if len(fields) > 0:
+                        product_shop = fields['seller']['name']
+                        product_rates = fields['seller']['percentRate'] if 'percentRate' in fields['seller'] else '0'
+                        product_brand = fields['product']['brand']['name']
                         product_images = [
                             'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
                         product_swatchcolors = [
@@ -164,7 +174,9 @@ class LazadaSpider(CrawlSpider):
                 specifications=product_specifications,
                 link=product_link,
                 images=product_images,
-                shop='lazada',
+                shop=product_shop,
+                rates=product_rates,
+                brand=product_brand,
                 domain='lazada.vn',
                 body=''
             )
@@ -177,19 +189,8 @@ class LazadaSpider(CrawlSpider):
 
     def get_unique_links(self, links):
         links = np.unique(links)
-        urls = []
-        if self.unique_urls is None:
-            self.unique_urls = links
-            urls = self.unique_urls
-        else:
-            # unique_urls = np.unique(np.concatenate(
-            #     (self.unique_urls, links), axis=None))
-            # self.unique_urls = unique_urls
-            for url in links:
-                if url not in self.unique_urls:
-                    np.append(self.unique_urls, url)
-                    urls = np.delete(links, np.argwhere(links == url))
+        return [item for item in links if item not in self.unique_urls]
 
-        logger.info('There are total of ' + str(len(
-            self.unique_urls)) + ' unique links and ' + str(len(urls)) + ' urls.')
-        return urls
+    def store_link(self, link):
+        if link not in self.unique_urls:
+            np.append(self.unique_urls, link)

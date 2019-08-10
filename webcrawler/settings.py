@@ -55,7 +55,7 @@ CONCURRENT_REQUESTS = 100
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 3
 
 # Reduce download timeout
 DOWNLOAD_TIMEOUT = 15
@@ -149,8 +149,8 @@ REACTOR_THREADPOOL_MAXSIZE = 20
 REDIRECT_ENABLED = False
 
 # Show all duplicate items while debug enviroment
-DUPEFILTER_DEBUG = True
-#DUPEFILTER_CLASS = 'webcrawler.dupefilters.MyRFPDupeFilter'
+DUPEFILTER_DEBUG = False
+#DUPEFILTER_CLASS = 'webcrawler.dupefilters.SeenURLFilter'
 
 #HTTPERROR_ALLOWED_CODES  =[404]
 

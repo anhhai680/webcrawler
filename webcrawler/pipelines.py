@@ -87,6 +87,8 @@ class MySQLPipeline(object):
             link = item["link"]
             domain = item["domain"]
             price = parse_money(item["price"])
+            brand = item['brand']
+            rates = item['rates']
 
             query = 'SELECT id FROM craw_products WHERE category_id= %s and shop=%s and link=%s'
             params = (cat_id, shop, link)
@@ -120,7 +122,7 @@ class MySQLPipeline(object):
 
             #spider.logger.info('MySQL result: %s' % myresult)
             if myresult is None:
-                query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name,brand,rates) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                 params = (
                     cat_id,
                     title,
@@ -131,7 +133,9 @@ class MySQLPipeline(object):
                     images,
                     link,
                     shop,
-                    domain
+                    domain,
+                    brand,
+                    rates
                 )
             else:
                 query = 'UPDATE craw_products SET price=%s, last_update=now() WHERE id=%s'
@@ -200,7 +204,8 @@ class WoocommercePipeline(object):
             }
             result = self.wcapi.post("products", data).json()
             if result['id'] is not None:
-                spider.logger.info('Successfull added a new product with Id: %s' % result['id'])
+                spider.logger.info(
+                    'Successfull added a new product with Id: %s' % result['id'])
             else:
                 spider.logger.error(
                     'Insert product failed with errors: %s' % resutl)

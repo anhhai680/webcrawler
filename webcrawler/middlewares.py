@@ -142,25 +142,6 @@ class WebcrawlerDownloaderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-# Define Chrome Options
-options = webdriver.ChromeOptions()
-
-prefs = {'profile.managed_default_content_settings.images': 2}
-options.add_experimental_option('prefs', prefs)
-
-options.add_argument('headless')
-options.add_argument('--disable-images')
-options.add_argument('--disable-notifications')
-options.add_argument('--incognito')
-options.add_argument('--disable-extensions')
-options.add_argument('--disable-gpu')
-options.add_argument('--disable-infobars')
-options.add_argument('--disable-web-security')
-options.add_argument('--no-sandbox')
-
-driver = webdriver.Chrome(options=options)
-
-
 class ShopeeSpiderDownloaderMiddleware(object):
 
     def spider_opened(self,spider):
@@ -174,21 +155,21 @@ class ShopeeSpiderDownloaderMiddleware(object):
         if bool(re.search(shopee_pattern, request.url)) is False:
             return None
 
-        # options = webdriver.ChromeOptions()
+        options = webdriver.ChromeOptions()
 
-        # prefs = {'profile.managed_default_content_settings.images': 2}
-        # options.add_experimental_option('prefs', prefs)
+        prefs = {'profile.managed_default_content_settings.images': 2}
+        options.add_experimental_option('prefs', prefs)
 
-        # options.add_argument('headless')
-        # options.add_argument("--disable-notifications")
-        # options.add_argument("--incognito")
-        # options.add_argument("--disable-extensions")
-        # options.add_argument(" --disable-gpu")
-        # options.add_argument(" --disable-infobars")
-        # options.add_argument(" -–disable-web-security")
-        # options.add_argument("--no-sandbox")
+        options.add_argument('headless')
+        options.add_argument("--disable-notifications")
+        options.add_argument("--incognito")
+        options.add_argument("--disable-extensions")
+        options.add_argument(" --disable-gpu")
+        options.add_argument(" --disable-infobars")
+        options.add_argument(" -–disable-web-security")
+        options.add_argument("--no-sandbox")
 
-        # driver = webdriver.Chrome(chrome_options=options)
+        driver = webdriver.Chrome(chrome_options=options)
         driver.get(request.url)
         try:
             WebDriverWait(driver, 5).until(
@@ -215,12 +196,13 @@ class ShopeeSpiderDownloaderMiddleware(object):
         # - return None: continue processing this exception
         # - return a Response object: stops process_exception() chain
         # - return a Request object: stops process_exception() chain
-        driver.close()
+        #driver.close()
         pass
 
     def spider_closed(self, spider):
-        driver.close()
-        driver.quit()
+        # driver.close()
+        # driver.quit()
+        pass
 
 
 class IgnoreVisitedItems(object):
