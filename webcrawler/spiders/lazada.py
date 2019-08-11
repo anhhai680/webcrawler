@@ -48,9 +48,9 @@ class LazadaSpider(CrawlSpider):
             ),
         ), callback='parse_lazada'),
     )
-    custom_settings = {
-        'DEPTH_LIMIT': 3,
-    }
+    # custom_settings = {
+    #     'DEPTH_LIMIT': 3,
+    # }
 
     def __init__(self, limit_pages=None, *args, **kwargs):
         super(LazadaSpider, self).__init__(*args, **kwargs)
@@ -145,7 +145,7 @@ class LazadaSpider(CrawlSpider):
                     fields = json_data['data']['root']['fields']
                     if len(fields) > 0:
                         product_shop = fields['seller']['name']
-                        product_rates = fields['seller']['percentRate'] if 'percentRate' in fields['seller'] else '0'
+                        product_rates = fields['seller']['rate'] if 'rate' in fields['seller'] else '0'
                         product_brand = fields['product']['brand']['name']
                         product_images = [
                             'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']

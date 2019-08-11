@@ -168,7 +168,7 @@ class WoocommercePipeline(object):
                 consumer_key="ck_e7b56c6e85a00b80b41605548c63aeb5cfa54868",
                 consumer_secret="cs_83582ad6bcd50f08daef5e0033f1760582bd184a",
                 version="wc/v3",
-                timeout=30
+                timeout=60
             )
         except:
             raise Error(msg='Could not connect to Woocommerce API')
@@ -178,37 +178,50 @@ class WoocommercePipeline(object):
         Product type. Options: simple, grouped, external and variable. Default is simple.
         """
         try:
-            specifications = []
-            if item["specifications"] is not None:
-                try:
-                    specifications = json.dumps(
-                        list(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
-                except:
-                    specifications = json.dumps(
-                        dict(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
-                    pass
+            specifications = ' '.join(item["specifications"])
+            # if item["specifications"] is not None:
+            #     try:
+            #         specifications = json.dumps(
+            #             list(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+            #     except:
+            #         specifications = json.dumps(
+            #             dict(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+            #         pass
             price = parse_money(item["price"])
+            short_description = item['description']
+            images = [{'src': img} for img in item['images']]
             data = {
                 "name": item['title'],
                 "type": "external",
                 "regular_price": price,
                 "description": specifications,
-                "short_description": item['description'],
+                "short_description": short_description,
                 "categories": [
                     {
                         "id": 70  # Smartphone
                     }
                 ],
-                "images": [{'src': img} for img in item['images']],
-                "external_url": item['link']
+                "images": images,
+                "external_url": item['link'],
+                "tags": [
+                    {"name": item['brand']},
+                    {"name": item['shop']}
+                ],
+                "meta_data": [{'key': sp[0], 'value':sp[1]} for sp in item["specifications"]]
             }
-            result = self.wcapi.post("products", data).json()
-            if result['id'] is not None:
-                spider.logger.info(
-                    'Successfull added a new product with Id: %s' % result['id'])
-            else:
+
+            try:
+                result = self.wcapi.post("products", data).json()
+                if 'id' in result:
+                    spider.logger.info(
+                        'Successfull added a new product with Id: %s' % result['id'])
+                else:
+                    spider.logger.error(
+                        'Insert product failed with errors: %s' % result)
+            except ValueError as ex:
                 spider.logger.error(
-                    'Insert product failed with errors: %s' % resutl)
+                        'Create new product failed with errors: {}'.format(ex))
+
             return item
         except:
             raise Error(msg='Could not insert new product by wcapi %s' % item)

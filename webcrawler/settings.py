@@ -149,7 +149,7 @@ REACTOR_THREADPOOL_MAXSIZE = 20
 REDIRECT_ENABLED = False
 
 # Show all duplicate items while debug enviroment
-DUPEFILTER_DEBUG = False
+DUPEFILTER_DEBUG = True
 #DUPEFILTER_CLASS = 'webcrawler.dupefilters.SeenURLFilter'
 
 #HTTPERROR_ALLOWED_CODES  =[404]
