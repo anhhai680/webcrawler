@@ -141,7 +141,7 @@ class LazadaSpider(CrawlSpider):
                              response.body.decode('utf-8'), re.S)
             if app is not None:
                 json_data = json.loads(app[0])
-                if json_data is not None:
+                if isinstance(json_data,list) or len(json_data) > 0:
                     fields = json_data['data']['root']['fields']
                     if len(fields) > 0:
                         product_shop = fields['seller']['name']

@@ -167,7 +167,8 @@ class WoocommercePipeline(object):
                 url="https://vivumuahang.com/",
                 consumer_key="ck_e7b56c6e85a00b80b41605548c63aeb5cfa54868",
                 consumer_secret="cs_83582ad6bcd50f08daef5e0033f1760582bd184a",
-                version="wc/v3",
+                wp_api=True,  # Enable the WP REST API integration
+                version="wc/v3",  # WooCommerce WP REST API version
                 timeout=60
             )
         except:
@@ -220,7 +221,7 @@ class WoocommercePipeline(object):
                         'Insert product failed with errors: %s' % result)
             except ValueError as ex:
                 spider.logger.error(
-                        'Create new product failed with errors: {}'.format(ex))
+                    'Create new product failed with errors: {}'.format(ex))
 
             return item
         except:
