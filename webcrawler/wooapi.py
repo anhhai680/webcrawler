@@ -35,7 +35,8 @@ class WoocommercePipeline(object):
                 "parent": parent
             }
             result = self.wcapi.post('products/categories', data).json()
-            if not isinstance(result, list) or len(result) <= 0:
+
+            if len(result) <= 0:
                 return None
 
             if 'id' in result:
@@ -47,6 +48,8 @@ class WoocommercePipeline(object):
                 else:
                     return None
         except:
+            # self.logger.error(
+            #     'New category {} was exception with {}'.format(category_name, ex))
             return None
 
     def addtags(self, tag_name):
@@ -58,8 +61,9 @@ class WoocommercePipeline(object):
             data = {
                 "name": tag_name
             }
-            result = self.wcapi.post('products/tags', data)
-            if not isinstance(result, list) or len(result) <= 0:
+            result = self.wcapi.post('products/tags', data).json()
+
+            if len(result) <= 0:
                 return None
 
             if 'id' in result:
@@ -88,7 +92,6 @@ class WoocommercePipeline(object):
             link = item['link']
             brand = item['brand']
             shop = item['shop']
-            catid = self.addcategory(brand, parent_id)
             # specifications = [re.split(':', rd)
             #                   for rd in item["specifications"]]
             specifications = item["specifications"]
@@ -103,12 +106,16 @@ class WoocommercePipeline(object):
             #         pass
 
             #spider.logger.info('Technical specifications: %s' % specifications)
+            catid = self.addcategory(brand, parent_id)
+            if not isinstance(catid, int):
+                spider.logger.info('Category Id result is %s' % str(catid))
+                return None
 
             data = {
                 "name": title,
                 "type": "external",
                 "regular_price": price,
-                "description": ''.join(specifications),
+                "description": ' '.join(specifications),
                 "short_description": short_description,
                 "categories": [
                     {
@@ -134,7 +141,7 @@ class WoocommercePipeline(object):
 
             try:
                 result = self.wcapi.post("products", data).json()
-                if not isinstance(result, list) or len(result) <= 0:
+                if len(result) <= 0:
                     spider.logger.info(
                         'Woocommerce API has been errors %s' % result)
                     return None
