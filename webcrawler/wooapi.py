@@ -64,7 +64,7 @@ class WoocommercePipeline(object):
             result = self.wcapi.post('products/tags', data).json()
 
             if len(result) <= 0:
-                return None
+                return 0
 
             if 'id' in result:
                 return result['id']
@@ -73,9 +73,9 @@ class WoocommercePipeline(object):
                 if code == 'term_exists':
                     return result['data']['resource_id']
                 else:
-                    return None
+                    return 0
         except:
-            return None
+            return 0
 
     def process_item(self, item, spider):
         """
@@ -111,11 +111,16 @@ class WoocommercePipeline(object):
                 spider.logger.info('Category Id result is %s' % str(catid))
                 return None
 
+            tag_brand_id = self.addtags(brand)
+            tag_shop_id = self.addtags(shop)
+            body_content = ' '.join(specifications)
+            rates = str(item['rates'])
+
             data = {
                 "name": title,
                 "type": "external",
                 "regular_price": price,
-                "description": ' '.join(specifications),
+                "description": body_content,
                 "short_description": short_description,
                 "categories": [
                     {
@@ -128,12 +133,13 @@ class WoocommercePipeline(object):
                 "images": images,
                 "external_url": link,
                 "tags": [
-                    {"id": self.addtags(brand)},
-                    {"id": self.addtags(shop)}
+                    {"id": tag_brand_id},
+                    {"id": tag_shop_id}
                 ],
                 "meta_data": [
                     {'key': 'brand', 'value': brand},
-                    {'key': 'shop', 'value': shop}
+                    {'key': 'shop', 'value': shop},
+                    {'key': 'rates','value': rates}
                 ]
             }
 
