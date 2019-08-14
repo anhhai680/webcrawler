@@ -141,7 +141,7 @@ class LazadaSpider(CrawlSpider):
                              response.body.decode('utf-8'), re.S)
             if app is not None:
                 json_data = json.loads(app[0])
-                if isinstance(json_data,list) or len(json_data) > 0:
+                if isinstance(json_data, list) or len(json_data) > 0:
                     fields = json_data['data']['root']['fields']
                     if len(fields) > 0:
                         product_shop = fields['seller']['name']
@@ -162,6 +162,7 @@ class LazadaSpider(CrawlSpider):
                         product_price = data_prices['salePrice']['value']
                         if int(product_price) <= 0:
                             product_price = data_prices['originalPrice']['value']
+                        product_price = product_price/10
             else:
                 logger.info('Could not found fields in json response.')
 

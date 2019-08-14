@@ -92,6 +92,7 @@ class WoocommercePipeline(object):
             link = item['link']
             brand = item['brand']
             shop = item['shop']
+            swatchcolors = item['swatchcolors']
             # specifications = [re.split(':', rd)
             #                   for rd in item["specifications"]]
             specifications = item["specifications"]
@@ -115,6 +116,7 @@ class WoocommercePipeline(object):
             tag_shop_id = self.addtags(shop)
             body_content = ' '.join(specifications)
             rates = str(item['rates'])
+            domain = item['domain']
 
             data = {
                 "name": title,
@@ -132,14 +134,23 @@ class WoocommercePipeline(object):
                 ],
                 "images": images,
                 "external_url": link,
+                "button_text": "Đến nơi bán",
+                "attributes": [
+                    {
+                        "id": 2,  # Color
+                        "visible": True,
+                        "options": swatchcolors
+                    }
+                ],
                 "tags": [
                     {"id": tag_brand_id},
-                    {"id": tag_shop_id}
                 ],
                 "meta_data": [
                     {'key': 'brand', 'value': brand},
                     {'key': 'shop', 'value': shop},
-                    {'key': 'rates','value': rates}
+                    {'key': 'rates', 'value': rates},
+                    {'key': 'external_url', 'value': link},
+                    {'key': 'domain', 'value': domain}
                 ]
             }
 
