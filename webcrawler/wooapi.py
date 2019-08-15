@@ -83,7 +83,7 @@ class WoocommercePipeline(object):
         """
 
         try:
-            parent_id = 70  # Smartphone
+            parent_id = 15  # Smartphone
 
             title = item['title']
             price = parse_money(item["price"])
@@ -113,7 +113,7 @@ class WoocommercePipeline(object):
                 return None
 
             tag_brand_id = self.addtags(brand)
-            tag_shop_id = self.addtags(shop)
+            #tag_shop_id = self.addtags(shop)
             body_content = ' '.join(specifications)
             rates = str(item['rates'])
             domain = item['domain']
