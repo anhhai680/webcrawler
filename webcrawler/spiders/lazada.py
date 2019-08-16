@@ -129,6 +129,7 @@ class LazadaSpider(CrawlSpider):
             product_desc = extract_with_css(
                 'meta[name="description"]::attr(content)')
             product_link = response.url
+            product_oldprice = None
             product_price = None
             product_images = None
             product_swatchcolors = None
@@ -147,6 +148,7 @@ class LazadaSpider(CrawlSpider):
                         product_shop = fields['seller']['name']
                         product_rates = fields['seller']['rate'] if 'rate' in fields['seller'] else '0'
                         product_brand = fields['product']['brand']['name']
+                        # product images
                         product_images = [
                             'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
                         product_swatchcolors = [
@@ -160,9 +162,12 @@ class LazadaSpider(CrawlSpider):
                         # price
                         data_prices = fields['skuInfos']['0']['price']
                         product_price = data_prices['salePrice']['value']
-                        if int(product_price) <= 0:
-                            product_price = data_prices['originalPrice']['value']
-                        product_price = product_price/10
+                        if product_price is not None:
+                            product_price = product_price/10
+
+                        product_oldprice = data_prices['originalPrice']['value']
+                        if product_oldprice is not None:
+                            product_oldprice = product_oldprice/10
             else:
                 logger.info('Could not found fields in json response.')
 
@@ -170,14 +175,16 @@ class LazadaSpider(CrawlSpider):
                 cid=1,  # 1: Smartphone
                 title=product_title,
                 description=product_desc,
+                oldprice=product_oldprice,
                 price=product_price,
                 swatchcolors=product_swatchcolors,
                 specifications=product_specifications,
                 link=product_link,
                 images=product_images,
+                brand=product_brand,
                 shop=product_shop,
                 rates=product_rates,
-                brand=product_brand,
+                sellplace='',
                 domain='lazada.vn',
                 body=''
             )

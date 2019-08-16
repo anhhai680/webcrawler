@@ -23,16 +23,19 @@ class ProductItem(scrapy.Item):
     cid = scrapy.Field()
     title = scrapy.Field()
     description = scrapy.Field()
+    oldprice = scrapy.Field()
     price = scrapy.Field()
     swatchcolors = scrapy.Field()
     specifications = scrapy.Field()
     link = scrapy.Field()
     images = scrapy.Field()
-    brand = scrapy.Field() # Apple, Samsung, Xiaomi...
-    shop = scrapy.Field() # Shop name
-    domain = scrapy.Field()
+    brand = scrapy.Field()  # Apple, Samsung, Xiaomi...
+    shop = scrapy.Field()  # Shop name
     rates = scrapy.Field()
-    #last_updated = scrapy.Field(serializer=str)   
+    sellplace = scrapy.Field()
+    domain = scrapy.Field()
+    #sku = scrapy.Field()
+    #last_updated = scrapy.Field(serializer=str)
     body = scrapy.Field()
     pass
 

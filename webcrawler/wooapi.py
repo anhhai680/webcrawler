@@ -114,7 +114,7 @@ class WoocommercePipeline(object):
 
             tag_brand_id = self.addtags(brand)
             #tag_shop_id = self.addtags(shop)
-            body_content = ' \n '.join(specifications)
+            description = ' \n '.join(specifications)
             rates = str(item['rates'])
             domain = item['domain']
 
@@ -122,7 +122,7 @@ class WoocommercePipeline(object):
                 "name": title,
                 "type": "external",
                 "regular_price": price,
-                "description": body_content,
+                "description": description,
                 "short_description": short_description,
                 "categories": [
                     {
