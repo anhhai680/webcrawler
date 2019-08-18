@@ -86,7 +86,6 @@ class WoocommercePipeline(object):
             parent_id = 15  # Smartphone
 
             title = item['title']
-            price = parse_money(item["price"])
             short_description = item['description']
             images = [{'src': img} for img in item['images']]
             link = item['link']
@@ -117,11 +116,14 @@ class WoocommercePipeline(object):
             description = ' \n '.join(specifications)
             rates = str(item['rates'])
             domain = item['domain']
+            oldprice = parse_money(item["oldprice"])
+            price = parse_money(item["price"])
 
             data = {
                 "name": title,
                 "type": "external",
-                "regular_price": price,
+                "regular_price": oldprice,
+                "sale_price": price,
                 "description": description,
                 "short_description": short_description,
                 "categories": [
