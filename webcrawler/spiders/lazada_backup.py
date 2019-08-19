@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class LazadaSpider(CrawlSpider):
-    name = 'lazada'
+    name = 'lazada_backup'
     allowed_domains = ['www.lazada.vn']
     start_urls = ['https://www.lazada.vn/dien-thoai-di-dong/']
     rules = (
@@ -63,13 +63,18 @@ class LazadaSpider(CrawlSpider):
     def parse_lazada(self, response):
         logger.info('Scrape Url: %s' % response.url)
         try:
-            pageData = re.findall(
-                "<script>window.pageData=({.+?})</script>", response.body.decode("utf-8"), re.M)
-            if pageData is not None:
-                data = json.loads(pageData[0])
-                if data["mods"]["listItems"] is not None:
-                    for item in data["mods"]["listItems"]:
-                        #product_link = 'https:%s' % item['productUrl']
+            links = re.findall(r'\"productUrl\":\"(.+?)\"\,',
+                               response.body.decode('utf-8'), re.S)
+            # pageData = re.findall(
+            #     "<script>window.pageData=({.+?})</script>", response.body.decode("utf-8"), re.M)
+            if links is not None:
+                # data = json.loads(pageData[0])
+                # if data["mods"]["listItems"] is not None:
+                links = np.unique(links)
+                if len(links) > 0:
+                    # for item in data["mods"]["listItems"]:
+                    for link in links:
+                        product_link = 'https:%s' % link
 
                         # # add product item to ItemLoader
                         # il = ProductLoader(item=ProductItem())
@@ -84,10 +89,7 @@ class LazadaSpider(CrawlSpider):
                         # il.add_value('domain', 'lazada.vn')
                         # il.add_value('body', '')
 
-                        # yield response.follow(product_link, callback=self.parse_product_detail)
-
-                        productItem = self.parse_product_item(item)
-                        yield productItem
+                        yield response.follow(product_link, callback=self.parse_product_detail)
                         time.sleep(1)
 
             else:
@@ -108,36 +110,6 @@ class LazadaSpider(CrawlSpider):
             logger.error(
                 'Could not parse url {} with errros: {}'.format(response.url, ex))
         pass
-
-    def parse_product_item(self, item):
-
-        product = ProductItem()
-        try:
-
-            product['cid'] = 1  # Smartphone
-            product['title'] = str(item['name']).strip()
-            product['description'] = ' '.join(item['description'])
-            product['oldprice'] = 0
-            if 'originalPrice' in item:
-                product['oldprice'] = item['originalPrice']
-
-            product['price'] = item['price']
-            product['swatchcolors'] = ''
-            product['specifications'] = ''
-            product['link'] = 'https:%s' % item['productUrl']
-            product['images'] = [img['image'] for img in item['thumbs']]
-            product['brand'] = item['brandName']
-            product['shop'] = item['sellerName']
-            product['rates'] = item['ratingScore']
-            product['location'] = item['location']
-            product['domain'] = 'lazada.vn'
-            product['instock'] = item['inStock']
-            product['body'] = ''
-
-        except Exception as ex:
-            logger.error('Could not parse {} with errors {}'.format(item, ex))
-
-        return product
 
     def parse_product_detail(self, response):
 
@@ -212,7 +184,7 @@ class LazadaSpider(CrawlSpider):
                 brand=product_brand,
                 shop=product_shop,
                 rates=product_rates,
-                location='',
+                sellplace='',
                 domain='lazada.vn',
                 body=''
             )

@@ -83,17 +83,21 @@ class MySQLPipeline(object):
             cat_id = item["cid"]
             title = item["title"]
             desc = item["description"]
-            shop = item["shop"]
-            link = item["link"]
-            domain = item["domain"]
+            swatchcolors = None
+            specifications = None
+            oldprice = parse_money(item["oldprice"])
             price = parse_money(item["price"])
+            link = item["link"]
             brand = item['brand']
+            shop = item["shop"]
+            location = item['location']
+            domain = item["domain"]
             rates = item['rates']
+            instock = item['instock']
 
-            query = 'SELECT id FROM craw_products WHERE category_id= %s and shop=%s and link=%s'
-            params = (cat_id, shop, link)
+            query = 'SELECT id FROM craw_products WHERE category_id= %s and domain_name=%s and link=%s'
+            params = (cat_id, domain, link)
 
-            swatchcolors = []
             if item["swatchcolors"] is not None:
                 try:
                     swatchcolors = json.dumps(
@@ -103,7 +107,6 @@ class MySQLPipeline(object):
                         dict(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
                     pass
 
-            specifications = []
             if item["specifications"] is not None:
                 try:
                     specifications = json.dumps(
@@ -122,20 +125,23 @@ class MySQLPipeline(object):
 
             #spider.logger.info('MySQL result: %s' % myresult)
             if myresult is None:
-                query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, price, images, link, shop, domain_name,brand,rates) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, oldprice, price, images, link, brand, shop, location, domain_name, rates, instock) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s)'
                 params = (
                     cat_id,
                     title,
                     desc,
                     swatchcolors,
                     specifications,
+                    oldprice,
                     price,
                     images,
                     link,
-                    shop,
-                    domain,
                     brand,
-                    rates
+                    shop,
+                    location,
+                    domain,
+                    rates,
+                    instock
                 )
             else:
                 query = 'UPDATE craw_products SET price=%s, last_update=now() WHERE id=%s'

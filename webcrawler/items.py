@@ -32,10 +32,11 @@ class ProductItem(scrapy.Item):
     brand = scrapy.Field()  # Apple, Samsung, Xiaomi...
     shop = scrapy.Field()  # Shop name
     rates = scrapy.Field()
-    sellplace = scrapy.Field()
+    location = scrapy.Field()
     domain = scrapy.Field()
     #sku = scrapy.Field()
     #last_updated = scrapy.Field(serializer=str)
+    instock = scrapy.Field()
     body = scrapy.Field()
     pass
 
