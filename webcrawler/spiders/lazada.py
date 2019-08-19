@@ -132,6 +132,10 @@ class LazadaSpider(CrawlSpider):
             product['location'] = item['location']
             product['domain'] = 'lazada.vn'
             product['instock'] = item['inStock']
+            if 'alias' in item['icons']:
+                product['shipping'] = item['icons']['alias']
+            else:
+                product['shipping'] = None
             product['body'] = ''
 
         except Exception as ex:

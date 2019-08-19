@@ -37,6 +37,7 @@ class ProductItem(scrapy.Item):
     #sku = scrapy.Field()
     #last_updated = scrapy.Field(serializer=str)
     instock = scrapy.Field()
+    shipping = scrapy.Field()
     body = scrapy.Field()
     pass
 

@@ -94,6 +94,7 @@ class MySQLPipeline(object):
             domain = item["domain"]
             rates = item['rates']
             instock = item['instock']
+            shipping = item['shipping']
 
             query = 'SELECT id FROM craw_products WHERE category_id= %s and domain_name=%s and link=%s'
             params = (cat_id, domain, link)
@@ -125,7 +126,7 @@ class MySQLPipeline(object):
 
             #spider.logger.info('MySQL result: %s' % myresult)
             if myresult is None:
-                query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, oldprice, price, images, link, brand, shop, location, domain_name, rates, instock) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s)'
+                query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, oldprice, price, images, link, brand, shop, location, domain_name, rates, instock,shipping) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)'
                 params = (
                     cat_id,
                     title,
@@ -141,11 +142,13 @@ class MySQLPipeline(object):
                     location,
                     domain,
                     rates,
-                    instock
+                    instock,
+                    shipping
                 )
             else:
-                query = 'UPDATE craw_products SET price=%s, last_update=now() WHERE id=%s'
-                params = (price, myresult[0])
+                id = myresult[0]
+                query = 'UPDATE craw_products SET oldprice=%s,price=%s,last_update=now(),instock=%s WHERE id=%s'
+                params = (oldprice, price, instock, id)
 
             self.mycursor.execute(query, params)
             self.db.commit()
