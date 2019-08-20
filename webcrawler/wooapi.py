@@ -13,10 +13,18 @@ class WoocommercePipeline(object):
 
     def __init__(self):
         try:
+            # self.wcapi = API(
+            #     url="https://vivumuahang.com/",
+            #     consumer_key="ck_e7b56c6e85a00b80b41605548c63aeb5cfa54868",
+            #     consumer_secret="cs_83582ad6bcd50f08daef5e0033f1760582bd184a",
+            #     wp_api=True,  # Enable the WP REST API integration
+            #     version="wc/v3",  # WooCommerce WP REST API version
+            #     timeout=60
+            # )
             self.wcapi = API(
-                url="https://vivumuahang.com/",
-                consumer_key="ck_e7b56c6e85a00b80b41605548c63aeb5cfa54868",
-                consumer_secret="cs_83582ad6bcd50f08daef5e0033f1760582bd184a",
+                url="https://bestsosanh.com/",
+                consumer_key="ck_6f71673f1ec832fa19a4119f0f986c1f5d339a92",
+                consumer_secret="cs_a621ce900c256dc7795f5020db7b52d46c8d432f",
                 wp_api=True,  # Enable the WP REST API integration
                 version="wc/v3",  # WooCommerce WP REST API version
                 timeout=60
@@ -28,7 +36,6 @@ class WoocommercePipeline(object):
         """
         Check a category is existing or not. If it does not exist, call an api to create this category
         """
-
         try:
             data = {
                 "name": category_name,
@@ -56,7 +63,6 @@ class WoocommercePipeline(object):
         """
         Add a new product's tags
         """
-
         try:
             data = {
                 "name": tag_name
@@ -81,7 +87,6 @@ class WoocommercePipeline(object):
         """
         Product type. Options: simple, grouped, external and variable. Default is simple.
         """
-
         try:
             parent_id = 15  # Smartphone
 
@@ -109,7 +114,7 @@ class WoocommercePipeline(object):
             catid = self.addcategory(brand, parent_id)
             if not isinstance(catid, int):
                 spider.logger.info('Category Id result is %s' % str(catid))
-                return None
+                catid = 0
 
             tag_brand_id = self.addtags(brand)
             #tag_shop_id = self.addtags(shop)
@@ -118,6 +123,11 @@ class WoocommercePipeline(object):
             domain = item['domain']
             oldprice = parse_money(item["oldprice"])
             price = parse_money(item["price"])
+
+            stock_status = "instock"
+            instock = item['instock']
+            if bool(instock) == False:
+                stock_status = "outofstock"
 
             data = {
                 "name": title,
@@ -154,8 +164,8 @@ class WoocommercePipeline(object):
                     {'key': 'external_url', 'value': link},
                     {'key': 'domain', 'value': domain},
                     {'key': 'swatch', 'value': swatchcolors}
-                ]
-            }
+                ],
+                "stock_status": stock_status}
 
             spider.logger.info('Product data: %s' % data)
 

@@ -117,7 +117,7 @@ class MySQLPipeline(object):
                         dict(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
                     pass
 
-            images = []
+            images = None
             if item["images"] is not None:
                 images = json.dumps(list(item["images"]), ensure_ascii=False)
 
