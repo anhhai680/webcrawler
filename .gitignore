@@ -1,7 +1,18 @@
 # Don't track content of these folders
 webcrawler/__pycache__
 webcrawler/spiders/__pycache__
+files
 
 # Do not track these files
-cellphones.json
-cellphones_items.json
+.DS_Store
+*.pyc
+*.egg-info
+
+build/*
+logs/*
+files/*
+webcrawler/__pycache__/*
+webcrawler/spiders/__pycache__/*
+*.json
+*.jl
+
