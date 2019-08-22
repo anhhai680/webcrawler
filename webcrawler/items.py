@@ -7,7 +7,7 @@
 
 import scrapy
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import TakeFirst, MapCompose, Join
+from scrapy.loader.processors import Compose, TakeFirst, MapCompose, Join
 from w3lib.html import remove_tags
 
 
@@ -41,23 +41,31 @@ class ProductItem(scrapy.Item):
     body = scrapy.Field()
     pass
 
+clean_text = Compose(MapCompose(lambda v: v.strip()), Join())
 
 class ProductLoader(ItemLoader):
-    default_item_class = ProductItem()
 
-    cid_out = TakeFirst()
+    default_item_class = ProductItem
 
-    title_in = MapCompose(remove_tags)
-    title_out = Join()
+    cid_out = Compose(TakeFirst(), int)
 
-    description_in = MapCompose(remove_tags)
-    description_out = Join()
+    title_out = clean_text
 
+    description_out = clean_text
+
+    oldprice_out = TakeFirst()
     price_out = TakeFirst()
-    link_out = TakeFirst()
-    shop_out = TakeFirst()
+
+    link_out = clean_text
+    brand_out = clean_text
+    shop_out = clean_text
+    rates_out = TakeFirst()
+    location_out = clean_text
     domain_out = TakeFirst()
+    instock_out = clean_text
+    shipping_out = clean_text
     body_out = TakeFirst()
+
     pass
 
 
