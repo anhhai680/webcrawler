@@ -8,17 +8,16 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.selector import Selector
 import numpy as np
-from scrapy.loader import ItemLoader
 
 
-from ..items import ProductItem, ProductLoader
+from ..items import ProductItem
 
 
 logger = logging.getLogger(__name__)
 
 
 class LazadaSpider(CrawlSpider):
-    name = 'lazada_loader'
+    name = 'lazada'
     allowed_domains = ['www.lazada.vn']
     start_urls = ['https://www.lazada.vn/dien-thoai-di-dong/']
     rules = (
@@ -70,20 +69,25 @@ class LazadaSpider(CrawlSpider):
                 data = json.loads(pageData[0])
                 if data["mods"]["listItems"] is not None:
                     for item in data["mods"]["listItems"]:
-                        product_link = 'https:%s' % item['productUrl']
-                        product_location = item['location']
-                        product_instock = str(item['inStock'])
-                        product_shipping = ''
-                        if 'alias' in item['icons']:
-                            product_shipping = item['icons']['alias']
-                        # add product item to ItemLoader
-                        il = ProductLoader()
-                        il.add_value('link', product_link)
-                        il.add_value('location', product_location)
-                        il.add_value('shipping', product_shipping)
-                        il.add_value('instock', product_instock)
+                        #product_link = 'https:%s' % item['productUrl']
 
-                        yield scrapy.Request(product_link, callback=self.parse_product_detail, cb_kwargs={'product_item': il.load_item()})
+                        # # add product item to ItemLoader
+                        # il = ProductLoader(item=ProductItem())
+                        # #il.default_output_processor = Join()
+                        # il.add_value('cid', cid)
+                        # il.add_value('title', product_title)
+                        # #il.add_value('description', product_desc)
+                        # il.add_value('price', product_price)
+                        # il.add_value('link', product_link)
+                        # il.add_value('images', product_images)
+                        # il.add_value('shop', 'lazada')
+                        # il.add_value('domain', 'lazada.vn')
+                        # il.add_value('body', '')
+
+                        # yield response.follow(product_link, callback=self.parse_product_detail)
+
+                        productItem = self.parse_product_item(item)
+                        yield productItem
                         time.sleep(1)
 
             else:
@@ -128,7 +132,6 @@ class LazadaSpider(CrawlSpider):
             product['location'] = item['location']
             product['domain'] = 'lazada.vn'
             product['instock'] = item['inStock']
-
             if 'alias' in item['icons']:
                 product['shipping'] = item['icons']['alias']
             else:
@@ -140,7 +143,7 @@ class LazadaSpider(CrawlSpider):
 
         return product
 
-    def parse_product_detail(self, response, product_item):
+    def parse_product_detail(self, response):
 
         def extract_with_css(query):
             return response.css(query).get().strip()
@@ -149,6 +152,8 @@ class LazadaSpider(CrawlSpider):
             return response.xpath(query).get(default='').strip()
 
         logger.info('Product Url: %s' % response.url)
+
+        # il = ProductLoader(item=product_item)
 
         try:
             product_title = extract_with_xpath(
@@ -198,40 +203,25 @@ class LazadaSpider(CrawlSpider):
             else:
                 logger.info('Could not found fields in json response.')
 
-            # products = ProductItem(
-            #     cid=1,  # 1: Smartphone
-            #     title=product_title,
-            #     description=product_desc,
-            #     oldprice=product_oldprice,
-            #     price=product_price,
-            #     swatchcolors=product_swatchcolors,
-            #     specifications=product_specifications,
-            #     link=product_link,
-            #     images=product_images,
-            #     brand=product_brand,
-            #     shop=product_shop,
-            #     rates=product_rates,
-            #     location='',
-            #     domain='lazada.vn',
-            #     body=''
-            # )
+            products = ProductItem(
+                cid=1,  # 1: Smartphone
+                title=product_title,
+                description=product_desc,
+                oldprice=product_oldprice,
+                price=product_price,
+                swatchcolors=product_swatchcolors,
+                specifications=product_specifications,
+                link=product_link,
+                images=product_images,
+                brand=product_brand,
+                shop=product_shop,
+                rates=product_rates,
+                location='',
+                domain='lazada.vn',
+                body=''
+            )
 
-            il = ProductLoader(item=product_item)
-            il.add_value('cid', 1)
-            il.add_value('title', product_title)
-            il.add_value('description', product_desc)
-            il.add_value('oldprice', product_oldprice)
-            il.add_value('price', product_price)
-            il.add_value('swatchcolors', product_swatchcolors)
-            il.add_value('specifications', product_specifications)
-            il.add_value('images', product_images)
-            il.add_value('brand', product_brand)
-            il.add_value('shop', product_shop)
-            il.add_value('rates', product_rates)
-            il.add_value('domain', 'lazada.vn')
-            il.add_value('body', '')
-
-            yield il.load_item()
+            yield products
 
         except Exception as ex:
             logger.error('Could not parse skuBase selector. Errors %s', ex)
