@@ -41,7 +41,9 @@ class ProductItem(scrapy.Item):
     body = scrapy.Field()
     pass
 
+
 clean_text = Compose(MapCompose(lambda v: v.strip()), Join())
+
 
 class ProductLoader(ItemLoader):
 

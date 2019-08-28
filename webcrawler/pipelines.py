@@ -7,7 +7,7 @@
 import json
 import codecs
 import re
-from scrapy.exceptions import DropItem
+from scrapy.exceptions import DropItem, NotConfigured
 
 import mysql.connector
 from mysql.connector import Error
@@ -54,18 +54,49 @@ class MongoPipeline(object):
 
 class MySQLPipeline(object):
 
-    def __init__(self):
+    def __init__(self, host, user, passwd, db):
+        self.host = host
+        self.user = user
+        self.passwd = passwd
+        self.db = db
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        """
+        Get all database infomations from settings
+        """
+        db_settings = crawler.settings.getdict("DB_SETTINGS")
+        if not db_settings:
+            raise NotConfigured
+        host = db_settings["host"]
+        user = db_settings["user"]
+        passwd = db_settings["passwd"]
+        db = db_settings["db"]
+        return cls(host, user, passwd, db)
+
+    def open_spider(self, spider):
         """
         Initializes database connection and sessionmaker.
         Creates deals table.
         """
         try:
+            # self.db = mysql.connector.connect(
+            #     host="localhost",
+            #     user="root",
+            #     passwd="Admin@123",
+            #     database="ecrawdb",
+            #     collation='utf8mb4_unicode_ci',
+            #     charset='utf8',
+            #     use_unicode=True
+            # )
             self.db = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                passwd="Admin@123",
-                database="ecrawdb",
-                collation='utf8mb4_unicode_ci'
+                host=self.host,
+                user=self.user,
+                passwd=self.passwd,
+                database=self.db,
+                collation='utf8mb4_unicode_ci',
+                charset='utf8',
+                use_unicode=True
             )
             if self.db.is_connected():
                 self.mycursor = self.db.cursor(buffered=True)
@@ -125,24 +156,8 @@ class MySQLPipeline(object):
             #spider.logger.info('MySQL result: %s' % myresult)
             if myresult is None:
                 query = 'INSERT INTO craw_products (category_id, title, short_description, swatch_colors, specifications, oldprice, price, images, link, brand, shop, location, domain_name, rates, instock,shipping) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)'
-                params = (
-                    cat_id,
-                    title,
-                    desc,
-                    swatchcolors,
-                    specifications,
-                    oldprice,
-                    price,
-                    images,
-                    link,
-                    brand,
-                    shop,
-                    location,
-                    domain,
-                    rates,
-                    instock,
-                    shipping
-                )
+                params = (cat_id, title, desc, swatchcolors, specifications, oldprice, price,
+                          images, link, brand, shop, location, domain, rates, instock, shipping)
             else:
                 id = myresult[0]
                 query = 'UPDATE craw_products SET oldprice=%s,price=%s,last_update=now(),instock=%s WHERE id=%s'
@@ -248,6 +263,20 @@ class FilesPipeline(object):
 
         return item
 
+from scrapy.exporters import JsonItemExporter
+class JsonPipeline(object):
+    def __init__(self):
+        self.file = open("data_export.json", 'wb')
+        self.exporter = JsonItemExporter(self.file, encoding='utf-8', ensure_ascii=False)
+        self.exporter.start_exporting()
+
+    def close_spider(self, spider):
+        self.exporter.finish_exporting()
+        self.file.close()
+
+    def process_item(self, item, spider):
+        self.exporter.export_item(item)
+        return item
 
 def parse_money(value):
     if str(value).isdigit():

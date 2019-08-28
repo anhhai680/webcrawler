@@ -163,6 +163,13 @@ DUPEFILTER_DEBUG = True
 #     db_name="ecrawdb",
 # )
 
+DB_SETTINGS = {
+    'db': "ecrawdb",
+    'user': 'root',
+    'passwd': 'Admin@123',
+    'host': 'localhost',
+}
+
 # Register a command module
 #COMMANDS_MODULE = 'webcrawler.commands'
 
