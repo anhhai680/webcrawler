@@ -2,6 +2,7 @@
 webcrawler/__pycache__
 webcrawler/spiders/__pycache__
 files
+env
 
 # Do not track these files
 .DS_Store
