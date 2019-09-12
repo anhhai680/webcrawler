@@ -25,6 +25,14 @@ LOG_LEVEL = 'INFO'  # Available levels are: CRITICAL, ERROR, WARNING, INFO, DEBU
 # LOG_FORMAT = '%(asctime)s %(message)s's
 LOG_DATEFORMAT = '%m/%d/%Y %I:%M:%S %p'
 
+# Image Pipline Settings
+IMAGES_STORE = '/uploads/images'
+IMAGES_URLS_FIELD = 'images_urls'
+IMAGES_RESULT_FIELD = 'images'
+IMAGES_MIN_HEIGHT = 150
+IMAGES_MIN_WIDTH = 150
+# 30 days of delay for images expiration
+IMAGES_EXPIRES = 60
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'webcrawler (+http://www.yourdomain.com)'
@@ -112,13 +120,14 @@ DOWNLOADER_MIDDLEWARES = {
 #    'webcrawler.pipelines.WebcrawlerPipeline': 300,
 # }
 ITEM_PIPELINES = {
-    # 'webcrawler.pipelines.MongoPipeline': 300,
+    # 'webcrawler.mongodb.MongoPipeline': 300,
     'webcrawler.pipelines.MySQLPipeline': 300,
     'webcrawler.pipelines.PricePipeline': 400,
     'webcrawler.pipelines.DuplicatesPipeline': 400,
     'webcrawler.pipelines.JsonWriterPipeline': 300,
-    # 'webcrawler.pipelines.FilesPipeline': 300,
+    # 'webcrawler.pipelines.JsonDataPipeline': 300,
     # 'webcrawler.wooapi.WoocommercePipeline': 300,
+    # 'scrapy.pipelines.images.ImagesPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -174,6 +183,6 @@ DB_SETTINGS = {
 #COMMANDS_MODULE = 'webcrawler.commands'
 
 # Mongodb configuration
-# MONGO_URI = 'mongodb://localhost:27017/'
-# MONGO_DATABASE = 'ecrawlerdb'
-# MONGO_COLLECTION_NAME = 'products'
+MONGO_URI = 'mongodb://localhost:27017/'
+MONGO_DATABASE = 'webcrawl'
+MONGO_COLLECTION_NAME = 'crawl_products'

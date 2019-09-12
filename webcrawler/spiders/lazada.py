@@ -104,41 +104,6 @@ class LazadaSpider(CrawlSpider):
                 'Could not parse url {} with errros: {}'.format(response.url, ex))
         pass
 
-    def parse_product_item(self, item):
-
-        product = ProductItem()
-        try:
-
-            product['cid'] = 1  # Smartphone
-            product['title'] = str(item['name']).strip()
-            product['description'] = ' '.join(item['description'])
-            product['oldprice'] = 0
-            if 'originalPrice' in item:
-                product['oldprice'] = item['originalPrice']
-
-            product['price'] = item['price']
-            product['swatchcolors'] = ''
-            product['specifications'] = ''
-            product['link'] = 'https:%s' % item['productUrl']
-            product['images'] = [img['image'] for img in item['thumbs']]
-            product['brand'] = item['brandName']
-            product['shop'] = item['sellerName']
-            product['rates'] = item['ratingScore']
-            product['location'] = item['location']
-            product['domain'] = 'lazada.vn'
-            product['instock'] = item['inStock']
-
-            if 'alias' in item['icons']:
-                product['shipping'] = item['icons']['alias']
-            else:
-                product['shipping'] = None
-            product['body'] = ''
-
-        except Exception as ex:
-            logger.error('Could not parse {} with errors {}'.format(item, ex))
-
-        return product
-
     def parse_product_detail(self, response, product_item):
 
         def extract_with_css(query):
@@ -155,8 +120,8 @@ class LazadaSpider(CrawlSpider):
             product_desc = extract_with_css(
                 'meta[name="description"]::attr(content)')
             #product_link = response.url
-            product_oldprice = None
-            product_price = None
+            product_oldprice = 0
+            product_price = 0
             product_images = None
             product_swatchcolors = None
             product_specifications = None
@@ -191,14 +156,15 @@ class LazadaSpider(CrawlSpider):
                         if product_price is not None:
                             product_price = product_price/10
 
-                        product_oldprice = data_prices['originalPrice']['value']
-                        if product_oldprice is not None:
-                            product_oldprice = product_oldprice/10
+                        if 'originalPrice' in data_prices:
+                            product_oldprice = data_prices['originalPrice']['value']
+                            if product_oldprice is not None:
+                                product_oldprice = product_oldprice/10
             else:
                 logger.info('Could not found fields in json response.')
 
             il = ProductLoader(item=product_item)
-            il.add_value('cid', 1)
+            il.add_value('cid', 'dienthoai')
             il.add_value('title', product_title)
             il.add_value('description', product_desc)
             il.add_value('oldprice', product_oldprice)

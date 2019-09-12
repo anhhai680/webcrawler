@@ -20,7 +20,7 @@ class WebcrawlerItem(scrapy.Item):
 
 
 class ProductItem(scrapy.Item):
-    cid = scrapy.Field()
+    cid = scrapy.Field()  # Điện thoại, máy tính bảng, laptop...
     title = scrapy.Field()
     description = scrapy.Field()
     oldprice = scrapy.Field()
@@ -28,6 +28,7 @@ class ProductItem(scrapy.Item):
     swatchcolors = scrapy.Field()
     specifications = scrapy.Field()
     link = scrapy.Field()
+    image_urls = scrapy.Field()
     images = scrapy.Field()
     brand = scrapy.Field()  # Apple, Samsung, Xiaomi...
     shop = scrapy.Field()  # Shop name
@@ -49,7 +50,7 @@ class ProductLoader(ItemLoader):
 
     default_item_class = ProductItem
 
-    cid_out = Compose(TakeFirst(), int)
+    cid_out = TakeFirst()
 
     title_out = clean_text
 
