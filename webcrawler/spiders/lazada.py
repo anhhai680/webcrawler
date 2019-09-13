@@ -8,10 +8,10 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.selector import Selector
 import numpy as np
-from scrapy.loader import ItemLoader
+#from scrapy.loader import ItemLoader
 
 
-from ..items import ProductItem, ProductLoader
+from ..items import ProductLoader
 
 
 logger = logging.getLogger(__name__)
