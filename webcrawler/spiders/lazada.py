@@ -145,7 +145,7 @@ class LazadaSpider(CrawlSpider):
                         product_images = [
                             'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
                         product_swatchcolors = [
-                            item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values']]
+                            item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values'] if 'name' in item]
                         # product_specifications
                         data_specs = fields['product']['highlights']
                         sel = Selector(text=data_specs)

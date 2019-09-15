@@ -15,3 +15,7 @@ https://shopee.vn/api/v2/item/get?itemid=2183317956&shopid=54057688
 https://cf.shopee.vn/file/27d55303ff8b4bb546837b1d756bd904
 # Here's format to make a product detail's link
 https://shopee.vn/i%E1%BB%87n%20tho%E1%BA%A1i%20smartphone%20XS%20mini-i.54057688.2183317956
+
+# Mysql's query example to help testing only purpose:
+- select * from ecrawdb.crawl_products as p inner join ecrawdb.crawl_blacklinks as b on p.link = b.link;
+- alter table ecrawdb.crawl_products auto_increment=1;
