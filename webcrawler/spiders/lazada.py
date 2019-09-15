@@ -48,9 +48,11 @@ class LazadaSpider(CrawlSpider):
             ),
         ), callback='parse_lazada'),
     )
-    # custom_settings = {
-    #     'DEPTH_LIMIT': 3,
-    # }
+    custom_settings = {
+        'DOWNLOADER_MIDDLEWARES': {
+            'webcrawler.middlewares.lazada.LazadaSpiderMiddleware': 543
+        },
+    }
 
     def __init__(self, limit_pages=None, *args, **kwargs):
         super(LazadaSpider, self).__init__(*args, **kwargs)

@@ -3,7 +3,7 @@ from scrapy.http import Request
 from scrapy.http import HtmlResponse
 from scrapy.item import BaseItem
 from scrapy.utils.request import request_fingerprint
-from scrapy.exceptions import DontCloseSpider, NotConfigured
+from scrapy.exceptions import DontCloseSpider, NotConfigured, IgnoreRequest
 
 import mysql.connector
 from mysql.connector import Error
@@ -44,9 +44,20 @@ class LazadaSpiderMiddleware(object):
         # - or return a Request object
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
-        if request in self.backlinks:
-            return None
-        return request
+        spider.logger.info('Spider request: %s' % request)
+        if request in self.blacklinks:
+            raise IgnoreRequest
+        return None
+
+    def process_exception(self, request, exception, spider):
+        # Called when a download handler or a process_request()
+        # (from other downloader middleware) raises an exception.
+
+        # Must either:
+        # - return None: continue processing this exception
+        # - return a Response object: stops process_exception() chain
+        # - return a Request object: stops process_exception() chains
+        pass
 
     def spider_opened(self, spider):
         """
@@ -64,12 +75,16 @@ class LazadaSpiderMiddleware(object):
             )
             if self.db.is_connected():
                 self.mycursor = self.db.cursor(buffered=True)
-                query = 'SELECT link FROM crawl_backlinks WHERE domain=%s'
-                params = ('lazada.vn')
-                self.mycursor.execute(query, params)
+                query = 'SELECT link FROM crawl_blacklinks WHERE domain="lazada.vn"'
+                params = 'lazada.vn'
+                self.mycursor.execute(query)
                 myresult = self.mycursor.fetchall()
+                spider.logger.info('There is total %s of items' %
+                                   len(myresult))
                 if len(myresult) > 0:
-                    self.backlinks = myresult
+                    self.blacklinks = myresult
+            else:
+                raise ConnectionError('Could not connect to MySQL')
 
         except Error as ex:
             raise ConnectionError('Error while connecting to MySQL', ex)
