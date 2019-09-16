@@ -90,7 +90,7 @@ class MySQLPipeline(object):
             query = 'SELECT id FROM crawl_products WHERE category_id= %s and domain=%s and link=%s'
             params = (cat_id, domain, link)
 
-            if item["swatchcolors"] is not None:
+            if 'swatchcolors' in item:
                 try:
                     swatchcolors = json.dumps(
                         list(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
