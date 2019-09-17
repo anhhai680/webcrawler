@@ -26,6 +26,7 @@ class ProductItem(scrapy.Item):
     oldprice = scrapy.Field()
     price = scrapy.Field()
     swatchcolors = scrapy.Field()
+    internalmemory = scrapy.Field()
     specifications = scrapy.Field()
     link = scrapy.Field()
     image_urls = scrapy.Field()

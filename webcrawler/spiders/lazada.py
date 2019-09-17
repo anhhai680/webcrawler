@@ -126,6 +126,7 @@ class LazadaSpider(CrawlSpider):
             product_price = 0
             product_images = None
             product_swatchcolors = None
+            product_internalmemory = None
             product_specifications = None
             product_brand = None
             product_shop = None
@@ -144,8 +145,14 @@ class LazadaSpider(CrawlSpider):
                         # product images
                         product_images = [
                             'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
-                        product_swatchcolors = [
-                            item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values'] if 'name' in item]
+                        
+                        if fields['productOption']['skuBase']['properties'][0]['name'] == 'Nhóm màu':
+                            product_swatchcolors = [
+                                item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values'] if 'name' in item]
+
+                        if fields['productOption']['skuBase']['properties'][1]['name'] == 'Khả năng lưu trữ':
+                            product_internalmemory =  [
+                                item['name'] for item in fields['productOption']['skuBase']['properties'][1]['values'] if 'name' in item]
                         # product_specifications
                         data_specs = fields['product']['highlights']
                         sel = Selector(text=data_specs)
@@ -172,6 +179,7 @@ class LazadaSpider(CrawlSpider):
             il.add_value('oldprice', product_oldprice)
             il.add_value('price', product_price)
             il.add_value('swatchcolors', product_swatchcolors)
+            il.add_value('internalmemory', product_internalmemory)
             il.add_value('specifications', product_specifications)
             il.add_value('images', product_images)
             il.add_value('brand', product_brand)

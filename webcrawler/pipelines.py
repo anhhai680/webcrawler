@@ -75,6 +75,7 @@ class MySQLPipeline(object):
             title = item["title"]
             desc = item["description"]
             swatchcolors = None
+            internalmemory = None
             specifications = None
             oldprice = parse_money(item["oldprice"])
             price = parse_money(item["price"])
@@ -99,6 +100,15 @@ class MySQLPipeline(object):
                         dict(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
                     pass
 
+            if 'internalmemory' in item:
+                try:
+                    internalmemory = json.dumps(
+                        list(item["internalmemory"]), separators=(',', ':'), ensure_ascii=False)
+                except:
+                    internalmemory = json.dumps(
+                        dict(item["internalmemory"]), separators=(',', ':'), ensure_ascii=False)
+                    pass
+
             if item["specifications"] is not None:
                 try:
                     specifications = json.dumps(
@@ -117,8 +127,8 @@ class MySQLPipeline(object):
 
             #spider.logger.info('MySQL result: %s' % myresult)
             if myresult is None:
-                query = 'INSERT INTO crawl_products (category_id, title, short_description, swatch_colors, specifications, old_price, price, images, link, brand, shop, location, domain, rating_count, in_stock,free_shipping) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s)'
-                params = (cat_id, title, desc, swatchcolors, specifications, oldprice, price,
+                query = 'INSERT INTO crawl_products (category_id, title, short_description, swatch_colors,internal_memory, specifications, old_price, price, images, link, brand, shop, location, domain, rating_count, in_stock,free_shipping) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s)'
+                params = (cat_id, title, desc, swatchcolors, internalmemory, specifications, oldprice, price,
                           images, link, brand, shop, location, domain, rates, instock, shipping)
             else:
                 id = myresult[0]
