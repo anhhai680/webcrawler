@@ -71,20 +71,22 @@ class LazadaSpider(CrawlSpider):
                 data = json.loads(pageData[0])
                 if data["mods"]["listItems"] is not None:
                     for item in data["mods"]["listItems"]:
-                        product_link = 'https:%s' % item['productUrl']
+                        #product_link = 'https:%s' % item['productUrl']
                         product_location = item['location']
                         product_instock = str(item['inStock'])
                         product_shipping = ''
                         if 'alias' in item['icons']:
                             product_shipping = item['icons']['alias']
-                        # add product item to ItemLoader
-                        il = ProductLoader()
-                        il.add_value('link', product_link)
-                        il.add_value('location', product_location)
-                        il.add_value('shipping', product_shipping)
-                        il.add_value('instock', product_instock)
 
-                        yield scrapy.Request(product_link, callback=self.parse_product_detail, cb_kwargs={'product_item': il.load_item()})
+                        for thumb_item in item['thumbs']:
+                            product_link = 'https:%s' % thumb_item['productUrl']
+                            # add product item to ItemLoader
+                            il = ProductLoader()
+                            il.add_value('link', product_link)
+                            il.add_value('location', product_location)
+                            il.add_value('shipping', product_shipping)
+                            il.add_value('instock', product_instock)
+                            yield scrapy.Request(product_link, callback=self.parse_product_detail, cb_kwargs={'product_item': il.load_item()})
                         time.sleep(1)
 
             else:
@@ -145,13 +147,13 @@ class LazadaSpider(CrawlSpider):
                         # product images
                         product_images = [
                             'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
-                        
+
                         if fields['productOption']['skuBase']['properties'][0]['name'] == 'Nhóm màu':
                             product_swatchcolors = [
                                 item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values'] if 'name' in item]
 
                         if fields['productOption']['skuBase']['properties'][1]['name'] == 'Khả năng lưu trữ':
-                            product_internalmemory =  [
+                            product_internalmemory = [
                                 item['name'] for item in fields['productOption']['skuBase']['properties'][1]['values'] if 'name' in item]
                         # product_specifications
                         data_specs = fields['product']['highlights']
@@ -191,7 +193,8 @@ class LazadaSpider(CrawlSpider):
             yield il.load_item()
 
         except Exception as ex:
-            logger.error('Could not parse skuBase selector. Errors %s', ex)
+            logger.error(
+                'Could not parse {}. Errors {}'.format(response.url, ex))
         pass
 
     def get_unique_links(self, links):
