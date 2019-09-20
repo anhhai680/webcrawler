@@ -1,5 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `ecrawdb` /*!40100 DEFAULT CHARACTER SET utf8 */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `ecrawdb`;
 -- MySQL dump 10.13  Distrib 8.0.16, for macos10.14 (x86_64)
 --
 -- Host: localhost    Database: ecrawdb
@@ -17,7 +15,128 @@ USE `ecrawdb`;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-ALTER SCHEMA `ecrawdb`  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ;
+--
+-- Table structure for table `crawl_attributes_product`
+--
+
+DROP TABLE IF EXISTS `crawl_attributes_product`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `crawl_attributes_product` (
+  `attr_id` int(11) NOT NULL AUTO_INCREMENT,
+  `attr_name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `attr_label` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`attr_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `crawl_blacklinks`
+--
+
+DROP TABLE IF EXISTS `crawl_blacklinks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `crawl_blacklinks` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `domain` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `link` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `crawl_brand`
+--
+
+DROP TABLE IF EXISTS `crawl_brand`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `crawl_brand` (
+  `brand_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `brand_name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`brand_id`),
+  UNIQUE KEY `brand_id_UNIQUE` (`brand_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `crawl_catalog`
+--
+
+DROP TABLE IF EXISTS `crawl_catalog`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `crawl_catalog` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `catalog_name` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `domain_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `start_url` longtext COLLATE utf8mb4_general_ci NOT NULL,
+  `prod_limit` smallint(6) NOT NULL DEFAULT '0',
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `crawl_config`
+--
+
+DROP TABLE IF EXISTS `crawl_config`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `crawl_config` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `blacklist` longtext COLLATE utf8mb4_unicode_ci,
+  `deny_domains` longtext COLLATE utf8mb4_unicode_ci,
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `crawl_price_history`
+--
+
+DROP TABLE IF EXISTS `crawl_price_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `crawl_price_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `product_id` int(11) NOT NULL,
+  `price` decimal(18,0) DEFAULT NULL,
+  `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `crawl_product_attributes`
+--
+
+DROP TABLE IF EXISTS `crawl_product_attributes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `crawl_product_attributes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `attr_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `attr_value` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `crawl_products`
@@ -25,31 +144,65 @@ ALTER SCHEMA `ecrawdb`  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
 
 DROP TABLE IF EXISTS `crawl_products`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `crawl_products` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `category_id` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `short_description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `swatch_colors` longtext DEFAULT NULL,
-  `specifications` longtext DEFAULT NULL,
+  `swatch_colors` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `internal_memory` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `specifications` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
   `old_price` decimal(10,2) NOT NULL,
   `price` decimal(10,2) NOT NULL,
-  `images` longtext NOT NULL,
-  `link` longtext NOT NULL,
-  `brand` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `link` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `brand` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `shop` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `location` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `domain` varchar(256) NOT NULL,
-  `rating_count` varchar(10) NOT NULL,
+  `domain` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `rating_count` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `in_stock` tinyint(1) NOT NULL DEFAULT '1',
   `status` tinyint(1) NOT NULL DEFAULT '1',
-  `free_shipping` tinyint(1) NOT NULL DEFAULT '0',
+  `free_shipping` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `created_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=76 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `products`
+--
+
+DROP TABLE IF EXISTS `products`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `products` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category_id` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `brand_id` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `old_price` decimal(18,0) NOT NULL,
+  `price` decimal(18,0) NOT NULL,
+  `quantity` int(3) NOT NULL DEFAULT '1',
+  `in_stock` tinyint(1) DEFAULT '1',
+  `shop_name` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rating_count` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `link` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `domain` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `sell_place` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `free_shipping` tinyint(1) NOT NULL DEFAULT '0',
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  `created_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -61,4 +214,4 @@ CREATE TABLE `crawl_products` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-07-18  0:20:24
+-- Dump completed on 2019-09-21  0:04:03
