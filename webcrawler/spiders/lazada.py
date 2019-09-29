@@ -73,20 +73,25 @@ class LazadaSpider(CrawlSpider):
                     for item in data["mods"]["listItems"]:
                         #product_link = 'https:%s' % item['productUrl']
                         product_location = item['location']
-                        product_instock = str(item['inStock'])
+                        # product_instock = str(item['inStock'])
                         product_shipping = ''
                         if 'alias' in item['icons']:
                             product_shipping = item['icons']['alias']
+                        rating_scope = item['ratingScore']
 
                         for thumb_item in item['thumbs']:
                             product_link = 'https:%s' % thumb_item['productUrl']
+                            product_sku = thumb_item['sku']
+                            skuId = thumb_item['skuId']
                             # add product item to ItemLoader
                             il = ProductLoader()
                             il.add_value('link', product_link)
                             il.add_value('location', product_location)
                             il.add_value('shipping', product_shipping)
-                            il.add_value('instock', product_instock)
-                            yield scrapy.Request(product_link, callback=self.parse_product_detail, cb_kwargs={'product_item': il.load_item()})
+                            # il.add_value('instock', product_instock)
+                            il.add_value('rates', rating_scope)
+                            il.add_value('sku', product_sku)
+                            yield scrapy.Request(product_link, callback=self.parse_product_detail, cb_kwargs={'product_item': il.load_item(), 'skuId': skuId})
                         time.sleep(1)
 
             else:
@@ -108,7 +113,7 @@ class LazadaSpider(CrawlSpider):
                 'Could not parse url {} with errros: {}'.format(response.url, ex))
         pass
 
-    def parse_product_detail(self, response, product_item):
+    def parse_product_detail(self, response, product_item, skuId):
 
         def extract_with_css(query):
             return response.css(query).get().strip()
@@ -132,7 +137,8 @@ class LazadaSpider(CrawlSpider):
             product_specifications = None
             product_brand = None
             product_shop = None
-            product_rates = None
+            #product_rates = None
+            product_instock = 1  # In stock otherwise 0 is out of stock
 
             app = re.findall(r'app.run\((.+?)\)\;\n',
                              response.body.decode('utf-8'), re.S)
@@ -142,19 +148,27 @@ class LazadaSpider(CrawlSpider):
                     fields = json_data['data']['root']['fields']
                     if len(fields) > 0:
                         product_shop = fields['seller']['name']
-                        product_rates = fields['seller']['rate'] if 'rate' in fields['seller'] else '0'
+                        #product_rates = fields['seller']['rate'] if 'rate' in fields['seller'] else '0'
                         product_brand = fields['product']['brand']['name']
                         # product images
                         product_images = [
-                            'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
+                            'https:' + item['src'] for item in fields['skuGalleries'][skuId] if item['type'] == 'img']
+                            # 'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
 
-                        if fields['productOption']['skuBase']['properties'][0]['name'] == 'Nhóm màu':
+                        # if fields['productOption']['skuBase']['properties'][0]['name'] == 'Nhóm màu':
+                        #     product_swatchcolors = [
+                        #         item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values'] if 'name' in item]
+
+                        if fields['primaryKey']['skuNames'] is not None:
                             product_swatchcolors = [
-                                item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values'] if 'name' in item]
-
-                        if fields['productOption']['skuBase']['properties'][1]['name'] == 'Khả năng lưu trữ':
+                                fields['primaryKey']['skuNames'][0]]
                             product_internalmemory = [
-                                item['name'] for item in fields['productOption']['skuBase']['properties'][1]['values'] if 'name' in item]
+                                fields['primaryKey']['skuNames'][1]]
+
+                        # if fields['productOption']['skuBase']['properties'][1]['name'] == 'Khả năng lưu trữ':
+                        #     product_internalmemory = [
+                        #         item['name'] for item in fields['productOption']['skuBase']['properties'][1]['values'] if 'name' in item]
+
                         # product_specifications
                         data_specs = fields['product']['highlights']
                         sel = Selector(text=data_specs)
@@ -162,7 +176,8 @@ class LazadaSpider(CrawlSpider):
                             product_specifications = sel.xpath(
                                 '//ul/li/text()').getall()
                         # price
-                        data_prices = fields['skuInfos']['0']['price']
+                        #data_prices = fields['skuInfos']['0']['price']
+                        data_prices = fields['skuInfos'][skuId]['price']
                         product_price = data_prices['salePrice']['value']
                         if product_price is not None:
                             product_price = product_price/10
@@ -171,6 +186,13 @@ class LazadaSpider(CrawlSpider):
                             product_oldprice = data_prices['originalPrice']['value']
                             if product_oldprice is not None:
                                 product_oldprice = product_oldprice/10
+
+                        stock = fields['skuInfos'][skuId]['stock']
+                        if stock is not None:
+                            if int(stock) > 0:
+                                product_instock = 1
+                            else:
+                                product_instock = 0  # Out of stock
             else:
                 logger.info('Could not found fields in json response.')
 
@@ -186,7 +208,8 @@ class LazadaSpider(CrawlSpider):
             il.add_value('images', product_images)
             il.add_value('brand', product_brand)
             il.add_value('shop', product_shop)
-            il.add_value('rates', product_rates)
+            #il.add_value('rates', product_rates)
+            il.add_value('instock', product_instock)
             il.add_value('domain', 'lazada.vn')
             il.add_value('body', '')
 

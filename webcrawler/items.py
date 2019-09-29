@@ -36,8 +36,7 @@ class ProductItem(scrapy.Item):
     rates = scrapy.Field()
     location = scrapy.Field()
     domain = scrapy.Field()
-    #sku = scrapy.Field()
-    #last_updated = scrapy.Field(serializer=str)
+    sku = scrapy.Field()
     instock = scrapy.Field()
     shipping = scrapy.Field()
     body = scrapy.Field()
@@ -63,10 +62,11 @@ class ProductLoader(ItemLoader):
     link_out = clean_text
     brand_out = clean_text
     shop_out = clean_text
-    rates_out = TakeFirst()
+    rates_out = clean_text
     location_out = clean_text
     domain_out = TakeFirst()
-    instock_out = clean_text
+    sku_out = clean_text
+    instock_out = TakeFirst()
     shipping_out = clean_text
     body_out = TakeFirst()
 

@@ -85,7 +85,9 @@ class MySQLPipeline(object):
             location = item['location']
             domain = item["domain"]
             rates = item['rates']
-            instock = 1 if item['instock'] == 'True' else 0
+            sku = item['sku']
+            #instock = 1 if item['instock'] == 'True' else 0
+            instock = item['instock']
             shipping = item['shipping']
 
             query = 'SELECT id FROM crawl_products WHERE category_id= %s and domain=%s and link=%s'
@@ -127,9 +129,9 @@ class MySQLPipeline(object):
 
             #spider.logger.info('MySQL result: %s' % myresult)
             if myresult is None:
-                query = 'INSERT INTO crawl_products (category_id, title, short_description, swatch_colors,internal_memory, specifications, old_price, price, images, link, brand, shop, location, domain, rating_count, in_stock,free_shipping) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s)'
+                query = 'INSERT INTO crawl_products (category_id, title, short_description, swatch_colors,internal_memory, specifications, old_price, price, images, link, brand, shop, location, domain, rating_count, sku, in_stock,free_shipping) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s, %s)'
                 params = (cat_id, title, desc, swatchcolors, internalmemory, specifications, oldprice, price,
-                          images, link, brand, shop, location, domain, rates, instock, shipping)
+                          images, link, brand, shop, location, domain, rates, sku, instock, shipping)
             else:
                 id = myresult[0]
                 query = 'UPDATE crawl_products SET old_price=%s,price=%s,last_update=now(),in_stock=%s WHERE id=%s'
