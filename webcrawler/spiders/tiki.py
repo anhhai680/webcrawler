@@ -66,15 +66,15 @@ class TikiSpider(CrawlSpider):
             gallery = response.xpath(query).getall()
             return gallery
 
-        # Validate price with pattern
-        price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
-        # product_price = extract_price(
-        #     '//div[@class="price-block show-border"]/p[@class="special-price-item"]/span[@id="span-price"]/text()')
-        product_price = extract_with_xpath(
-            '//span[@id="span-price"]/text()')
-        #logger.info('Product Price: %s' % product_price)
-        if re.match(price_pattern, product_price) is None:
-            return
+        # # Validate price with pattern
+        # price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
+        # # product_price = extract_price(
+        # #     '//div[@class="price-block show-border"]/p[@class="special-price-item"]/span[@id="span-price"]/text()')
+        # product_price = extract_with_xpath(
+        #     '//span[@id="span-price"]/text()')
+        # #logger.info('Product Price: %s' % product_price)
+        # if re.match(price_pattern, product_price) is None:
+        #     return
 
         # product_link = extract_with_xpath(
         #     '//meta[@property="og:url"]/@content')
@@ -87,26 +87,29 @@ class TikiSpider(CrawlSpider):
         # product_swatchcolors = extract_swatchcolors(
         #     '//div[@class="product_pick_color"]/div[contains(@class,"prco_content")]/div[contains(@class,"color color_cover")]/a//text()')
 
-        product_swatchcolors = []
-        product_images = []
+        product_sku = extract_with_xpath('//div[@id="product-sku"]/p/text()')
+        product_price = 0
+        product_oldprice = extract_with_xpath(
+            '//p[@id="p-listpirce"]/@data-value')
+        product_images = None
+        product_swatchcolors = None
+        product_internalmemory = None
+        product_specifications = None
+        product_brand = extract_with_xpath(
+            '//div[@class="item-brand"]/p/a/text()')
+        product_shop = extract_with_xpath(
+            '//div[@class="current-seller"]/div/div/span/text()')
+        product_location = None
+        product_shipping = None
+        product_rates = None
+        product_instock = 1  # Product in stock
+
         # product_images = extract_xpath_all(
         #     '//img[@class="product-magiczoom"]/@src')
 
-        # parse json data from response
-        script = response.xpath(
-            '//script/text()').re('var configuration = ({.*?});')
-        if len(script) > 0:
-            json_data = json.loads(script[0])
-            if len(json_data["configurable_options"]) > 0:
-                product_swatchcolors = [
-                    color["label"] for color in json_data["configurable_options"][0]["values"]]
-            if len(json_data["configurable_products"]) > 0:
-                product_images = [item["medium_url"]
-                                for item in json_data["configurable_products"][0]["images"]]
-
-        if len(product_images) <= 0:
-            product_images = extract_xpath_all(
-                '//img[@class="product-magiczoom"]/@src')
+        # if len(product_images) <= 0:
+        #     product_images = extract_xpath_all(
+        #         '//img[@class="product-magiczoom"]/@src')
 
         # product_images = extract_product_gallery(
         #     '//ul[@class="nk-product-bigImg"]/li/div[@class="wrap-img-tag-pdp"]/span/img/@src')
@@ -125,17 +128,51 @@ class TikiSpider(CrawlSpider):
         #         except:
         #             pass
 
-        products = ProductItem()
-        products['cid'] = 1  # 1: Smartphone
-        products['title'] = product_title
-        products['description'] = product_desc
-        products['price'] = product_price
-        products['swatchcolors'] = product_swatchcolors
-        products['specifications'] = product_specifications
-        products['link'] = product_link
-        products['images'] = product_images
-        products['shop'] = 'tiki'
-        products['domain'] = 'tiki.vn'
-        products['body'] = response.text
+        # parse json data from response
+        script = response.xpath(
+            '//script/text()').re('var configuration = ({.*?});')
+        if len(script) > 0:
+            json_data = json.loads(script[0])
+            if len(json_data) > 0:
+                # if len(json_data["configurable_options"]) > 0:
+                #     product_swatchcolors = [
+                #         color["label"] for color in json_data["configurable_options"][0]["values"]]
+                if len(json_data["configurable_products"]) > 0:
+                    for item in json_data["configurable_products"]:
+                        product_title = item['name']
+                        product_price = item['price']
+                        product_images = [img["large_url"]
+                                          for img in item["images"]]
+                        inventory_status = item['inventory_status']
+                        if inventory_status is not None:
+                            if inventory_status == 'available':
+                                product_instock = 1
+                            else:
+                                product_instock = 0  # Out of stock
+                        product_swatchcolors = [item['option1']]
+                        spid = item['id']
+                        product_link = re.sub(
+                            r'spid=(.*)', 'spid=%s' % spid, product_link)
 
-        yield products
+                        products = ProductItem()
+                        products['cid'] = 'dienthoai'  # 1: Smartphone
+                        products['title'] = product_title
+                        products['description'] = product_desc
+                        products['oldprice'] = product_oldprice
+                        products['price'] = product_price
+                        products['swatchcolors'] = product_swatchcolors
+                        products['internalmemory'] = product_internalmemory
+                        products['specifications'] = product_specifications
+                        products['link'] = product_link
+                        products['images'] = product_images
+                        products['brand'] = product_brand
+                        products['shop'] = product_shop
+                        products['rates'] = product_rates
+                        products['location'] = product_location
+                        products['domain'] = 'tiki.vn'
+                        products['sku'] = product_sku
+                        products['instock'] = product_instock
+                        products['shipping'] = product_shipping
+                        products['body'] = ''
+
+                        yield products
