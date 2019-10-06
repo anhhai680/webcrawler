@@ -42,6 +42,13 @@ class TikiSpider(CrawlSpider):
         ), callback='parse_tiki'),
     )
 
+    def __init__(self, limit_pages=None, *args, **kwargs):
+        super(TikiSpider, self).__init__(*args, **kwargs)
+        if limit_pages is not None:
+            self.limit_pages = int(limit_pages)
+        else:
+            self.limit_pages = 300
+
     def parse_tiki(self, response):
         logger.info('Scrape url: %s' % response.url)
         for product_link in response.xpath('//div[@class="product-box-list"]/div/a/@href').getall():
@@ -52,9 +59,15 @@ class TikiSpider(CrawlSpider):
         #     '//div[@class="list-pager"]/ul/li/a/@href').get()
         next_page = response.xpath(
             '//link[@rel="next"]/@href').get()
+        # match = re.match(r".*&page=(\d+)", next_page)
+        # next_page_number = int(match.groups()[0])
+        # if next_page_number <= self.limit_pages:
         if next_page is not None:
             #next_page = "https://tiki.vn%s" % next_page
             yield response.follow(next_page, callback=self.parse_tiki)
+        else:
+            logger.info(
+                'Next page not found. Spider will be stop right now !!!')
         pass
 
     def parse_product_detail(self, response):
@@ -87,13 +100,16 @@ class TikiSpider(CrawlSpider):
         # product_swatchcolors = extract_swatchcolors(
         #     '//div[@class="product_pick_color"]/div[contains(@class,"prco_content")]/div[contains(@class,"color color_cover")]/a//text()')
 
-        product_sku = extract_with_xpath('//div[@id="product-sku"]/p/text()')
+        #product_sku = extract_with_xpath('//div[@id="product-sku"]/p/text()')
+        sku = re.findall(r'p\d+', product_link)
+        if len(sku) > 0:
+            product_sku = sku[0]
         product_price = 0
         product_oldprice = extract_with_xpath(
             '//p[@id="p-listpirce"]/@data-value')
         product_images = None
         product_swatchcolors = None
-        product_internalmemory = None
+        product_internalmemory = extract_with_xpath('//td[@rel="rom"]/../td[@class="last"]/text()')
         product_specifications = None
         product_brand = extract_with_xpath(
             '//div[@class="item-brand"]/p/a/text()')
@@ -101,7 +117,7 @@ class TikiSpider(CrawlSpider):
             '//div[@class="current-seller"]/div/div/span/text()')
         product_location = None
         product_shipping = None
-        product_rates = None
+        product_rates = 0
         product_instock = 1  # Product in stock
 
         # product_images = extract_xpath_all(
@@ -148,8 +164,14 @@ class TikiSpider(CrawlSpider):
                             if inventory_status == 'available':
                                 product_instock = 1
                             else:
-                                product_instock = 0  # Out of stock
-                        product_swatchcolors = [item['option1']]
+                                product_instock = 0  # Out of 
+                        if 'option1' in item and 'option2' not in item:
+                            product_swatchcolors = item['option1']
+                        else if 'option2' in item:
+                            product_swatchcolors = item['option2']
+                        else:
+                            product_swatchcolors = item['color']
+
                         spid = item['id']
                         product_link = re.sub(
                             r'spid=(.*)', 'spid=%s' % spid, product_link)

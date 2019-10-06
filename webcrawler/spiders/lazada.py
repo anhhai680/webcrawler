@@ -162,8 +162,7 @@ class LazadaSpider(CrawlSpider):
                         if fields['primaryKey']['skuNames'] is not None:
                             product_swatchcolors = [
                                 fields['primaryKey']['skuNames'][0]]
-                            product_internalmemory = [
-                                fields['primaryKey']['skuNames'][1]]
+                            product_internalmemory = fields['primaryKey']['skuNames'][1]
 
                         # if fields['productOption']['skuBase']['properties'][1]['name'] == 'Khả năng lưu trữ':
                         #     product_internalmemory = [

@@ -74,8 +74,8 @@ class MySQLPipeline(object):
             cat_id = item["cid"]
             title = item["title"]
             desc = item["description"]
-            swatchcolors = None
-            internalmemory = None
+            swatchcolors = item["swatchcolors"]
+            internalmemory = item["internalmemory"]
             specifications = None
             oldprice = parse_money(item["oldprice"])
             price = parse_money(item["price"])
@@ -93,23 +93,23 @@ class MySQLPipeline(object):
             query = 'SELECT id FROM crawl_products WHERE category_id= %s and domain=%s and link=%s'
             params = (cat_id, domain, link)
 
-            if 'swatchcolors' in item:
-                try:
-                    swatchcolors = json.dumps(
-                        list(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
-                except:
-                    swatchcolors = json.dumps(
-                        dict(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
-                    pass
+            # if 'swatchcolors' in item:
+            #     try:
+            #         swatchcolors = json.dumps(
+            #             list(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
+            #     except:
+            #         swatchcolors = json.dumps(
+            #             dict(item["swatchcolors"]), separators=(',', ':'), ensure_ascii=False)
+            #         pass
 
-            if 'internalmemory' in item:
-                try:
-                    internalmemory = json.dumps(
-                        list(item["internalmemory"]), separators=(',', ':'), ensure_ascii=False)
-                except:
-                    internalmemory = json.dumps(
-                        dict(item["internalmemory"]), separators=(',', ':'), ensure_ascii=False)
-                    pass
+            # if 'internalmemory' in item:
+            #     try:
+            #         internalmemory = json.dumps(
+            #             list(item["internalmemory"]), separators=(',', ':'), ensure_ascii=False)
+            #     except:
+            #         internalmemory = json.dumps(
+            #             dict(item["internalmemory"]), separators=(',', ':'), ensure_ascii=False)
+            #         pass
 
             if item["specifications"] is not None:
                 try:
