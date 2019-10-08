@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 class TikiSpider(CrawlSpider):
     name = 'tiki'
     allowed_domains = ['tiki.vn']
-    start_urls = ['https://tiki.vn/dien-thoai-smartphone/c1795?src=tree']
+    start_urls = ['https://tiki.vn/dien-thoai-smartphone/c1795']
     rules = (
         Rule(LxmlLinkExtractor(
             allow=(
                 '/dien-thoai-smartphone/',
                 '/dien-thoai-smartphone/[\\w-]+/[\\w-]+$'
             ),
-            deny=(
+            deny_domains=(
                 '/tin-tuc/',
                 '/phu-kien/',
                 '/huong-dan/',
@@ -37,9 +37,22 @@ class TikiSpider(CrawlSpider):
                 '/dat-ve-may-bay?src=(.*?)',
                 '/chuong-trinh/',
                 '/phieu-qua-tang/'
-                '/deal-hot?src=(.*?)'
+                '/deal-hot?src=(.*?)',
+                '?only_ship_to_nested',
+                '?filter_mobile_khe_sim',
+                '?filter_mobile_dungluong_pin',
+                '?filter_mobile_man_hinh',
+                '?filter_mobile_dophangiai',
+                '?filter_mobile_rom',
+                '?filter_mobile_camera_sau',
+                '?filter_mobile_camera_truoc',
+                '?seller',
+                '?rating',
+                '?price',
+                '?src'
             ),
         ), callback='parse_tiki'),
+
     )
 
     def __init__(self, limit_pages=None, *args, **kwargs):
@@ -59,15 +72,17 @@ class TikiSpider(CrawlSpider):
         #     '//div[@class="list-pager"]/ul/li/a/@href').get()
         next_page = response.xpath(
             '//link[@rel="next"]/@href').get()
-        # match = re.match(r".*&page=(\d+)", next_page)
-        # next_page_number = int(match.groups()[0])
-        # if next_page_number <= self.limit_pages:
         if next_page is not None:
-            #next_page = "https://tiki.vn%s" % next_page
-            yield response.follow(next_page, callback=self.parse_tiki)
-        else:
-            logger.info(
-                'Next page not found. Spider will be stop right now !!!')
+            match = re.match(r".*?page=(\d+)", next_page)
+            if match is not None:
+                next_page_number = int(match.groups()[0])
+                if next_page_number <= self.limit_pages:
+                    # if next_page is not None:
+                    #next_page = "https://tiki.vn%s" % next_page
+                    yield response.follow(next_page, callback=self.parse_tiki)
+                else:
+                    logger.info(
+                        'Next page not found. Spider will be stop right now !!!')
         pass
 
     def parse_product_detail(self, response):
@@ -109,15 +124,17 @@ class TikiSpider(CrawlSpider):
             '//p[@id="p-listpirce"]/@data-value')
         product_images = None
         product_swatchcolors = None
-        product_internalmemory = extract_with_xpath('//td[@rel="rom"]/../td[@class="last"]/text()')
+        product_internalmemory = extract_with_xpath(
+            '//td[@rel="rom"]/../td[@class="last"]/text()')
         product_specifications = None
         product_brand = extract_with_xpath(
             '//div[@class="item-brand"]/p/a/text()')
         product_shop = extract_with_xpath(
             '//div[@class="current-seller"]/div/div/span/text()')
-        product_location = None
-        product_shipping = None
-        product_rates = 0
+        product_location = 'Hồ Chí Minh'
+        product_shipping = 0  # 1 Free shipping, 0 Not Free
+        product_rates = extract_with_xpath(
+            '//meta[@itemprop="ratingValue"]/@content')
         product_instock = 1  # Product in stock
 
         # product_images = extract_xpath_all(
@@ -164,12 +181,21 @@ class TikiSpider(CrawlSpider):
                             if inventory_status == 'available':
                                 product_instock = 1
                             else:
-                                product_instock = 0  # Out of 
-                        if 'option1' in item and 'option2' not in item:
-                            product_swatchcolors = item['option1']
-                        else if 'option2' in item:
-                            product_swatchcolors = item['option2']
-                        else:
+                                product_instock = 0  # Out of
+                        # if 'option1' in item and 'option2' not in item:
+                        #     product_swatchcolors = item['option1']
+                        # elif 'option2' in item:
+                        #     product_swatchcolors = item['option2']
+                        # else:
+                        #     product_swatchcolors = item['color']
+
+                        if 'option1' in item:
+                            if 'GB' not in item['option1']:
+                                product_swatchcolors = item['option1']
+                        elif 'option2' in item:
+                            if 'GB' not in item['option2']:
+                                product_swatchcolors = item['option2']
+                        elif 'color' in item:
                             product_swatchcolors = item['color']
 
                         spid = item['id']
