@@ -1,5 +1,5 @@
 import pymongo
-import json
+from scrapy.exceptions import DropItem
 
 
 class MongoPipeline(object):
@@ -44,7 +44,7 @@ class MongoPipeline(object):
             #         pass
             # item["specifications"] = specifications
             # self.db[self.collection_name].insert(list(item))
-            self.db[self.collection_name].insert_one(item)
+            self.db[self.collection_name].insert_one(dict(item))
         except pymongo.errors.InvalidBSON as ex:
             spider.logger.error('InvalidBSON %s' % ex)
         return item

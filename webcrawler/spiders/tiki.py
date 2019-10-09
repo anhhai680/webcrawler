@@ -51,23 +51,7 @@ class TikiSpider(CrawlSpider):
                 '/c1795?price',
                 '/c1795?src'
             ),
-        ), callback='parse_tiki'),
-        Rule(LxmlLinkExtractor(
-            deny_extensions=(
-                '?only_ship_to_nested',
-                '?filter_mobile_khe_sim',
-                '?filter_mobile_dungluong_pin',
-                '?filter_mobile_man_hinh',
-                '?filter_mobile_dophangiai',
-                '?filter_mobile_rom',
-                '?filter_mobile_camera_sau',
-                '?filter_mobile_camera_truoc',
-                '?seller',
-                '?rating',
-                '?price',
-                '?src'
-            )
-        ))
+        ), callback='parse_tiki')
     )
 
     def __init__(self, limit_pages=None, *args, **kwargs):
@@ -167,7 +151,7 @@ class TikiSpider(CrawlSpider):
         if specifications is not None:
             product_specifications = [item.strip() for item in specifications]
 
-        # product_specifications = []
+        # # product_specifications = []
         # for spec_row in response.xpath('//table[@id="chi-tiet"]/tbody'):
         #     if spec_row is not None:
         #         try:
