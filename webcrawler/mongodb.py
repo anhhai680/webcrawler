@@ -1,4 +1,5 @@
 import pymongo
+import json
 
 
 class MongoPipeline(object):
@@ -32,7 +33,18 @@ class MongoPipeline(object):
 
     def process_item(self, item, spider):
         try:
-            self.db[self.collection_name].insert(list(item))
+            # specifications = None
+            # if item["specifications"] is not None:
+            #     try:
+            #         specifications = json.dumps(
+            #             list(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+            #     except:
+            #         specifications = json.dumps(
+            #             dict(item["specifications"]), separators=(',', ':'), ensure_ascii=False)
+            #         pass
+            # item["specifications"] = specifications
+            # self.db[self.collection_name].insert(list(item))
+            self.db[self.collection_name].insert_one(item)
         except pymongo.errors.InvalidBSON as ex:
             spider.logger.error('InvalidBSON %s' % ex)
         return item

@@ -24,7 +24,7 @@ class TikiSpider(CrawlSpider):
                 '/dien-thoai-smartphone/',
                 '/dien-thoai-smartphone/[\\w-]+/[\\w-]+$'
             ),
-            deny_domains=(
+            deny=(
                 '/tin-tuc/',
                 '/phu-kien/',
                 '/huong-dan/',
@@ -38,6 +38,22 @@ class TikiSpider(CrawlSpider):
                 '/chuong-trinh/',
                 '/phieu-qua-tang/'
                 '/deal-hot?src=(.*?)',
+                '/c1795?only_ship_to_nested=(.*?)',
+                '/c1795?filter_mobile_khe_sim',
+                '/c1795?filter_mobile_dungluong_pin',
+                '/c1795?filter_mobile_man_hinh',
+                '/c1795?filter_mobile_dophangiai',
+                '/c1795?filter_mobile_rom',
+                '/c1795?filter_mobile_camera_sau',
+                '/c1795?filter_mobile_camera_truoc',
+                '/c1795?seller',
+                '/c1795?rating',
+                '/c1795?price',
+                '/c1795?src'
+            ),
+        ), callback='parse_tiki'),
+        Rule(LxmlLinkExtractor(
+            deny_extensions=(
                 '?only_ship_to_nested',
                 '?filter_mobile_khe_sim',
                 '?filter_mobile_dungluong_pin',
@@ -50,9 +66,8 @@ class TikiSpider(CrawlSpider):
                 '?rating',
                 '?price',
                 '?src'
-            ),
-        ), callback='parse_tiki'),
-
+            )
+        ))
     )
 
     def __init__(self, limit_pages=None, *args, **kwargs):
@@ -77,7 +92,6 @@ class TikiSpider(CrawlSpider):
             if match is not None:
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
-                    # if next_page is not None:
                     #next_page = "https://tiki.vn%s" % next_page
                     yield response.follow(next_page, callback=self.parse_tiki)
                 else:
@@ -148,8 +162,10 @@ class TikiSpider(CrawlSpider):
         #     '//ul[@class="nk-product-bigImg"]/li/div[@class="wrap-img-tag-pdp"]/span/img/@src')
 
         # Specifications product
-        product_specifications = extract_xpath_all(
+        specifications = extract_xpath_all(
             '//table[@id="chi-tiet"]/tbody/tr/td/text()')
+        if specifications is not None:
+            product_specifications = [item.strip() for item in specifications]
 
         # product_specifications = []
         # for spec_row in response.xpath('//table[@id="chi-tiet"]/tbody'):
@@ -206,7 +222,7 @@ class TikiSpider(CrawlSpider):
                         products['cid'] = 'dienthoai'  # 1: Smartphone
                         products['title'] = product_title
                         products['description'] = product_desc
-                        products['oldprice'] = product_oldprice
+                        products['oldprice'] = int(product_oldprice)
                         products['price'] = product_price
                         products['swatchcolors'] = product_swatchcolors
                         products['internalmemory'] = product_internalmemory

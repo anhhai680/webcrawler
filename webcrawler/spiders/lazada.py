@@ -153,7 +153,7 @@ class LazadaSpider(CrawlSpider):
                         # product images
                         product_images = [
                             'https:' + item['src'] for item in fields['skuGalleries'][skuId] if item['type'] == 'img']
-                            # 'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
+                        # 'https:' + item['src'] for item in fields['skuGalleries']['0'] if item['type'] == 'img']
 
                         # if fields['productOption']['skuBase']['properties'][0]['name'] == 'Nhóm màu':
                         #     product_swatchcolors = [

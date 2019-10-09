@@ -19,3 +19,8 @@ https://shopee.vn/i%E1%BB%87n%20tho%E1%BA%A1i%20smartphone%20XS%20mini-i.5405768
 # Mysql's query example to help testing only purpose:
 - select * from ecrawdb.crawl_products as p inner join ecrawdb.crawl_blacklinks as b on p.link = b.link;
 - alter table ecrawdb.crawl_products auto_increment=1;
+
+# Test scrapy shell inside command line
+url = 'http://www.example.com'
+request = scrapy.Request(url, headers={'User-Agent': 'Mybot'})
+fetch(request)

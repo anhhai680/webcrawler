@@ -120,8 +120,8 @@ DOWNLOADER_MIDDLEWARES = {
 #    'webcrawler.pipelines.WebcrawlerPipeline': 300,
 # }
 ITEM_PIPELINES = {
-    # 'webcrawler.mongodb.MongoPipeline': 300,
-    'webcrawler.pipelines.MySQLPipeline': 300,
+    'webcrawler.mongodb.MongoPipeline': 300,
+    # 'webcrawler.pipelines.MySQLPipeline': 300,
     'webcrawler.pipelines.PricePipeline': 400,
     'webcrawler.pipelines.DuplicatesPipeline': 400,
     'webcrawler.pipelines.JsonWriterPipeline': 300,
