@@ -4,7 +4,8 @@ import logging
 import re
 import json
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
+#from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
+from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
 from datetime import datetime
 
@@ -19,7 +20,7 @@ class TikiSpider(CrawlSpider):
     allowed_domains = ['tiki.vn']
     start_urls = ['https://tiki.vn/dien-thoai-smartphone/c1795']
     rules = (
-        Rule(LxmlLinkExtractor(
+        Rule(LinkExtractor(
             allow=(
                 '/dien-thoai-smartphone/',
                 '/dien-thoai-smartphone/[\\w-]+/[\\w-]+$'
@@ -38,7 +39,7 @@ class TikiSpider(CrawlSpider):
                 '/chuong-trinh/',
                 '/phieu-qua-tang/'
                 '/deal-hot?src=(.*?)',
-                '/c1795?only_ship_to_nested=(.*?)',
+                '/c1795?only_ship_to_nested',
                 '/c1795?filter_mobile_khe_sim',
                 '/c1795?filter_mobile_dungluong_pin',
                 '/c1795?filter_mobile_man_hinh',
@@ -51,7 +52,8 @@ class TikiSpider(CrawlSpider):
                 '/c1795?price',
                 '/c1795?src'
             ),
-        ), callback='parse_tiki')
+            allow_domains=['tiki.vn']
+        ), callback='parse_tiki'),
     )
 
     def __init__(self, limit_pages=None, *args, **kwargs):
@@ -67,8 +69,6 @@ class TikiSpider(CrawlSpider):
             yield response.follow(product_link, callback=self.parse_product_detail)
 
         # Following next page to scrape
-        # next_page = response.xpath(
-        #     '//div[@class="list-pager"]/ul/li/a/@href').get()
         next_page = response.xpath(
             '//link[@rel="next"]/@href').get()
         if next_page is not None:
@@ -76,7 +76,6 @@ class TikiSpider(CrawlSpider):
             if match is not None:
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
-                    #next_page = "https://tiki.vn%s" % next_page
                     yield response.follow(next_page, callback=self.parse_tiki)
                 else:
                     logger.info(
@@ -124,7 +123,7 @@ class TikiSpider(CrawlSpider):
         product_swatchcolors = None
         product_internalmemory = extract_with_xpath(
             '//td[@rel="rom"]/../td[@class="last"]/text()')
-        product_specifications = None
+        product_specifications = []
         product_brand = extract_with_xpath(
             '//div[@class="item-brand"]/p/a/text()')
         product_shop = extract_with_xpath(
@@ -145,21 +144,22 @@ class TikiSpider(CrawlSpider):
         # product_images = extract_product_gallery(
         #     '//ul[@class="nk-product-bigImg"]/li/div[@class="wrap-img-tag-pdp"]/span/img/@src')
 
-        # Specifications product
-        specifications = extract_xpath_all(
-            '//table[@id="chi-tiet"]/tbody/tr/td/text()')
-        if specifications is not None:
-            product_specifications = [item.strip() for item in specifications]
+        # # Specifications product
+        # specifications = extract_xpath_all(
+        #     '//table[@id="chi-tiet"]/tbody/tr/td/text()')
+        # if specifications is not None:
+        #     product_specifications = [item.strip() for item in specifications]
 
-        # # product_specifications = []
-        # for spec_row in response.xpath('//table[@id="chi-tiet"]/tbody'):
-        #     if spec_row is not None:
-        #         try:
-        #             spec_values = spec_row.xpath('.//tr//text()').getall()
-        #             spec_info = [st.strip() for st in spec_values]
-        #             product_specifications.append({spec_info})
-        #         except:
-        #             pass
+        # product_specifications = []
+        for srow in response.xpath('//table[@id="chi-tiet"]/tbody/tr'):
+            if srow is not None:
+                try:
+                    spec_values = srow.xpath('.//td//text()').getall()
+                    spec_info = [st.strip()
+                                 for st in spec_values if st.strip()]
+                    product_specifications.append(spec_info)
+                except:
+                    pass
 
         # parse json data from response
         script = response.xpath(
