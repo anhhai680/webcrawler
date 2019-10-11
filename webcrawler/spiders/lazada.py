@@ -160,8 +160,7 @@ class LazadaSpider(CrawlSpider):
                         #         item['name'] for item in fields['productOption']['skuBase']['properties'][0]['values'] if 'name' in item]
 
                         if fields['primaryKey']['skuNames'] is not None:
-                            product_swatchcolors = [
-                                fields['primaryKey']['skuNames'][0]]
+                            product_swatchcolors = fields['primaryKey']['skuNames'][0]
                             product_internalmemory = fields['primaryKey']['skuNames'][1]
 
                         # if fields['productOption']['skuBase']['properties'][1]['name'] == 'Khả năng lưu trữ':
@@ -169,11 +168,16 @@ class LazadaSpider(CrawlSpider):
                         #         item['name'] for item in fields['productOption']['skuBase']['properties'][1]['values'] if 'name' in item]
 
                         # product_specifications
-                        data_specs = fields['product']['highlights']
-                        sel = Selector(text=data_specs)
-                        if sel is not None:
-                            product_specifications = sel.xpath(
-                                '//ul/li/text()').getall()
+                        # data_specs = fields['product']['highlights']
+                        # sel = Selector(text=data_specs)
+                        # if sel is not None:
+                        #     product_specifications = sel.xpath(
+                        #         '//ul/li/text()').getall()
+                        data_specs = fields['specifications'][skuId]
+                        if data_specs is not None:
+                            product_specifications = data_specs['features']
+
+
                         # price
                         #data_prices = fields['skuInfos']['0']['price']
                         data_prices = fields['skuInfos'][skuId]['price']

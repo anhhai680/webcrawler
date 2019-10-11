@@ -56,6 +56,12 @@ class TikiSpider(CrawlSpider):
         ), callback='parse_tiki'),
     )
 
+    custom_settings={
+        'EXTENSIONS' : {
+            'webcrawler.exts.spider_ext.SpiderOpenCloseLogging': 543,
+        },
+    }
+
     def __init__(self, limit_pages=None, *args, **kwargs):
         super(TikiSpider, self).__init__(*args, **kwargs)
         if limit_pages is not None:
