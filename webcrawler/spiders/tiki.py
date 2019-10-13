@@ -39,26 +39,14 @@ class TikiSpider(CrawlSpider):
                 '/chuong-trinh/',
                 '/phieu-qua-tang/'
                 '/deal-hot?src=(.*?)',
-                '/c1795?only_ship_to_nested',
-                '/c1795?filter_mobile_khe_sim',
-                '/c1795?filter_mobile_dungluong_pin',
-                '/c1795?filter_mobile_man_hinh',
-                '/c1795?filter_mobile_dophangiai',
-                '/c1795?filter_mobile_rom',
-                '/c1795?filter_mobile_camera_sau',
-                '/c1795?filter_mobile_camera_truoc',
-                '/c1795?seller',
-                '/c1795?rating',
-                '/c1795?price',
-                '/c1795?src'
             ),
             allow_domains=['tiki.vn']
         ), callback='parse_tiki'),
     )
 
-    custom_settings={
-        'EXTENSIONS' : {
-            'webcrawler.exts.spider_ext.SpiderOpenCloseLogging': 543,
+    custom_settings = {
+        'DOWNLOADER_MIDDLEWARES': {
+            'webcrawler.middlewares.tiki.TikiSpiderMiddleware': 543
         },
     }
 

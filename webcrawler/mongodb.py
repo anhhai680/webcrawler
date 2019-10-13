@@ -4,8 +4,6 @@ from scrapy.exceptions import DropItem
 
 class MongoPipeline(object):
 
-    collection_name = "crawl_products"
-
     def __init__(self, mongo_uri, mongo_db):
         self.mongo_uri = mongo_uri
         self.mongo_db = mongo_db
@@ -21,11 +19,12 @@ class MongoPipeline(object):
         try:
             self.client = pymongo.MongoClient(self.mongo_uri)
             self.db = self.client[self.mongo_db]
+            self.collection_name = "crawl_products"
             colllist = self.db.list_collection_names()
-            if collection_name in colllist:
-                spider.logger.info('%s has been connected.' % collection_name)
+            if self.collection_name in colllist:
+                spider.logger.info('%s has been connected.' % self.collection_name)
         except:
-            spider.logger.error(
+            raise pymongo.errors.PyMongoError(
                 'Could not open mongodb connection from %s' % self.mongo_db)
 
     def close_spider(self, spider):
