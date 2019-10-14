@@ -62,11 +62,14 @@ class TikiSpiderMiddleware(object):
         if request.url == start_url:
             return None
 
-        if len(self.blacklinks) > 0:
-            for item in self.blacklinks:
-                if request.url in item['link']:
-                    raise IgnoreRequest('IgnoreRequest %s' % request.url)
-        else:
-            spider.logger.info('Tiki blacklinks have no any records.')
+        try:
+            if len(self.blacklinks) > 0:
+                for item in self.blacklinks:
+                    if request.url in item['link']:
+                        raise IgnoreRequest('IgnoreRequest %s' % request.url)
+            else:
+                spider.logger.info('Tiki blacklinks have no any records.')
+        except Exception as ex:
+            spider.logger.error('Spider process_request errors: {}'.format(ex))
 
         return None

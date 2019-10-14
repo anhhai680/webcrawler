@@ -32,9 +32,13 @@ class MongoPipeline(object):
         try:
             # self.db[self.collection_name].insert(list(item))
             myquery = {'link': item['link']}
-            mycol = self.db[self.collection_name].count(myquery)
-            if mycol is not None:
+            mycol = self.db[self.collection_name].count_documents(myquery)
+            if mycol <= 0:
                 self.db[self.collection_name].insert_one(dict(item))
+            else:
+                newcol = {'$set': {
+                    'oldprice': item['oldprice'], 'price': item['price'], 'rates': item['rates'], 'instock': item['instock']}}
+                self.db[self.collection_name].update_one(myquery, newcol)
         except pymongo.errors.InvalidBSON as ex:
             spider.logger.error('InvalidBSON %s' % ex)
         return item
