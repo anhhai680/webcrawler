@@ -22,18 +22,19 @@ class MongoPipeline(object):
             self.collection_name = "crawl_products"
             colllist = self.db.list_collection_names()
             if self.collection_name in colllist:
-                spider.logger.info('%s has been connected.' % self.collection_name)
+                spider.logger.info('%s has been connected.' %
+                                   self.collection_name)
         except:
             raise pymongo.errors.PyMongoError(
                 'Could not open mongodb connection from %s' % self.mongo_db)
 
-    def close_spider(self, spider):
-        self.client.close()
-
     def process_item(self, item, spider):
         try:
             # self.db[self.collection_name].insert(list(item))
-            self.db[self.collection_name].insert_one(dict(item))
+            myquery = {'link': item['link']}
+            mycol = self.db[self.collection_name].count(myquery)
+            if mycol is not None:
+                self.db[self.collection_name].insert_one(dict(item))
         except pymongo.errors.InvalidBSON as ex:
             spider.logger.error('InvalidBSON %s' % ex)
         return item

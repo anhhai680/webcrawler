@@ -4,7 +4,6 @@ import logging
 import re
 import json
 from scrapy.spiders import CrawlSpider, Rule
-#from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
 from datetime import datetime

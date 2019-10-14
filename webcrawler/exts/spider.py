@@ -4,6 +4,7 @@ from scrapy.exceptions import NotConfigured
 
 logger = logging.getLogger(__name__)
 
+
 class SpiderOpenCloseLogging(object):
 
     def __init__(self, item_count):
@@ -24,8 +25,10 @@ class SpiderOpenCloseLogging(object):
         ext = cls(item_count)
 
         # connect the extension object to signals
-        crawler.signals.connect(ext.spider_opened, signal=signals.spider_opened)
-        crawler.signals.connect(ext.spider_closed, signal=signals.spider_closed)
+        crawler.signals.connect(
+            ext.spider_opened, signal=signals.spider_opened)
+        crawler.signals.connect(
+            ext.spider_closed, signal=signals.spider_closed)
         crawler.signals.connect(ext.item_scraped, signal=signals.item_scraped)
 
         # return the extension object
