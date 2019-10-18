@@ -213,7 +213,7 @@ class TikiSpider(CrawlSpider):
                         products['domain'] = 'tiki.vn'
                         products['sku'] = product_sku
                         products['instock'] = product_instock
-                        products['shipping'] = product_shipping
+                        #products['freeshipping'] = product_shipping
                         products['body'] = ''
 
                         yield products

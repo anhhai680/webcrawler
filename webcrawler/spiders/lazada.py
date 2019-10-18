@@ -74,9 +74,11 @@ class LazadaSpider(CrawlSpider):
                         #product_link = 'https:%s' % item['productUrl']
                         product_location = item['location']
                         # product_instock = str(item['inStock'])
-                        product_shipping = ''
-                        if 'alias' in item['icons']:
-                            product_shipping = item['icons']['alias']
+                        # product_shipping = 0  # No freeshipping
+                        # if 'alias' in item['icons']:
+                        #     if item['icons']['alias'] == 'freeShipping':
+                        #         product_shipping = 1  # Its freeshipping
+
                         rating_scope = item['ratingScore']
 
                         for thumb_item in item['thumbs']:
@@ -87,7 +89,7 @@ class LazadaSpider(CrawlSpider):
                             il = ProductLoader()
                             il.add_value('link', product_link)
                             il.add_value('location', product_location)
-                            il.add_value('shipping', product_shipping)
+                            #il.add_value('freeshipping', product_shipping)
                             # il.add_value('instock', product_instock)
                             il.add_value('rates', rating_scope)
                             il.add_value('sku', product_sku)
@@ -176,7 +178,6 @@ class LazadaSpider(CrawlSpider):
                         data_specs = fields['specifications'][skuId]
                         if data_specs is not None:
                             product_specifications = data_specs['features']
-
 
                         # price
                         #data_prices = fields['skuInfos']['0']['price']

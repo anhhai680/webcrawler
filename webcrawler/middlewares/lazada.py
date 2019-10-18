@@ -5,34 +5,53 @@ from scrapy.item import BaseItem
 from scrapy.utils.request import request_fingerprint
 from scrapy.exceptions import DontCloseSpider, NotConfigured, IgnoreRequest
 
-import mysql.connector
-from mysql.connector import Error
+import pymongo
 
 
 class LazadaSpiderMiddleware(object):
 
-    # Not all methods need to be defined. If a method is not defined,
-    # scrapy acts as if the downloader middleware does not modify the
-    # passed objects.
-    def __init__(self, host, user, passwd, db):
-        self.host = host
-        self.user = user
-        self.passwd = passwd
-        self.db = db
+    def __init__(self, mongo_uri, mongo_db):
+        self.mongo_uri = mongo_uri
+        self.mongo_db = mongo_db
 
     @classmethod
     def from_crawler(cls, crawler):
-        # This method is used by Scrapy to create your spiders.
-        db_settings = crawler.settings.getdict("DB_SETTINGS")
-        if not db_settings:
-            raise NotConfigured
-        host = db_settings["host"]
-        user = db_settings["user"]
-        passwd = db_settings["passwd"]
-        db = db_settings["db"]
-        s = cls(host, user, passwd, db)
+
+        MONGO_URI = crawler.settings.get('MONGO_URI')
+        MONGO_DATABASE = crawler.settings.get('MONGO_DATABASE')
+        if MONGO_URI is None or MONGO_DATABASE is None:
+            raise NotConfigured('{0} or {1} did not defined in settings.'.format(
+                MONGO_URI, MONGO_DATABASE))
+
+        s = cls(
+            mongo_uri=MONGO_URI,
+            mongo_db=MONGO_DATABASE
+        )
         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
         return s
+
+    def spider_opened(self, spider):
+        try:
+            self.client = pymongo.MongoClient(self.mongo_uri)
+            self.db = self.client[self.mongo_db]
+            self.collection_name = "crawl_blacklinks"
+            self.blacklinks = []
+            colllist = self.db.list_collection_names()
+            if self.collection_name in colllist:
+                spider.logger.info('%s has been connected.' %
+                                   self.collection_name)
+                query = {'domain': 'lazada.vn'}
+                projection = {'link': 1, '_id': 0}
+                mycol = self.db[self.collection_name]
+                mydocs = list(mycol.find(query, projection))
+                if len(mydocs) > 0:
+                    self.blacklinks = mydocs
+                spider.logger.info('{0} query results {1}'.format(
+                    self.collection_name, len(mydocs)))
+
+        except:
+            raise pymongo.errors.PyMongoError(
+                'PyMongo could not open collection %s' % self.collection_name)
 
     def process_request(self, request, spider):
         # Called for each request that goes through the downloader
@@ -44,39 +63,17 @@ class LazadaSpiderMiddleware(object):
         # - or return a Request object
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
-        spider.logger.info('Spider request: %s' % request.url)
-        for item in self.blacklinks:
-            if request.url in item[1]:
-                raise IgnoreRequest('IgnoreRequest %s' % request.url)
-        return None
+        spider.logger.info('Url request: {0}'.format(request.url))
 
-    def spider_opened(self, spider):
-        """
-        Initializes database connection and sessionmaker.
-        Creates deals table.
-        """
         try:
-            self.db = mysql.connector.connect(
-                host=self.host,
-                user=self.user,
-                passwd=self.passwd,
-                database=self.db,
-                charset='utf8',
-                use_unicode=True
-            )
-            if self.db.is_connected():
-                self.mycursor = self.db.cursor(buffered=True)
-                query = 'SELECT id,link FROM crawl_blacklinks WHERE domain="lazada.vn"'
-                #params = 'lazada.vn'
-                self.mycursor.execute(query)
-                myresult = self.mycursor.fetchall()
-                spider.logger.info('There is total %s of items' %
-                                   len(myresult))
-                if len(myresult) > 0:
-                    self.blacklinks = myresult
+            if len(self.blacklinks) > 0:
+                for item in self.blacklinks:
+                    if request.url in item['link']:
+                        raise IgnoreRequest('IgnoreRequest %s' % request.url)
             else:
-                raise ConnectionError('Could not connect to MySQL')
+                spider.logger.info('Lazada blacklinks have no any records.')
+        except Exception as ex:
+            spider.logger.error(
+                'Lazada spider process_request errors: {}'.format(ex))
 
-        except Error as ex:
-            raise ConnectionError('Error while connecting to MySQL', ex)
-        spider.logger.info('Spider opened: %s' % spider.name)
+        return None

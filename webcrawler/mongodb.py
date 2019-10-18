@@ -1,5 +1,6 @@
 import pymongo
 from scrapy.exceptions import DropItem
+import datetime
 
 
 class MongoPipeline(object):
@@ -33,11 +34,16 @@ class MongoPipeline(object):
             # self.db[self.collection_name].insert(list(item))
             myquery = {'link': item['link']}
             mycol = self.db[self.collection_name].count_documents(myquery)
+
+            # set datetime value
+            item['created_date'] = datetime.datetime.now()
+            item['last_updated'] = datetime.datetime.now()
+
             if mycol <= 0:
                 self.db[self.collection_name].insert_one(dict(item))
             else:
                 newcol = {'$set': {
-                    'oldprice': item['oldprice'], 'price': item['price'], 'rates': item['rates'], 'instock': item['instock']}}
+                    'oldprice': item['oldprice'], 'price': item['price'], 'rates': item['rates'], 'instock': item['instock'], 'last_update': item['last_update']}}
                 self.db[self.collection_name].update_one(myquery, newcol)
         except pymongo.errors.InvalidBSON as ex:
             spider.logger.error('InvalidBSON %s' % ex)

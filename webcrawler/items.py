@@ -9,6 +9,7 @@ import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Compose, TakeFirst, MapCompose, Join
 from w3lib.html import remove_tags
+import datetime
 
 
 class WebcrawlerItem(scrapy.Item):
@@ -38,8 +39,10 @@ class ProductItem(scrapy.Item):
     domain = scrapy.Field()
     sku = scrapy.Field()
     instock = scrapy.Field()
-    shipping = scrapy.Field()
+    #freeshipping = scrapy.Field()
     body = scrapy.Field()
+    created_date = scrapy.Field(serializer=str)
+    last_updated = scrapy.Field(serializer=str)
     pass
 
 
@@ -59,6 +62,9 @@ class ProductLoader(ItemLoader):
     oldprice_out = TakeFirst()
     price_out = TakeFirst()
 
+    swatchcolors_out = TakeFirst()
+    internalmemory_out = TakeFirst()
+
     link_out = clean_text
     brand_out = clean_text
     shop_out = clean_text
@@ -67,7 +73,7 @@ class ProductLoader(ItemLoader):
     domain_out = TakeFirst()
     sku_out = clean_text
     instock_out = TakeFirst()
-    shipping_out = clean_text
+    #freeshipping_out = TakeFirst()
     body_out = TakeFirst()
 
     pass
