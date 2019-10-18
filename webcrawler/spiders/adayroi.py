@@ -13,6 +13,7 @@ from ..items import ProductItem
 
 logger = logging.getLogger(__name__)
 
+
 class AdayroiSpider(CrawlSpider):
     name = 'adayroi'
     allowed_domains = ['www.adayroi.com']
@@ -35,6 +36,19 @@ class AdayroiSpider(CrawlSpider):
             ),
         ), callback='parse_adayroi'),
     )
+
+    custom_settings = {
+        'DOWNLOADER_MIDDLEWARES': {
+            'webcrawler.middlewares.adayroi.AdayroiSpiderMiddleware': 543
+        },
+    }
+
+    def __init__(self, limit_pages=None, *args, **kwargs):
+        super(AdayroiSpider).__init__(*args, **kwargs)
+        if limit_pages is not None:
+            self.limit_pages = int(limit_pages)
+        else:
+            self.limit_pages = 300
 
     def parse_adayroi(self, response):
         logger.info('Scrape url: %s' % response.url)
@@ -73,6 +87,14 @@ class AdayroiSpider(CrawlSpider):
         if re.match(price_pattern, product_price) is None:
             return
 
+        product_oldprice = 0
+        product_internalmemory = None
+        product_brand = None
+        product_location = 'Hồ Chí Minh'
+        product_rates = 0
+        product_sku = None
+        product_instock = 1
+
         product_link = extract_with_xpath(
             '//link[@rel="canonical"]/@href')
         product_title = extract_with_xpath(
@@ -83,8 +105,15 @@ class AdayroiSpider(CrawlSpider):
         product_desc = ''.join(short_desc)
         #product_desc = extract_with_xpath('//meta[@property="description"]/@content')
 
-        product_swatchcolors = extract_xpath_all(
-            '//div[@class="product-variant__list"]/a//text()')
+        # product_swatchcolors = extract_xpath_all(
+        #     '//div[@class="product-variant__list"]/a//text()')
+        product_swatchcolors = None
+        color_links = response.xpath(
+            '//div[@class="product-variant__list"]/a/@href').getall()
+        if len(color_links) > 0:
+            for sublink in color_links:
+                if sublink != response.url:
+                    yield response.follow(sublink, callback=self.parse_product_detail)
 
         # product_images = extract_with_xpath('//meta[@property="image"]/@content')
         product_images = []
@@ -99,7 +128,7 @@ class AdayroiSpider(CrawlSpider):
         # Specifications product
         product_specifications = extract_xpath_all(
             '//div[@class="product-specs__table"]/table/tbody/tr/td/text()')
-            
+
         # product_specifications = []
         # for spec_row in response.xpath('//div[@class="product-specs__table"]/table/tbody/tr'):
         #     if spec_row is not None:
@@ -113,16 +142,23 @@ class AdayroiSpider(CrawlSpider):
         #             pass
 
         products = ProductItem()
-        products['cid'] = 1  # 1: Smartphone
+        products['cid'] = 'dienthoai'  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
+        products['oldprice'] = product_oldprice
         products['price'] = product_price
         products['swatchcolors'] = product_swatchcolors
+        products['internalmemory'] = product_internalmemory
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
+        products['brand'] = product_brand
         products['shop'] = 'adayroi'
+        products['rates'] = product_rates
+        products['location'] = product_location
         products['domain'] = 'adayroi.com'
+        products['sku'] = product_sku
+        products['instock'] = product_instock
         products['body'] = ''
 
         yield products

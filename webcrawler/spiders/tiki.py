@@ -122,7 +122,7 @@ class TikiSpider(CrawlSpider):
         product_shop = extract_with_xpath(
             '//div[@class="current-seller"]/div/div/span/text()')
         product_location = 'Hồ Chí Minh'
-        product_shipping = 0  # 1 Free shipping, 0 Not Free
+        # product_shipping = 0  # 1 Free shipping, 0 Not Free
         product_rates = extract_with_xpath(
             '//meta[@itemprop="ratingValue"]/@content')
         product_instock = 1  # Product in stock
