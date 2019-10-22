@@ -30,7 +30,7 @@ class ProductItem(scrapy.Item):
     internalmemory = scrapy.Field()
     specifications = scrapy.Field()
     link = scrapy.Field()
-    image_urls = scrapy.Field()
+    #image_urls = scrapy.Field()
     images = scrapy.Field()
     brand = scrapy.Field()  # Apple, Samsung, Xiaomi...
     shop = scrapy.Field()  # Shop name

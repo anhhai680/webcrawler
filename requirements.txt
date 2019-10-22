@@ -19,4 +19,4 @@ user-agents==2.0
 w3lib==1.20.0
 woocommerce==2.1.1
 numpy==1.17.0
-Pillow==6.1.0
+# Pillow==6.1.0

@@ -71,9 +71,9 @@ class AdayroiSpiderMiddleware(object):
                     if request.url in item['link']:
                         raise IgnoreRequest('IgnoreRequest %s' % request.url)
             else:
-                spider.logger.info('Lazada blacklinks have no any records.')
+                spider.logger.info('Adayroi blacklinks have no any records.')
         except Exception as ex:
             spider.logger.error(
-                'Lazada spider process_request errors: {}'.format(ex))
+                'Adayroi spider process_request errors: {}'.format(ex))
 
         return None
