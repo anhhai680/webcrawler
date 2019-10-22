@@ -37,16 +37,16 @@ class AdayroiSpider(CrawlSpider):
         ), callback='parse_adayroi'),
     )
 
-    custom_settings = {
-        'DOWNLOADER_MIDDLEWARES': {
-            'webcrawler.middlewares.adayroi.AdayroiSpiderMiddleware': 543
-        }
-    }
+    # custom_settings = {
+    #     'DOWNLOADER_MIDDLEWARES': {
+    #         'webcrawler.middlewares.adayroi.AdayroiSpiderMiddleware': 543
+    #     }
+    # }
 
-    def __init__(self, limit_pages=None, *a, **kw):
-        super(AdayroiSpider, self).__init__(*a, **kw)
+    def __init__(self, limit_pages=None, *args, **kwargs):
+        super(AdayroiSpider, self).__init__(*args, **kwargs)
         if limit_pages is not None:
-            self.limit_pages = limit_pages
+            self.limit_pages = int(limit_pages)
         else:
             self.limit_pages = 300
 
@@ -84,11 +84,16 @@ class AdayroiSpider(CrawlSpider):
         #logger.info('Product Url: %s' % response.url)
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
-        product_price = extract_price(
-            '//div[@class="product-detail__price"]/div[@class="product-detail__price-info"]/div[@class="price-info__sale"]/text()')
+        product_price = 0
+        # regular_prices = extract_price(
+        #     '//div[@class="product-detail__price"]/div[@class="product-detail__price-info"]/div[@class="price-info__sale"]/text()')
+        regular_prices = extract_with_xpath(
+            '//div[contains(@class,"txt-color-5 h1-bo")]/text()')
         #logger.info('Product Price: %s' % product_price)
-        if re.match(price_pattern, product_price) is None:
+        if re.match(price_pattern, regular_prices) is None:
             return
+        else:
+            product_price = parse_money(regular_prices)
 
         product_link = extract_with_xpath(
             '//link[@rel="canonical"]/@href')
@@ -100,11 +105,28 @@ class AdayroiSpider(CrawlSpider):
         product_desc = ''.join(short_desc)
         #product_desc = extract_with_xpath('//meta[@property="description"]/@content')
 
-        product_swatchcolors = extract_xpath_all(
-            '//div[@class="product-variant__list"]/a//text()')
+        product_swatchcolors = None
+        # colors = extract_xpath_all(
+        #     '//div[@class="product-variant__list"]/a//text()')
+        for crow in response.xpath('//div[@class="product-variant__list"]/a').getall():
+            color_link = crow.xpath(
+                './/[not(contains(@class,"disabled"))]/@href')
+            color_text = crow.xpath('.//span[@class="h6-re"]/text()')
+            if color_link is not None:
+                if color_link not in response.url:
+                    requestUrl = 'https://www.adayroi.com%s' % color_link
+                    yield response.follow(requestUrl, callback=self.parse_product_detail)
+                else:
+                    scolors = color_text.split()
+                    if len(scolors) > 0:
+                        product_swatchcolors = str(scolors[0])
 
-        product_oldprice = extract_price(
+        product_oldprice = 0
+        oldprice = extract_price(
             '//div[@class="txt-color-16 h2-re mxl-8 txt-deco-line_through ng-star-inserted"]/text()')
+        if oldprice is not None and oldprice != '':
+            product_oldprice = parse_money(oldprice)
+
         product_internalmemory = extract_with_xpath(
             '//td[@class="product-specs__value"]/div[@class="ng-star-inserted"]/text()')
 
@@ -124,11 +146,25 @@ class AdayroiSpider(CrawlSpider):
 
         product_brand = extract_with_xpath(
             '//div[@class="txt-color-16 h6-re mt-6 ng-star-inserted"]/span/a[@class="txt-color-25 "]/text()')
+        product_shop = extract_with_xpath(
+            '//div[@class="txt-color-16 h6-re mt-6 ng-star-inserted"]/span[@class="ng-star-inserted"]/a/text()')
         product_location = 'Hồ Chí Minh'
-        product_sku = extract_with_xpath(
+        product_sku = None
+        sku_text = extract_with_xpath(
             '//span[@class="product-sapSku ng-star-inserted"]/text()')
+        if sku_text is not None:
+            skus = sku_text.split()
+            if len(skus) > 0:
+                product_sku = str(skus[2])
         product_instock = 1
-        product_rates = 0
+        outofstock_text = extract_with_xpath(
+            '//div[@class="product-price my-8 ng-star-inserted"]/div[contains(@class,"txt-color-16 h1-bo")]/text()')
+        if outofstock_text is not None:
+            if outofstock_text in 'Tạm hết hàng':
+                product_instock = 0
+
+        product_rates = extract_with_xpath(
+            '//div[@class="wx-196 flex-col flex-start_center ng-star-inserted"]/div[@class="h41-bo-47"]/text()')
 
         # product_specifications = []
         # for spec_row in response.xpath('//div[@class="product-specs__table"]/table/tbody/tr'):
@@ -146,13 +182,26 @@ class AdayroiSpider(CrawlSpider):
         products['cid'] = 'dienthoai'  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
+        products['oldprice'] = product_oldprice
         products['price'] = product_price
         products['swatchcolors'] = product_swatchcolors
+        products['internalmemory'] = product_internalmemory
         products['specifications'] = product_specifications
         products['link'] = product_link
         products['images'] = product_images
-        products['shop'] = 'adayroi'
+        products['brand'] = product_brand
+        products['shop'] = product_shop
+        products['rates'] = product_rates
+        products['location'] = product_location
         products['domain'] = 'adayroi.com'
+        products['sku'] = product_sku
+        products['instock'] = product_instock
         products['body'] = ''
 
         yield products
+
+
+def parse_money(value):
+    if str(value).isdigit():
+        return value
+    return re.sub(r'[^\d]', '', str(value))
