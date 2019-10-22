@@ -93,7 +93,7 @@ class AdayroiSpider(CrawlSpider):
         if re.match(price_pattern, regular_prices) is None:
             return
         else:
-            product_price = parse_money(regular_prices)
+            product_price = self.parse_money(regular_prices)
 
         product_link = extract_with_xpath(
             '//link[@rel="canonical"]/@href')
@@ -125,7 +125,7 @@ class AdayroiSpider(CrawlSpider):
         oldprice = extract_price(
             '//div[@class="txt-color-16 h2-re mxl-8 txt-deco-line_through ng-star-inserted"]/text()')
         if oldprice is not None and oldprice != '':
-            product_oldprice = parse_money(oldprice)
+            product_oldprice = self.parse_money(oldprice)
 
         product_internalmemory = extract_with_xpath(
             '//td[@class="product-specs__value"]/div[@class="ng-star-inserted"]/text()')
@@ -200,8 +200,7 @@ class AdayroiSpider(CrawlSpider):
 
         yield products
 
-
-def parse_money(value):
-    if str(value).isdigit():
-        return value
-    return re.sub(r'[^\d]', '', str(value))
+    def parse_money(self, value):
+        if str(value).isdigit():
+            return value
+        return re.sub(r'[^\d]', '', str(value))
