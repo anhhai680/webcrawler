@@ -131,16 +131,22 @@ class CellphonesSpider(CrawlSpider):
         # Specifications product
         # product_specifications = response.xpath(
         #     '//table[@id="tskt"]/tr/*/text()').re('(\\w+[^\n]+)')
+        # product_specifications = []
+        # for spec_row in response.xpath('//table[@id="tskt"]/tr'):
+        #     if spec_row is not None:
+        #         try:
+        #             spec_key = spec_row.xpath('.//td/text()')[0].get().strip()
+        #             spec_value = spec_row.xpath(
+        #                 './/td/text()')[1].get().strip()
+        #             product_specifications.append({spec_key, spec_value})
+        #         except:
+        #             pass
         product_specifications = []
-        for spec_row in response.xpath('//table[@id="tskt"]/tr'):
-            if spec_row is not None:
-                try:
-                    spec_key = spec_row.xpath('.//td/text()')[0].get().strip()
-                    spec_value = spec_row.xpath(
-                        './/td/text()')[1].get().strip()
-                    product_specifications.append({spec_key, spec_value})
-                except:
-                    pass
+        names = extract_xpath_all('//table[@id="tskt"]//td[1]/text()')
+        values = extract_xpath_all('//table[@id="tskt"]//td[2]/text()')
+        for index in range(len(names)):
+            if values[index] is not None and values[index] != '':
+                product_specifications.append([names[index], values[index]])
 
         product_oldprice = 0
         oldprice = extract_with_xpath(
@@ -148,11 +154,11 @@ class CellphonesSpider(CrawlSpider):
         if oldprice is not None and oldprice != '':
             product_oldprice = self.parse_money(oldprice)
 
+        # product_internalmemory = extract_with_xpath(
+        #     '//div[@class="linked"]/a[contains(@class,"active")]/span/text()')
+        # if product_internalmemory is None or product_internalmemory == '':
         product_internalmemory = extract_with_xpath(
-            '//div[@class="linked"]/a[contains(@class,"active")]/span/text()')
-        if product_internalmemory is None or product_internalmemory == '':
-            product_internalmemory = extract_with_xpath(
-                '//td[contains(.,"Bộ nhớ trong")]/../td/text()')
+            '//table[@id="tskt"]//td[contains(.,"Bộ nhớ trong")]/../td[2]/text()')
 
         product_brand = extract_with_xpath(
             '//tr[@itemprop="brand"]/td[@itemprop="name"]/text()')
