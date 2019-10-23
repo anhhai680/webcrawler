@@ -21,23 +21,24 @@ class CellphonesSpider(CrawlSpider):
         # 'https://cellphones.com.vn/hang-cu.html',
     ]
     rules = (
-        Rule(LinkExtractor(allow=(
-            'mobile.html',
-            'mobile.html?p=[0-9]',
-            # 'https://cellphones.com.vn/mobile/[\\w-]+/[\\w-]+$',
-        ), deny=(
-            'itel-it2123v.html',
-            'dien-thoai-pho-thong.html',
-            'timkiem.html',
-            '/sforum/'
-            'mobile.html#top',
-        ), deny_domains=(
-            'https://cellphones.com.vn/mobile.html?model_dienthoai_mtb=[0-9]',
-            'https://cellphones.com.vn/mobile.html?screen_size=[0-9]',
-            'https://cellphones.com.vn/mobile.html?storage=[0-9]',
-            'https://cellphones.com.vn/mobile.html?sim_card=[0-9]',
-            'https://cellphones.com.vn/mobile.html?operating_system=[0-9]'
-        ),
+        Rule(LinkExtractor(
+            allow=(
+                'mobile.html',
+                'mobile.html?p=[0-9]',
+                # 'https://cellphones.com.vn/mobile/[\\w-]+/[\\w-]+$',
+            ), deny=(
+                'itel-it2123v.html',
+                'dien-thoai-pho-thong.html',
+                'timkiem.html',
+                '/sforum/'
+                'mobile.html#top',
+            ), deny_domains=(
+                'https://cellphones.com.vn/mobile.html?model_dienthoai_mtb=[0-9]',
+                'https://cellphones.com.vn/mobile.html?screen_size=[0-9]',
+                'https://cellphones.com.vn/mobile.html?storage=[0-9]',
+                'https://cellphones.com.vn/mobile.html?sim_card=[0-9]',
+                'https://cellphones.com.vn/mobile.html?operating_system=[0-9]'
+            ),
         ), callback='parse_cellphones'),
     )
 
