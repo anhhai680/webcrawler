@@ -160,7 +160,7 @@ class CellphonesSpider(CrawlSpider):
         #     '//div[@class="linked"]/a[contains(@class,"active")]/span/text()')
         # if product_internalmemory is None or product_internalmemory == '':
         product_internalmemory = extract_with_xpath(
-            '//table[@id="tskt"]//td[contains(.,"Bộ nhớ trong")]/../td[2]/text()')
+            '//table[@id="tskt"]//td[contains(text(),"Bộ nhớ trong")]/../td[2]/text()')
 
         product_brand = extract_with_xpath(
             '//tr[@itemprop="brand"]/td[@itemprop="name"]/text()')

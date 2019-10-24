@@ -112,7 +112,7 @@ class HnammobileSpider(CrawlSpider):
 
         product_oldprice = 0
         product_internalmemory = extract_with_xpath(
-            '//div[@class="content-body"]/div/label[contains(.,"Bộ nhớ trong")]/../p/text()')
+            '//div[@class="content-body"]/div/label[contains(text(),"Bộ nhớ trong")]/../p/text()')
         product_brand = None
         product_shop = 'Hnammobile'
         product_rates = 0

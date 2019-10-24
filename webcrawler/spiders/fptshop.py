@@ -112,19 +112,24 @@ class FptshopSpider(CrawlSpider):
         #         except:
         #             pass
         product_specifications = []
-        names = extract_xpath_all('//div[@class="fs-tsright"]/ul/li/label/text()')
-        values = extract_xpath_all('//div[@class="fs-tsright"]/ul/li/span/text()')
+        names = extract_xpath_all(
+            '//div[@class="fs-tsright"]/ul/li/label/text()')
+        values = extract_xpath_all(
+            '//div[@class="fs-tsright"]/ul/li/span/text()')
         for index in range(len(names)):
             if values[index] is not None and values[index] != '':
                 product_specifications.append([names[index], values[index]])
-        
+
         product_oldprice = 0
-        oldprice = extract_with_xpath('//p[contains(@class,"fs-dtprice")]/del/text()')
+        oldprice = extract_with_xpath(
+            '//p[contains(@class,"fs-dtprice")]/del/text()')
         if oldprice is not None:
             product_oldprice = self.parse_money(oldprice)
 
-        product_internalmemory = extract_with_xpath('//div[@class="fs-tsright"]/ul/li/label[contains(.,"Bộ nhớ trong")]/../span/text()')
-        product_brand = extract_with_xpath('//ul[@class="fs-breadcrumb"]/li/a[contains(@onclick,"Product Detail")]/text()')
+        product_internalmemory = extract_with_xpath(
+            '//div[@class="fs-tsright"]/ul/li/label[contains(text(),"Bộ nhớ trong")]/../span/text()')
+        product_brand = extract_with_xpath(
+            '//ul[@class="fs-breadcrumb"]/li/a[contains(@onclick,"Product Detail")]/text()')
         product_shop = 'fptshop'
 
         product_rates = None
@@ -133,9 +138,9 @@ class FptshopSpider(CrawlSpider):
             product_rates = reviews.split('/')[0]
 
         product_location = 'Hồ Chí Minh'
-        product_sku = extract_with_xpath('//h1[@class="fs-dttname"]/span[@class="nosku"]/text()')
+        product_sku = extract_with_xpath(
+            '//h1[@class="fs-dttname"]/span[@class="nosku"]/text()')
         product_instock = 1
-
 
         product_link = response.url
         products = ProductItem()
@@ -159,7 +164,6 @@ class FptshopSpider(CrawlSpider):
         products['body'] = ''
 
         yield products
-    
 
     def parse_money(self, value):
         if str(value).isdigit():
