@@ -101,15 +101,15 @@ class LazadaSpider(CrawlSpider):
 
             # Follow the next page to scrape data
             next_page = response.xpath('//link[@rel="next"]/@href').get()
-            match = re.match(r".*?page=(\d+)", next_page)
-            next_page_number = int(match.groups()[0])
-            # logger.info('next_page_number: %s', str(next_page_number))
-            if next_page_number <= self.limit_pages:
-                if next_page is not None:
-                    yield response.follow(next_page, callback=self.parse_lazada)
-                else:
-                    logger.info(
-                        'Next page not found. Spider will be stop right now !!!')
+            if next_page is not None:
+                match = re.match(r".*?page=(\d+)", next_page)
+                if match is not None:
+                    next_page_number = int(match.groups()[0])
+                    # logger.info('next_page_number: %s', str(next_page_number))
+                    if next_page_number <= self.limit_pages:
+                        if next_page is not None:
+                            yield response.follow(next_page, callback=self.parse_lazada)
+
         except Exception as ex:
             logger.error(
                 'Could not parse url {} with errros: {}'.format(response.url, ex))

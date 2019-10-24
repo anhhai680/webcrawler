@@ -70,9 +70,7 @@ class TikiSpider(CrawlSpider):
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
                     yield response.follow(next_page, callback=self.parse_tiki)
-                else:
-                    logger.info(
-                        'Next page not found. Spider will be stop right now !!!')
+
         pass
 
     def parse_product_detail(self, response):

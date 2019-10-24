@@ -61,9 +61,10 @@ class CellphonesSpider(CrawlSpider):
             '//link[@rel="next"]/@href').get()
         if next_page is not None:
             match = re.match(r".*?p=(\d+)", next_page)
-            next_page_number = int(match.groups()[0])
-            if next_page_number <= self.limit_pages:
-                yield response.follow(next_page, callback=self.parse_cellphones)
+            if match is not None:
+                next_page_number = int(match.groups()[0])
+                if next_page_number <= self.limit_pages:
+                    yield response.follow(next_page, callback=self.parse_cellphones)
         # num_page = response.xpath(
         #     '//div[@class="pages"]/ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/text()').re(r'\d+')[-1]
         # total_of_page = int(num_page)

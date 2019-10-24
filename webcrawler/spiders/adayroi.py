@@ -62,10 +62,11 @@ class AdayroiSpider(CrawlSpider):
         next_page = response.xpath('//a[@rel="next"]/@href').get()
         if next_page is not None:
             match = re.match(r".*?page=(\d+)", next_page)
-            next_page_number = int(match.groups()[0])
-            if next_page_number <= self.limit_pages:
-                next_page = "https://www.adayroi.com%s" % next_page
-                yield response.follow(next_page, callback=self.parse_adayroi)
+            if match is not None:
+                next_page_number = int(match.groups()[0])
+                if next_page_number <= self.limit_pages:
+                    next_page = "https://www.adayroi.com%s" % next_page
+                    yield response.follow(next_page, callback=self.parse_adayroi)
         pass
 
     def parse_product_detail(self, response):
