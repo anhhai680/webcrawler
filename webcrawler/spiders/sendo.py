@@ -95,25 +95,41 @@ class SendoSpider(scrapy.Spider):
                     product_swatchcolors = [att["name"]
                                             for att in data["attribute"][0]["value"]]
                     product_link = 'https://www.sendo.vn/' + data["cat_path"]
-                    product_specifications = []
 
+                    product_specifications = []
                     # str_list = list(filter(None, str_list))
                     sel = Selector(text=data["description"])
-                    for st in sel.xpath('//div[@class="attrs-block"]/ul/li'):
-                        if st is not None:
-                            key = st.xpath('.//strong/text()').get().strip()
-                            if key is None or key == '.':
-                                break
-                            value = st.xpath('.//span/text()').get().strip()
-                            if value is None or value == '.':
-                                break
-                            product_specifications.append({key, value})
+                    # for st in sel.xpath('//div[@class="attrs-block"]/ul/li'):
+                    #     if st is not None:
+                    #         key = st.xpath('.//strong/text()').get().strip()
+                    #         if key is None or key == '.':
+                    #             break
+                    #         value = st.xpath('.//span/text()').get().strip()
+                    #         if value is None or value == '.':
+                    #             break
+                    #         product_specifications.append({key, value})
+
+                    names = sel.xpath(
+                        '//div[@class="attrs-block"]/ul/li/strong/text()').getall()
+                    values = sel.xpath(
+                        '//div[@class="attrs-block"]/ul/li/span/text()').getall()
+                    if len(names) > 0:
+                        for index in range(len(names)):
+                            if values[index] is not None and values[index] != '':
+                                product_specifications.append(
+                                    [names[index], values[index]])
 
                     product_oldprice = data['final_price_max']
                     product_internalmemory = sel.xpath(
                         '//div[@class="attrs-block"]/ul/li/strong[contains(text(),"Bộ nhớ trong")]/../span/text()').get().strip()
+                    if product_internalmemory is not None:
+                        product_internalmemory = product_internalmemory.replace(
+                            '.', '')
+
                     product_brand = sel.xpath(
                         '//div[@class="attrs-block"]/ul/li/strong[contains(text(),"Hãng sản xuất")]/../span/text()').get().strip()
+                    if product_brand is not None:
+                        product_brand = product_brand.replace('.', '')
 
                     product_shop = str(data['shop_info']['shop_name'])
                     product_location = str(
