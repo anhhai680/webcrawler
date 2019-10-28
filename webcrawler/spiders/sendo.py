@@ -4,7 +4,7 @@ import logging
 import re
 import json
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
+from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
 from datetime import datetime
 
@@ -21,6 +21,19 @@ class SendoSpider(scrapy.Spider):
     start_urls = [
         'https://www.sendo.vn/m/wap_v2/category/product?category_id=2354&listing_algo=algo5&p=1&platform=web&s=60&sortType=default_listing_desc',
     ]
+
+    custom_settings = {
+        'DOWNLOADER_MIDDLEWARES': {
+            'webcrawler.middlewares.sendo.SendoSpiderMiddleware': 543
+        },
+    }
+
+    def __init__(self, limit_pages=None, *a, **kw):
+        super(SendoSpider, self).__init__(*a, **kw)
+        if limit_pages is not None:
+            self.limit_pages = int(limit_pages)
+        else:
+            self.limit_pages = 300
 
     def parse(self, response):
         logger.info('Parsing Url: %s', response.url)
@@ -47,6 +60,8 @@ class SendoSpider(scrapy.Spider):
                 logger.info('There is a total of ' +
                             str(total_pages) + ' links.')
                 while page_number <= total_pages:
+                    if page_number > self.limit_pages:
+                        break
                     try:
                         page_number += 1
                         # https://www.sendo.vn/m/wap_v2/category/product?category_id=2354&listing_algo=algo5&p=1&platform=web&s=60&sortType=default_listing_desc
@@ -69,7 +84,12 @@ class SendoSpider(scrapy.Spider):
                 if len(data) > 0:
                     product_title = str(data["name"]).strip()
                     product_desc = str(data["short_description"]).strip()
-                    product_price = str(data["final_price"])
+                    product_price = 0
+                    if 'special_price' in data:
+                        product_price = data["special_price"]
+                    else:
+                        product_price = data['final_price']
+
                     product_images = [item["image"]
                                       for item in data["media"] if item["type"] == 'image']
                     product_swatchcolors = [att["name"]
@@ -89,17 +109,40 @@ class SendoSpider(scrapy.Spider):
                                 break
                             product_specifications.append({key, value})
 
+                    product_oldprice = data['final_price_max']
+                    product_internalmemory = sel.xpath(
+                        '//div[@class="attrs-block"]/ul/li/strong[contains(text(),"Bộ nhớ trong")]/../span/text()').get().strip()
+                    product_brand = sel.xpath(
+                        '//div[@class="attrs-block"]/ul/li/strong[contains(text(),"Hãng sản xuất")]/../span/text()').get().strip()
+
+                    product_shop = str(data['shop_info']['shop_name'])
+                    product_location = str(
+                        data['shop_info']['warehourse_region_name'])
+                    product_rates = data['shop_info']['rating_avg']
+                    product_sku = str(data['sku'])
+                    product_instock = 1
+                    instock = data['stock_status']
+                    if instock != 1:
+                        product_instock = 0
+
                     products = ProductItem()
-                    products['cid'] = 1  # 1: Smartphone
+                    products['cid'] = 'dienthoai'  # 1: Smartphone
                     products['title'] = product_title
                     products['description'] = product_desc
+                    products['oldprice'] = product_oldprice
                     products['price'] = product_price
                     products['swatchcolors'] = product_swatchcolors
+                    products['internalmemory'] = product_internalmemory
                     products['specifications'] = product_specifications
                     products['link'] = product_link
                     products['images'] = product_images
-                    products['shop'] = 'sendo'
+                    products['brand'] = product_brand
+                    products['shop'] = product_shop
+                    products['rates'] = product_rates
+                    products['location'] = product_location
                     products['domain'] = 'sendo.vn'
+                    products['sku'] = product_sku
+                    products['instock'] = product_instock
                     products['body'] = ''
 
                     yield products
@@ -107,3 +150,8 @@ class SendoSpider(scrapy.Spider):
         except:
             logger.error('Parse %s product failed.', response.url)
             pass
+
+    def parse_money(self, value):
+        if str(value).isdigit():
+            return value
+        return re.sub(r'[^\d]', '', str(value))
