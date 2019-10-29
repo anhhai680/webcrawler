@@ -3,99 +3,77 @@ from scrapy.http import Request
 from scrapy.http import HtmlResponse
 from scrapy.item import BaseItem
 from scrapy.utils.request import request_fingerprint
-from scrapy.exceptions import DontCloseSpider
-import re
+from scrapy.exceptions import DontCloseSpider, NotConfigured, IgnoreRequest
 
-
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import pymongo
 
 
 class ShopeeSpiderMiddleware(object):
-    # Not all methods need to be defined. If a method is not defined,
-    # scrapy acts as if the spider middleware does not modify the
-    # passed objects.
+
+    def __init__(self, mongo_uri, mongo_db):
+        self.mongo_uri = mongo_uri
+        self.mongo_db = mongo_db
 
     @classmethod
     def from_crawler(cls, crawler):
-        # This method is used by Scrapy to create your spiders.
-        s = cls()
-        crawler.signals.connect(s.spider_idle, signal=signals.spider_idle)
+
+        MONGO_URI = crawler.settings.get('MONGO_URI')
+        MONGO_DATABASE = crawler.settings.get('MONGO_DATABASE')
+        if MONGO_URI is None or MONGO_DATABASE is None:
+            raise NotConfigured('{0} or {1} did not defined in settings.'.format(
+                MONGO_URI, MONGO_DATABASE))
+
+        s = cls(
+            mongo_uri=MONGO_URI,
+            mongo_db=MONGO_DATABASE
+        )
+        crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
         return s
 
-    def spider_idle(self, spider):
-        spider.logger.info('===> Spider idle: %s.' % spider.name)
-
-        spider.logger.info('I am alive. Request more data...')
-        # spider.crawler.engine.crawl(spider.create_more_requests(), spider)
-        reqs = spider.start_requests()
-        if not reqs:
-            return
-        for req in reqs:
-            spider.crawler.engine.schedule(req, spider)
-        raise DontCloseSpider
-
-
-class ShopeeSpiderDownloaderMiddleware(object):
-
     def spider_opened(self, spider):
-        spider.logger.info('Spider opened: %s' % spider.name)
-        pass
+        try:
+            self.client = pymongo.MongoClient(self.mongo_uri)
+            self.db = self.client[self.mongo_db]
+            self.collection_name = "crawl_blacklinks"
+            self.blacklinks = []
+            colllist = self.db.list_collection_names()
+            if self.collection_name in colllist:
+                spider.logger.info('%s has been connected.' %
+                                   self.collection_name)
+                query = {'domain': 'shopee.vn'}
+                projection = {'link': 1, '_id': 0}
+                mycol = self.db[self.collection_name]
+                mydocs = list(mycol.find(query, projection))
+                if len(mydocs) > 0:
+                    self.blacklinks = mydocs
+                spider.logger.info('{0} query results {1}'.format(
+                    self.collection_name, len(mydocs)))
+
+        except:
+            raise pymongo.errors.PyMongoError(
+                'PyMongo could not open collection %s' % self.collection_name)
 
     def process_request(self, request, spider):
         # Called for each request that goes through the downloader
         # middleware.
-        shopee_pattern = re.compile(r'^https://shopee.vn/(.*?)$')
-        if bool(re.search(shopee_pattern, request.url)) is False:
-            return None
 
-        options = webdriver.ChromeOptions()
-
-        prefs = {'profile.managed_default_content_settings.images': 2}
-        options.add_experimental_option('prefs', prefs)
-
-        options.add_argument('headless')
-        options.add_argument("--disable-notifications")
-        options.add_argument("--incognito")
-        options.add_argument("--disable-extensions")
-        options.add_argument(" --disable-gpu")
-        options.add_argument(" --disable-infobars")
-        options.add_argument(" -–disable-web-security")
-        options.add_argument("--no-sandbox")
-
-        driver = webdriver.Chrome(chrome_options=options)
-        driver.get(request.url)
-        try:
-            WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, '//link[@rel="canonical"]/@href'))
-            )
-        except:
-            spider.logger.info('WebDriver exception: %s' %
-                               driver.current_url)
         # Must either:
         # - return None: continue processing this request
         # - or return a Response object
         # - or return a Request object
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
-        body = driver.page_source
-        return HtmlResponse(driver.current_url, body=body, encoding='utf-8', request=request)
+        spider.logger.info('Url request: {0}'.format(request.url))
 
-    def process_exception(self, request, exception, spider):
-        # Called when a download handler or a process_request()
-        # (from other downloader middleware) raises an exception.
+        try:
+            if len(self.blacklinks) > 0:
+                for item in self.blacklinks:
+                    if request.url in item['link']:
+                        raise IgnoreRequest('IgnoreRequest %s' % request.url)
+            else:
+                spider.logger.info('Shopee blacklinks have no any records.')
+        except Exception as ex:
+            spider.logger.error(
+                'Shopee spider process_request errors: {}'.format(ex))
 
-        # Must either:
-        # - return None: continue processing this exception
-        # - return a Response object: stops process_exception() chain
-        # - return a Request object: stops process_exception() chain
-        # driver.close()
-        pass
-
-    def spider_closed(self, spider):
-        # driver.close()
-        # driver.quit()
-        pass
+        return None
