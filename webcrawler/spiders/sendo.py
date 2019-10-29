@@ -92,13 +92,36 @@ class SendoSpider(scrapy.Spider):
 
                     product_images = [item["image"]
                                       for item in data["media"] if item["type"] == 'image']
-                    product_swatchcolors = [att["name"]
-                                            for att in data["attribute"][0]["value"]]
+
+                    product_swatchcolors = []
+                    # swatchcolors = [att["name"]
+                    #                 for att in data["attribute"][0]["value"]]
+                    for att in data['attribute']:
+                        if att['attribute_id'] == 284:  # Màu sắc
+                            for opt in att['value']:
+                                name = opt['name']
+                                opt_id = str(opt['option_id'])
+                                for varitem in data['variants']:
+                                    if varitem['attribute_hash'] == opt_id or opt_id in varitem['attribute_hash']:
+                                        price = varitem['price']
+                                        special_price = 0
+                                        if 'special_price' in varitem:
+                                            special_price = varitem['special_price']
+                                        else:
+                                            special_price = varitem['final_price']
+
+                                        stock = varitem['stock']
+                                        swatchcolors = {'name': name, 'value': {
+                                            'price': price,
+                                            'special_price': special_price,
+                                            'stock': stock}
+                                        }
+                                        product_swatchcolors.append(
+                                            swatchcolors)
+
                     product_link = 'https://www.sendo.vn/' + data["cat_path"]
 
-                    product_specifications = []
                     # str_list = list(filter(None, str_list))
-                    sel = Selector(text=data["description"])
                     # for st in sel.xpath('//div[@class="attrs-block"]/ul/li'):
                     #     if st is not None:
                     #         key = st.xpath('.//strong/text()').get().strip()
@@ -109,6 +132,8 @@ class SendoSpider(scrapy.Spider):
                     #             break
                     #         product_specifications.append({key, value})
 
+                    product_specifications = []
+                    sel = Selector(text=data["description"])
                     names = sel.xpath(
                         '//div[@class="attrs-block"]/ul/li/strong/text()').getall()
                     values = sel.xpath(
