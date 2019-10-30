@@ -107,8 +107,7 @@ class LazadaSpider(CrawlSpider):
                     next_page_number = int(match.groups()[0])
                     # logger.info('next_page_number: %s', str(next_page_number))
                     if next_page_number <= self.limit_pages:
-                        if next_page is not None:
-                            yield response.follow(next_page, callback=self.parse_lazada)
+                        yield response.follow(next_page, callback=self.parse_lazada)
 
         except Exception as ex:
             logger.error(

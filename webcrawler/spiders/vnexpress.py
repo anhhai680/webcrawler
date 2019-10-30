@@ -39,6 +39,13 @@ class VnexpressSpider(CrawlSpider):
     )
     handle_httpstatus_list = [301]
 
+    def __init__(self, limit_pages=None, *a, **kw):
+        super(VnexpressSpider, self).__init__(*a, **kw)
+        if limit_pages is not None:
+            self.limit_pages = int(limit_pages)
+        else:
+            limit_pages = 300
+
     def parse_vnexpress(self, response):
         logger.info('Scrape url: %s' % response.url)
         for product_link in response.xpath('//div[@class="item-pro"]/div[@class="box box-image"]/a/@href').getall():
@@ -48,7 +55,11 @@ class VnexpressSpider(CrawlSpider):
         next_page = response.xpath(
             '//ul[@class="pagination pagination-lg"]/li/a[not(contains(@class,"active"))]/@href').get()
         if next_page is not None:
-            yield response.follow(next_page, callback=self.parse_vnexpress)
+            match = re.match(r".*?page=(\d+)", next_page)
+            if match is not None:
+                next_page_number = int(match.groups()[0])
+                if next_page_number <= self.limit_pages:
+                    yield response.follow(next_page, callback=self.parse_vnexpress)
         pass
 
     def parse_product_detail(self, response):
@@ -82,10 +93,11 @@ class VnexpressSpider(CrawlSpider):
             '//div[@id="images_pro"]/a/@href')
         #product_specifications = response.xpath('//div[@id="information"]/div/table[@class="table"]/tbody/tr/td//text()').getall()
         product_specifications = []
-        specs = extract_xpath_all('//div[@class="box-body box-information"]/text()')
+        specs = extract_xpath_all(
+            '//div[@class="box-body box-information"]/text()')
         if len(specs) > 0:
             product_specifications = [sp.strip() for sp in specs]
-            
+
         product_link = response.url
 
         products = ProductItem()
