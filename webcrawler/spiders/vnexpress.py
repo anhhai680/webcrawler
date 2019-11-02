@@ -140,6 +140,10 @@ class VnexpressSpider(CrawlSpider):
             '//div[@class="box-info-supplier"]/div[@class="info-address"]/p[@class="info-value"]/text()')
         product_sku = None
         product_instock = 1
+        instock = extract_with_xpath('//button[contains(@class,"add_to_cart_disable")]/text()')
+        if instock is not None:
+            if instock in 'Hết hàng':
+                product_instock = 0 # Out of stock
 
         product_link = response.url
 
