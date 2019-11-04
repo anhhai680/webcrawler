@@ -99,6 +99,10 @@ class VnexpressSpider(CrawlSpider):
             '//div[@class="similar-products"]/span/@rel')
         product_images = extract_xpath_all(
             '//div[@id="images_pro"]/a/@href')
+
+        internalmemory = None
+        brand = None
+
         # product_specifications = response.xpath('//div[@id="information"]/div/table[@class="table"]/tbody/tr/td//text()').getall()
         # product_specifications = []
         # specs = extract_xpath_all(
@@ -118,8 +122,14 @@ class VnexpressSpider(CrawlSpider):
             for index in range(len(names)):
                 try:
                     if values[index] is not None and values[index] != '':
+                        if 'ROM' in names[index]:
+                            internalmemory = str(values[index])
+                        if 'Thương hiệu' in names[index]:
+                            brand = str(values[index])
                         product_specifications.append(
-                            [names[index], values[index]])
+                            [str(names[index]), str(values[index])])
+                except IndexError as ie:
+                    logger.error(ie)
                 except Exception as ex:
                     logger.error('Errors: %s' % ex)
 
@@ -129,10 +139,12 @@ class VnexpressSpider(CrawlSpider):
         if oldprice is not None:
             product_oldprice = self.parse_money(oldprice)
 
-        product_internalmemory = extract_with_xpath(
-            '//div[@class="box-body box-information"]/table[@class="table"]/tbody/tr/td[1]/label[contains(text(),"ROM")]/../td[2]/text()')
-        product_brand = extract_with_xpath(
-            '//div[@class="box-body box-information"]/table[@class="table"]/tbody/tr/td[1]/label[contains(text(),"Thương hiệu")]/../td/text()')
+        # product_internalmemory = extract_with_xpath(
+        #     '//div[@class="box-body box-information"]/table[@class="table"]/tbody/tr/td[1]/label[contains(text(),"ROM")]/../td[2]/text()')
+        product_internalmemory = internalmemory
+        # product_brand = extract_with_xpath(
+        #     '//div[@class="box-body box-information"]/table[@class="table"]/tbody/tr/td[1]/label[contains(text(),"Thương hiệu")]/../td/text()')
+        product_brand = brand
         product_shop = extract_with_xpath(
             '//div[@class="info-supplier"]/div[@class="box-name"]/p/a/text()')
         product_rates = 0
@@ -140,10 +152,11 @@ class VnexpressSpider(CrawlSpider):
             '//div[@class="box-info-supplier"]/div[@class="info-address"]/p[@class="info-value"]/text()')
         product_sku = None
         product_instock = 1
-        instock = extract_with_xpath('//button[contains(@class,"add_to_cart_disable")]/text()')
+        instock = extract_with_xpath(
+            '//button[contains(@class,"add_to_cart_disable")]/text()')
         if instock is not None:
-            if instock in 'Hết hàng':
-                product_instock = 0 # Out of stock
+            if 'Hết hàng' in instock:
+                product_instock = 0  # Out of stock
 
         product_link = response.url
 

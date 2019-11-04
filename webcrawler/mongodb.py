@@ -43,7 +43,7 @@ class MongoPipeline(object):
                 self.db[self.collection_name].insert_one(dict(item))
             else:
                 newcol = {'$set': {
-                    'oldprice': item['oldprice'], 'price': item['price'], 'rates': item['rates'], 'instock': item['instock'], 'last_update': item['last_update']}}
+                    'oldprice': item['oldprice'], 'price': item['price'], 'rates': item['rates'], 'instock': item['instock'], 'last_updated': item['last_updated']}}
                 self.db[self.collection_name].update_one(myquery, newcol)
         except pymongo.errors.InvalidBSON as ex:
             spider.logger.error('InvalidBSON %s' % ex)
