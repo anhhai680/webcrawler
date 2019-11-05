@@ -25,37 +25,116 @@ class AdayroiSpider(scrapy.Spider):
 
     def parse(self, response):
         logger.info('Scrape url: %s' % response.url)
-        sel = Selector(response, type="xml")
-        if sel is not None:
-            for item in sel.xpath('//productSearchPage/products').getall():
-                product_title = item.xpath('.//name/text()').get()
-                product_description = item.xpath('.//description/text()').get()
+        try:
+            sel = Selector(response, type="xml")
+            if sel is not None:
+                for item in sel.xpath('//productSearchPage/products').getall():
+                    product_code = item.xpath(
+                        './/baseProductCode/text()').get()
+                    if product_code is not None:
+                        product_link = 'https://rest.adayroi.com/cxapi/v2/adayroi/product/detail?fields=FULL&productCode=%s' % product_code
+                        yield response.follow(product_link, callback=self.parse_product_detail)
+        except Exception as ex:
+            logger.error('Parse Errors: %s' % ex)
+        pass
+
+    def parse_product_detail(self, response):
+
+        try:
+            item = Selector(response, type="xml")
+            if item is not None:
+                product_title = item.xpath('//product/name/text()').get()
+                product_desc = item.xpath('//product/description/text()').get()
 
                 oldprice = item.xpath(
-                    './/productPrice/value/text()').get()
+                    '//product/productPrice/value/text()').get()
                 product_oldprice = self.parse_money(oldprice)
 
-                price = item.xpath('.//price/value/text()').get()
+                price = item.xpath('//product/price/value/text()').get()
                 product_price = self.parse_money(price)
 
                 product_swatchcolors = []
-                for color in item.xpath('.//firstCategoryNameList').getall():
-                    color_name = color.xpath('.//spCategoryName/text()').get()
-                    if 'Màu sắc' in color_name:
-                        color_item = ''
-                        color_value = ''
+                for color in item.xpath('//product/productVariants/variantGroup').getall():
+                    color_name = color.xpath('.//variantName/text()').get()
+                    color_price = color.xpath('.//priceValue/text()').get()
+                    color_price = self.parse_money(color_price)
+                    color_url = 'https://adayroi.vn%s' + \
+                        color.xpath('.//productUrl/text()').get()
+                    instock = 1
+                    productcode = color.xpath('.//productCode/text()').get()
+                    if productcode is not None:
+                        for code in item.xpath('//baseOptions/options').getall():
+                            pcode = code.xpath('.//code/text()').get()
+                            if pcode is not None and pcode == productcode:
+                                stock = code.xpath(
+                                    './/stock/stockLevelStatus/text()').get()
+                                if stock is not None and stock != 'inStock':
+                                    instock = 0
+
+                    swatchcolors = {'name': color_name, 'value': {
+                        'price': price,
+                        'stock': instock,
+                        'url': color_url
+                    }}
+                    product_swatchcolors.append(swatchcolors)
+
                 product_internalmemory = None
-                product_specifications = None
-                product_images = None
-                plink = sel.xpath('.//url/text()').get()
+                product_specifications = []
+                for spec in item.xpath('//product/classifications/features').getall():
+                    name = spec.xpath('.//name/text()').get()
+                    value = spec.xpath('.//featureValues/value/text()').get()
+                    if 'Bộ nhớ trong' in name:
+                        product_internalmemory = value + 'GB'
+                    product_specifications.append([name, value])
+
+                # product images
+                product_images = []
+                images = json.load(item.xpath(
+                    '//product/jsonMedias/text()').get())
+                if len(images) > 0:
+                    for json_img in images:
+                        img_url = json_img['zoomUrl']
+                        product_images.append(img_url)
+
+                plink = item.xpath('//product/url/text()').get()
                 product_link = 'https://adayroi.vn%s' % plink
-                product_brand = item.xpath('.//brandName/text()').get()
+                product_brand = item.xpath('//product/brandName/text()').get()
                 product_shop = item.xpath(
-                    './/merchant/merchantName/text()').get()
+                    '//product/merchant/merchantName/text()').get()
                 product_rates = 0
                 product_location = 'Hồ Chí Minh'
-                product_sku = item.xpath('.//productSKU/text()').get()
+                product_sku = item.xpath('//product/sapSku/text()').get()
                 product_instock = 1
+                instock = item.xpath(
+                    '//product/stock/stockLevelStatus/text()').get()
+                if instock is not None:
+                    if instock != 'inStock':
+                        product_instock = 0  # Out of stock
+
+                products = ProductItem()
+                products['cid'] = 'dienthoai'  # 1: Smartphone
+                products['title'] = product_title
+                products['description'] = product_desc
+                products['oldprice'] = product_oldprice
+                products['price'] = product_price
+                products['swatchcolors'] = product_swatchcolors
+                products['internalmemory'] = product_internalmemory
+                products['specifications'] = product_specifications
+                products['link'] = product_link
+                products['images'] = product_images
+                products['brand'] = product_brand
+                products['shop'] = product_shop
+                products['rates'] = product_rates
+                products['location'] = product_location
+                products['domain'] = 'adayroi.com'
+                products['sku'] = product_sku
+                products['instock'] = product_instock
+                products['body'] = ''
+
+                yield products
+
+        except Exception as ex:
+            logger.error('Parse Errors: %s' % ex)
         pass
 
     def parse_money(self, value):
