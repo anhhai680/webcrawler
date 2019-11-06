@@ -31,15 +31,44 @@ class AdayroiSpider(scrapy.Spider):
                 categoryCode = sel.xpath(
                     '//productSearchPage/categoryCode/text()').get()
                 logger.info('categoryCode: %s' % categoryCode)
+
                 for item in sel.xpath('//productSearchPage/products'):
-                    product_code = item.xpath(
-                        './/baseProductCode/text()').get()
-                    logger.info('baseProductCode: %s' % product_code)
+                    # product_code = item.xpath('.//baseProductCode/text()').get()
+                    product_code = item.xpath('.//code/text()').get()
+                    logger.info('ProductCode: %s' % product_code)
                     if product_code is not None:
-                        product_link = 'https://rest.adayroi.com/cxapi/v2/adayroi/product/detail?fields=FULL&productCode=%s' % product_code
-                        # https://rest.adayroi.com/cxapi/v2/adayroi/product/detail?fields=FULL&offerCode=2574552_M-OMP&search=
+                        # product_link = 'https://rest.adayroi.com/cxapi/v2/adayroi/product/detail?fields=FULL&productCode=%s' % product_code
+                        product_link = 'https://rest.adayroi.com/cxapi/v2/adayroi/product/detail?fields=FULL&offerCode=%s&search=' % product_code
                         logger.info('Product detail link: %s' % product_link)
                         yield response.follow(product_link, callback=self.parse_product_detail)
+
+                # Next page: https://rest.adayroi.com/cxapi/v2/adayroi/search?q=&categoryCode=323&pageSize=32&page=2&currentPage=1
+                page_number = 1
+                current_page = 0
+                total_pages = 0
+                currentpage = sel.xpath(
+                    '//productSearchPage/pagination/currentPage/text()').get()
+                if currentpage is not None:
+                    current_page = int(currentpage)
+                totalpages = sel.xpath(
+                    '//productSearchPage/pagination/totalPages/text()').get()
+                if totalpages is not None:
+                    total_pages = int(totalpages)
+
+                if total_pages > 0:
+                    while page_number <= total_pages:
+                        if current_page > self.limit_pages:
+                            break
+                        try:
+                            page_number += 1
+                            next_page = 'https://rest.adayroi.com/cxapi/v2/adayroi/search?q=&categoryCode=323&pageSize=32&page={0}&currentPage={1}'.format(
+                                page_number, current_page)
+                            yield response.follow(next_page, callback=self.parse)
+                        except Exception as ex:
+                            logger.error(
+                                'Could not follow to next page %s' % page_number)
+                            break
+
         except Exception as ex:
             logger.error('Parse Errors: %s' % ex)
         pass
@@ -50,7 +79,8 @@ class AdayroiSpider(scrapy.Spider):
             item = Selector(response=response, type="xml")
             if item is not None:
                 product_title = item.xpath('//product/name/text()').get()
-                product_desc = item.xpath('//product/description/text()').get()
+                product_desc = item.xpath(
+                    '//product/description/text()').get().strip()
 
                 oldprice = item.xpath(
                     '//product/productPrice/value/text()').get()
