@@ -55,19 +55,21 @@ class AdayroiSpider(scrapy.Spider):
                 if totalpages is not None:
                     total_pages = int(totalpages)
 
-                if total_pages > 0:
-                    while page_number <= total_pages:
-                        if current_page > self.limit_pages:
-                            break
-                        try:
-                            page_number += 1
-                            next_page = 'https://rest.adayroi.com/cxapi/v2/adayroi/search?q=&categoryCode=323&pageSize=32&page={0}&currentPage={1}'.format(
-                                page_number, current_page)
-                            yield response.follow(next_page, callback=self.parse)
-                        except Exception as ex:
-                            logger.error(
-                                'Could not follow to next page %s' % page_number)
-                            break
+                while page_number <= total_pages:
+                    if page_number > self.limit_pages:
+                        break
+                    try:
+                        page_number += 1
+                        current_page += 1
+                        logger.info('Page number: {0}, Current page: {1}, Total page: {2}'.format(
+                            page_number, current_page, total_pages))
+                        next_page = 'https://rest.adayroi.com/cxapi/v2/adayroi/search?q=&categoryCode=323&pageSize=32&page={0}&currentPage={1}'.format(
+                            page_number, current_page)
+                        yield response.follow(next_page, callback=self.parse)
+                    except Exception as ex:
+                        logger.error(
+                            'Could not follow to next page %s' % page_number)
+                        break
 
         except Exception as ex:
             logger.error('Parse Errors: %s' % ex)
@@ -122,11 +124,13 @@ class AdayroiSpider(scrapy.Spider):
                 product_internalmemory = None
                 product_specifications = []
                 for spec in item.xpath('//product/classifications/features'):
-                    name = spec.xpath('.//name/text()').get()
-                    value = spec.xpath('.//featureValues/value/text()').get()
-                    if 'Bộ nhớ trong' in name:
-                        product_internalmemory = value + 'GB'
-                    product_specifications.append([name, value])
+                    spec_name = spec.xpath(
+                        './/name[not(parent::featureUnit)]/text()').get()
+                    spec_value = spec.xpath(
+                        './/featureValues/value/text()').get()
+                    if spec_name == 'Bộ nhớ trong':
+                        product_internalmemory = spec_value + 'GB'
+                    product_specifications.append([spec_name, spec_value])
 
                 # product images
                 product_images = []
