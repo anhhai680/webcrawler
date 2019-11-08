@@ -22,6 +22,7 @@ class AdayroiSpider(scrapy.Spider):
             self.limit_pages = int(limit_pages)
         else:
             self.limit_pages = 300
+        self.page_number = 1
 
     def parse(self, response):
         logger.info('Scrape url: %s' % response.url)
@@ -43,7 +44,7 @@ class AdayroiSpider(scrapy.Spider):
                         yield response.follow(product_link, callback=self.parse_product_detail)
 
                 # Next page: https://rest.adayroi.com/cxapi/v2/adayroi/search?q=&categoryCode=323&pageSize=32&page=2&currentPage=1
-                page_number = 1
+                page_number = self.page_number
                 current_page = 0
                 total_pages = 0
                 currentpage = sel.xpath(
@@ -54,6 +55,9 @@ class AdayroiSpider(scrapy.Spider):
                     '//productSearchPage/pagination/totalPages/text()').get()
                 if totalpages is not None:
                     total_pages = int(totalpages)
+
+                # logger.info(
+                #     'page_number:{}, current_page:{}, total_pages: {}, currentpage: {}, totalpages: {}'.format(page_number, current_page, total_pages, currentpage, totalpages))
 
                 while page_number <= total_pages:
                     if page_number > self.limit_pages:
@@ -70,6 +74,8 @@ class AdayroiSpider(scrapy.Spider):
                         logger.error(
                             'Could not follow to next page %s' % page_number)
                         break
+
+                    self.page_number = page_number
 
         except Exception as ex:
             logger.error('Parse Errors: %s' % ex)
