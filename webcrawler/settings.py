@@ -124,9 +124,9 @@ ITEM_PIPELINES = {
     # 'webcrawler.pipelines.MySQLPipeline': 300,
     'webcrawler.pipelines.PricePipeline': 400,
     'webcrawler.pipelines.DuplicatesPipeline': 400,
-    'webcrawler.pipelines.JsonWriterPipeline': 300,
+    # 'webcrawler.pipelines.JsonWriterPipeline': 300,
     # 'webcrawler.pipelines.JsonDataPipeline': 300,
-    # 'webcrawler.wooapi.WoocommercePipeline': 300,
+    # 'webcrawler.wooapi.WoocommercePipeline': 400,
     # 'scrapy.pipelines.images.ImagesPipeline': 300,
 }
 

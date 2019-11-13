@@ -22,9 +22,9 @@ class WoocommercePipeline(object):
             #     timeout=60
             # )
             self.wcapi = API(
-                url="https://bestsosanh.com/",
-                consumer_key="ck_6f71673f1ec832fa19a4119f0f986c1f5d339a92",
-                consumer_secret="cs_a621ce900c256dc7795f5020db7b52d46c8d432f",
+                url="http://caogiammo.com/",
+                consumer_key="ck_44de6dbbfe2224b22e609d5e86705106cf8bf4bd",
+                consumer_secret="cs_fdd2af932872d4e6f3ca4325097c55c72750c13f",
                 wp_api=True,  # Enable the WP REST API integration
                 version="wc/v3",  # WooCommerce WP REST API version
                 timeout=60
@@ -88,7 +88,7 @@ class WoocommercePipeline(object):
         Product type. Options: simple, grouped, external and variable. Default is simple.
         """
         try:
-            parent_id = 15  # Smartphone
+            parent_id = 111  # Smartphone
 
             title = item['title']
             short_description = item['description']
@@ -96,7 +96,8 @@ class WoocommercePipeline(object):
             link = item['link']
             brand = item['brand']
             shop = item['shop']
-            swatchcolors = ' - '.join(item['swatchcolors'])
+            # swatchcolors = ' - '.join(item['swatchcolors'])
+            swatchcolors = item['swatchcolors']
             # specifications = [re.split(':', rd)
             #                   for rd in item["specifications"]]
             specifications = item["specifications"]
@@ -183,13 +184,13 @@ class WoocommercePipeline(object):
                     spider.logger.error(
                         'Insert product failed with errors: %s' % result)
             except ValueError as ex:
-                raise DropItem(
+                raise spider.logger.error(
                     'Create new product failed with errors: {}'.format(ex))
 
             return item
 
         except Exception as ex:
-            raise DropItem(
+            raise spider.logger.error(
                 'Product {} inserted failure with errors {}'.format(item, ex))
 
         return None

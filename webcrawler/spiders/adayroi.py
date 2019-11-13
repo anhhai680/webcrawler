@@ -87,8 +87,15 @@ class AdayroiSpider(scrapy.Spider):
             item = Selector(response=response, type="xml")
             if item is not None:
                 product_title = item.xpath('//product/name/text()').get()
-                product_desc = item.xpath(
+                product_desc = None
+                desc = item.xpath(
                     '//product/description/text()').get().strip()
+                if desc is not None:
+                    desc_html = Selector(text=desc, type='html')
+                    if desc_html is not None:
+                        desc_temp = desc_html.xpath(
+                            '//ul/li/text()').getall()
+                        product_desc = ' \n '.join(desc_temp)
 
                 oldprice = item.xpath(
                     '//product/productPrice/value/text()').get()
