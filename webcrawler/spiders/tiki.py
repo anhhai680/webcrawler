@@ -14,34 +14,34 @@ from ..items import ProductItem
 logger = logging.getLogger(__name__)
 
 
-class TikiSpider(CrawlSpider):
+class TikiSpider(scrapy.Spider):
     name = 'tiki'
     allowed_domains = ['tiki.vn']
     start_urls = ['https://tiki.vn/dien-thoai-smartphone/c1795']
-    rules = (
-        Rule(LinkExtractor(
-            allow=(
-                '/dien-thoai-smartphone/',
-                '/dien-thoai-smartphone/[\\w-]+/[\\w-]+$'
-            ),
-            deny=(
-                '/tin-tuc/',
-                '/phu-kien/',
-                '/huong-dan/',
-                '/ho-tro/',
-                '/tra-gop/',
-                '/khuyen-mai/',
-                '/tel:19006035',
-                '/tel:18006963',
-                '/top/',
-                '/dat-ve-may-bay?src=(.*?)',
-                '/chuong-trinh/',
-                '/phieu-qua-tang/'
-                '/deal-hot?src=(.*?)',
-            ),
-            allow_domains=['tiki.vn']
-        ), callback='parse_tiki'),
-    )
+    # rules = (
+    #     Rule(LinkExtractor(
+    #         allow=(
+    #             '/dien-thoai-smartphone/',
+    #             '/dien-thoai-smartphone/[\\w-]+/[\\w-]+$'
+    #         ),
+    #         deny=(
+    #             '/tin-tuc/',
+    #             '/phu-kien/',
+    #             '/huong-dan/',
+    #             '/ho-tro/',
+    #             '/tra-gop/',
+    #             '/khuyen-mai/',
+    #             '/tel:19006035',
+    #             '/tel:18006963',
+    #             '/top/',
+    #             '/dat-ve-may-bay?src=(.*?)',
+    #             '/chuong-trinh/',
+    #             '/phieu-qua-tang/'
+    #             '/deal-hot?src=(.*?)',
+    #         ),
+    #         allow_domains=['tiki.vn']
+    #     ), callback='parse_tiki'),
+    # )
 
     custom_settings = {
         'DOWNLOADER_MIDDLEWARES': {
@@ -56,7 +56,7 @@ class TikiSpider(CrawlSpider):
         else:
             self.limit_pages = 300
 
-    def parse_tiki(self, response):
+    def parse(self, response):
         logger.info('Scrape url: %s' % response.url)
         for product_link in response.xpath('//div[@class="product-box-list"]/div/a/@href').getall():
             yield response.follow(product_link, callback=self.parse_product_detail)
@@ -69,7 +69,10 @@ class TikiSpider(CrawlSpider):
             if match is not None:
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
-                    yield response.follow(next_page, callback=self.parse_tiki)
+                    yield response.follow(next_page, callback=self.parse)
+                else:
+                    logger.info('Spider will be stop here.{0} of {1}'.format(
+                        next_page_number, next_page))
 
         pass
 

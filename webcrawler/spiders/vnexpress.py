@@ -3,8 +3,8 @@ import scrapy
 import logging
 import re
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
-import w3lib.html
+from scrapy.linkextractors import LinkExtractor
+#import w3lib.html
 
 
 from ..items import ProductItem
@@ -17,7 +17,7 @@ class VnexpressSpider(CrawlSpider):
     allowed_domains = ['shop.vnexpress.net']
     start_urls = ['https://shop.vnexpress.net/dien-thoai']
     rules = (
-        Rule(LxmlLinkExtractor(
+        Rule(LinkExtractor(
             allow=(
                 '/dien-thoai/',
                 '/dien-thoai/[\\w-]+/[\\w-]+$'
@@ -37,7 +37,7 @@ class VnexpressSpider(CrawlSpider):
             ),
         ), callback='parse_vnexpress'),
     )
-    handle_httpstatus_list = [301]
+    handle_httpstatus_list = [301, 302]
 
     custom_settings = {
         'DOWNLOADER_MIDDLEWARES': {
@@ -50,7 +50,7 @@ class VnexpressSpider(CrawlSpider):
         if limit_pages is not None:
             self.limit_pages = int(limit_pages)
         else:
-            limit_pages = 300
+            self.limit_pages = 300
 
     def parse_vnexpress(self, response):
         logger.info('Scrape url: %s' % response.url)
@@ -66,6 +66,9 @@ class VnexpressSpider(CrawlSpider):
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
                     yield response.follow(next_page, callback=self.parse_vnexpress)
+                else:
+                    logger.info('Spider will be stop here.{0} of {1}'.format(
+                        next_page_number, next_page))
         pass
 
     def parse_product_detail(self, response):

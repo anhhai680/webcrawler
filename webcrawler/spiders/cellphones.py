@@ -65,6 +65,9 @@ class CellphonesSpider(CrawlSpider):
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
                     yield response.follow(next_page, callback=self.parse_cellphones)
+                else:
+                    logger.info('Spider will be stop here.{0} of {1}'.format(
+                        next_page_number, next_page))
         # num_page = response.xpath(
         #     '//div[@class="pages"]/ul[@class="pagination"]/li[not(contains(@class,"active"))]/a/text()').re(r'\d+')[-1]
         # total_of_page = int(num_page)

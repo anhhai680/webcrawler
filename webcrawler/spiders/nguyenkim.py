@@ -62,6 +62,9 @@ class NguyenkimSpider(CrawlSpider):
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
                     yield response.follow(next_page, callback=self.parse_nguyenkim)
+                else:
+                    logger.info('Spider will be stop here.{0} of {1}'.format(
+                        next_page_number, next_page))
         pass
 
     def parse_product_detail(self, response):

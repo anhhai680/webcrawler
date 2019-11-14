@@ -1,10 +1,10 @@
 # webcrawler
 # These are commands to run multiple spiders at time by scrapyd on local
-curl http://localhost:6800/schedule.json -d project=default -d spider=adayroi
-curl http://localhost:6800/schedule.json -d project=default -d spider=cellphones
-curl http://localhost:6800/schedule.json -d project=default -d spider=fptshop
+curl http://localhost:6800/schedule.json -d project=webcrawler -d spider=adayroi
+curl http://localhost:6800/schedule.json -d project=webcrawler -d spider=cellphones
+curl http://localhost:6800/schedule.json -d project=webcrawler -d spider=fptshop
 # This command to cancel currently or specific job is running
-curl http://localhost:6800/cancel.json -d project=default -d job=6487ec79947edab326d6db28a2d86511e8247444
+curl http://localhost:6800/cancel.json -d project=webcrawler -d job=6487ec79947edab326d6db28a2d86511e8247444
 
 # Shopee
 # To get all products by category id
@@ -24,3 +24,7 @@ https://shopee.vn/i%E1%BB%87n%20tho%E1%BA%A1i%20smartphone%20XS%20mini-i.5405768
 url = 'http://www.example.com'
 request = scrapy.Request(url, headers={'User-Agent': 'Mybot'})
 fetch(request)
+
+# Install MySQL Server on Ubuntu
+sudo apt install mysql-server
+sudo systemctl status mysql

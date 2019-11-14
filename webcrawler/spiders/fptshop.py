@@ -68,6 +68,9 @@ class FptshopSpider(CrawlSpider):
             if next_page_number <= self.limit_pages:
                 next_page = 'https://fptshop.com.vn/dien-thoai?sort=ban-chay-nhat&trang=%s' % next_page
                 yield response.follow(next_page, callback=self.parse_fptshop)
+            else:
+                logger.info('Spider will be stop here.{0} of {1}'.format(
+                    next_page_number, next_page))
         pass
 
     def parse_product_detail(self, response):
