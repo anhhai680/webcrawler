@@ -37,6 +37,8 @@ class NguyenkimSpider(CrawlSpider):
         ), callback='parse_nguyenkim'),
     )
 
+    handle_httpstatus_list = [301, 302]
+
     def __init__(self, limit_pages=None, *a, **kw):
         super(NguyenkimSpider, self).__init__(*a, **kw)
         if limit_pages is not None:

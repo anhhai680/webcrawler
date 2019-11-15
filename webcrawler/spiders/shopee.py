@@ -38,14 +38,15 @@ class ShopeeSpider(scrapy.Spider):
         json_data = json.loads(response.body, encoding='utf-8')
         if json_data is not None:
             items = json_data['items']
-            if len(items) > 0:
-                # Get itemid and shopid from items list
-                product_link = 'https://shopee.vn/api/v2/item/get?itemid={}&shopid={}'
-                data = [product_link.format(item['itemid'], item['shopid'])
-                        for item in items]
-                for url in data:
-                    # yield scrapy.Request(url, callback=self.parse_product_detail)
-                    yield response.follow(url, callback=self.parse_product_detail)
+            if items is not None:
+                if len(items) > 0:
+                    # Get itemid and shopid from items list
+                    product_link = 'https://shopee.vn/api/v2/item/get?itemid={}&shopid={}'
+                    data = [product_link.format(item['itemid'], item['shopid'])
+                            for item in items]
+                    for url in data:
+                        # yield scrapy.Request(url, callback=self.parse_product_detail)
+                        yield response.follow(url, callback=self.parse_product_detail)
             else:
                 self.limit_pages = 0  # Stop at the end of link
 

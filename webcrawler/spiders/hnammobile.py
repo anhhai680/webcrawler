@@ -32,7 +32,7 @@ class HnammobileSpider(CrawlSpider):
             )
         ), callback='parse_hnammobile'),
     )
-    #handle_httpstatus_list = [404, 504]
+    handle_httpstatus_list = [301, 302]
 
     def __init__(self, limit_pages=None, *a, **kw):
         super(HnammobileSpider, self).__init__(*a, **kw)
