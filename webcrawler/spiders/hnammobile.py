@@ -70,28 +70,26 @@ class HnammobileSpider(CrawlSpider):
         def extract_with_xpath(query):
             return response.xpath(query).get(default='').strip()
 
-        def extract_price(query):
-            price = response.xpath(query).get(default='').strip()
-            return price
-
         def extract_xpath_all(query):
             gallery = response.xpath(query).getall()
             return gallery
 
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
-        product_price = extract_price(
+        product_price = extract_with_xpath(
             '//h3[contains(@class,"price")]/font/font[@class="numberprice"]/text()')
         if re.match(price_pattern, product_price) is None:
             return
+        else:
+            product_price = self.parse_money(product_price)
 
         product_title = extract_with_xpath('//h2[@class="title"]/text()')
         product_desc = extract_with_xpath(
             '//meta[@name="description"]/@content')
         product_swatchcolors = extract_xpath_all(
-            '//div[@class="picker-color row"]/ul/li/div/img/@data-title')
+            '//div[@class="picker-color row"]/ul/li/img/@data-title')
         product_images = extract_xpath_all(
-            '//div[@class="gallery"]/div[contains(@class,"item")]/@data-src')
+            '//div[@class="gallery"]//div[contains(@class,"item")]/@data-src')
 
         #product_specifications = response.xpath('//div[@class="content-body"]/div[@class="row size-screen"]//text()').getall()
         # product_specifications = []
@@ -146,8 +144,8 @@ class HnammobileSpider(CrawlSpider):
         products['cid'] = 'dienthoai'  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
-        products['oldprice'] = product_oldprice
-        products['price'] = product_price
+        products['oldprice'] = int(product_oldprice)
+        products['price'] = int(product_price)
         products['swatchcolors'] = product_swatchcolors
         products['internalmemory'] = product_internalmemory
         products['specifications'] = product_specifications
@@ -165,6 +163,9 @@ class HnammobileSpider(CrawlSpider):
         yield products
 
     def parse_money(self, value):
-        if str(value).isdigit():
-            return value
-        return re.sub(r'[^\d]', '', str(value))
+        try:
+            if str(value).isdigit():
+                return value
+            return re.sub(r'[^\d]', '', str(value))
+        except Exception as ex:
+            logger.error('parse_money errors: %s' % ex)

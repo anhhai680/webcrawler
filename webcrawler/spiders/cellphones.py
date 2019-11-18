@@ -12,7 +12,7 @@ from ..items import ProductItem
 logger = logging.getLogger(__name__)
 
 
-class CellphonesSpider(CrawlSpider):
+class CellphonesSpider(scrapy.Spider):
     name = 'cellphones'
     allowed_domains = ['cellphones.com.vn']
     start_urls = [
@@ -20,27 +20,27 @@ class CellphonesSpider(CrawlSpider):
         # 'https://cellphones.com.vn/tablet.html',
         # 'https://cellphones.com.vn/hang-cu.html',
     ]
-    rules = (
-        Rule(LinkExtractor(
-            allow=(
-                'mobile.html',
-                'mobile.html?p=[0-9]',
-                # 'https://cellphones.com.vn/mobile/[\\w-]+/[\\w-]+$',
-            ), deny=(
-                'itel-it2123v.html',
-                'dien-thoai-pho-thong.html',
-                'timkiem.html',
-                '/sforum/'
-                'mobile.html#top',
-            ), deny_domains=(
-                'https://cellphones.com.vn/mobile.html?model_dienthoai_mtb=[0-9]',
-                'https://cellphones.com.vn/mobile.html?screen_size=[0-9]',
-                'https://cellphones.com.vn/mobile.html?storage=[0-9]',
-                'https://cellphones.com.vn/mobile.html?sim_card=[0-9]',
-                'https://cellphones.com.vn/mobile.html?operating_system=[0-9]'
-            ),
-        ), callback='parse_cellphones'),
-    )
+    # rules = (
+    #     Rule(LinkExtractor(
+    #         allow=(
+    #             'mobile.html',
+    #             'mobile.html?p=[0-9]',
+    #             # 'https://cellphones.com.vn/mobile/[\\w-]+/[\\w-]+$',
+    #         ), deny=(
+    #             'itel-it2123v.html',
+    #             'dien-thoai-pho-thong.html',
+    #             'timkiem.html',
+    #             '/sforum/'
+    #             'mobile.html#top',
+    #         ), deny_domains=(
+    #             'https://cellphones.com.vn/mobile.html?model_dienthoai_mtb=[0-9]',
+    #             'https://cellphones.com.vn/mobile.html?screen_size=[0-9]',
+    #             'https://cellphones.com.vn/mobile.html?storage=[0-9]',
+    #             'https://cellphones.com.vn/mobile.html?sim_card=[0-9]',
+    #             'https://cellphones.com.vn/mobile.html?operating_system=[0-9]'
+    #         ),
+    #     ), callback='parse_cellphones'),
+    # )
 
     def __init__(self, limit_pages=None, *a, **kw):
         super(CellphonesSpider, self).__init__(*a, **kw)
@@ -49,7 +49,7 @@ class CellphonesSpider(CrawlSpider):
         else:
             self.limit_pages = 300
 
-    def parse_cellphones(self, response):
+    def parse(self, response):
         logger.info('Scrape url: %s' % response.url)
         # Get all product links on current page
         for link_product in response.css('div.lt-product-group-image>a::attr(href)'):
@@ -64,7 +64,7 @@ class CellphonesSpider(CrawlSpider):
             if match is not None:
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
-                    yield response.follow(next_page, callback=self.parse_cellphones)
+                    yield response.follow(next_page, callback=self.parse)
                 else:
                     logger.info('Spider will be stop here.{0} of {1}'.format(
                         next_page_number, next_page))
@@ -151,13 +151,17 @@ class CellphonesSpider(CrawlSpider):
         values = extract_xpath_all('//table[@id="tskt"]//td[2]/text()')
         for index in range(len(names)):
             if values[index] is not None and values[index] != '':
-                product_specifications.append([names[index], values[index]])
+                spec_name = str(names[index]).strip()
+                spec_value = str(values[index]).strip()
+                product_specifications.append([spec_name, spec_value])
 
         product_oldprice = 0
         oldprice = extract_with_xpath(
             '//p[@class="old-price"]/span[@id="old-price-12388"]/text()')
         if oldprice is not None and oldprice != '':
             product_oldprice = self.parse_money(oldprice)
+        else:
+            product_oldprice = 0
 
         # product_internalmemory = extract_with_xpath(
         #     '//div[@class="linked"]/a[contains(@class,"active")]/span/text()')
@@ -177,8 +181,8 @@ class CellphonesSpider(CrawlSpider):
         products['cid'] = 'dienthoai'  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
-        products['oldprice'] = product_oldprice
-        products['price'] = product_price
+        products['oldprice'] = int(product_oldprice)
+        products['price'] = int(product_price)
         products['swatchcolors'] = product_swatchcolors
         products['internalmemory'] = product_internalmemory
         products['specifications'] = product_specifications
@@ -196,6 +200,9 @@ class CellphonesSpider(CrawlSpider):
         yield products
 
     def parse_money(self, value):
-        if str(value).isdigit():
-            return value
-        return re.sub(r'[^\d]', '', str(value))
+        try:
+            if str(value).isdigit():
+                return value
+            return re.sub(r'[^\d]', '', str(value))
+        except Exception as ex:
+            logger.error('parse_money errors: %s' % ex)

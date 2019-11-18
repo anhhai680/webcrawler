@@ -188,5 +188,5 @@ MONGO_DATABASE = 'webcrawl'
 MONGO_COLLECTION_NAME = 'crawl_products'
 
 # Enable or disable a spider extension
-MYEXT_ENABLED = True
-MYEXT_ITEMCOUNT = 30
+# MYEXT_ENABLED = True
+# MYEXT_ITEMCOUNT = 30

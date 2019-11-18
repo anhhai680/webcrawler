@@ -78,17 +78,13 @@ class FptshopSpider(CrawlSpider):
         def extract_with_xpath(query):
             return response.xpath(query).get(default='').strip()
 
-        def extract_price(query):
-            price = response.xpath(query).get(default='').strip()
-            return price
-
         def extract_xpath_all(query):
             gallery = response.xpath(query).getall()
             return gallery
 
         # Validate price with pattern
         price_pattern = re.compile("([0-9](\\w+ ?)*\\W+)")
-        product_price = extract_price(
+        product_price = extract_with_xpath(
             '//div[contains(@class,"fs-pr-box")]/p[contains(@class,"fs-dtprice")]/text()')
         #logger.info('Product Price: %s' % product_price)
         if re.match(price_pattern, product_price) is None:
@@ -121,13 +117,19 @@ class FptshopSpider(CrawlSpider):
             '//div[@class="fs-tsright"]/ul/li/span/text()')
         for index in range(len(names)):
             if values[index] is not None and values[index] != '':
-                product_specifications.append([names[index], values[index]])
+                spec_name = str(names[index]).replace(':', '').strip()
+                spec_value = str(values[index]).strip()
+                product_specifications.append([spec_name, spec_value])
 
         product_oldprice = 0
         oldprice = extract_with_xpath(
             '//p[contains(@class,"fs-dtprice")]/del/text()')
-        if oldprice is not None:
+        if oldprice is not None and oldprice != '':
             product_oldprice = self.parse_money(oldprice)
+        else:
+            product_oldprice = 0
+        # logger.info('Oldprice: {0}, Price: {1}'.format(
+        #     product_oldprice, product_price))
 
         product_internalmemory = extract_with_xpath(
             '//div[@class="fs-tsright"]/ul/li/label[contains(text(),"Bộ nhớ trong")]/../span/text()')
@@ -141,17 +143,22 @@ class FptshopSpider(CrawlSpider):
             product_rates = reviews.split('/')[0]
 
         product_location = 'Hồ Chí Minh'
-        product_sku = extract_with_xpath(
+        product_sku = None
+        sku = extract_with_xpath(
             '//h1[@class="fs-dttname"]/span[@class="nosku"]/text()')
+        if sku is not None:
+            product_sku = str(sku[1:-1])
+
         product_instock = 1
 
         product_link = response.url
+
         products = ProductItem()
         products['cid'] = 'dienthoai'  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
-        products['oldprice'] = product_oldprice
-        products['price'] = product_price
+        products['oldprice'] = int(product_oldprice)
+        products['price'] = int(product_price)
         products['swatchcolors'] = product_swatchcolors
         products['internalmemory'] = product_internalmemory
         products['specifications'] = product_specifications
@@ -169,6 +176,9 @@ class FptshopSpider(CrawlSpider):
         yield products
 
     def parse_money(self, value):
-        if str(value).isdigit():
-            return value
-        return re.sub(r'[^\d]', '', str(value))
+        try:
+            if str(value).isdigit():
+                return value
+            return re.sub(r'[^\d]', '', str(value))
+        except Exception as ex:
+            logger.error('parse_money errors: %s' % ex)

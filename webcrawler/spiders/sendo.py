@@ -141,8 +141,12 @@ class SendoSpider(scrapy.Spider):
                     if len(names) > 0:
                         for index in range(len(names)):
                             if values[index] is not None and values[index] != '':
+                                spec_name = str(names[index]).replace(
+                                    ':', '').strip()
+                                spec_value = str(values[index]).replace(
+                                    '.', '').strip()
                                 product_specifications.append(
-                                    [names[index], values[index]])
+                                    [spec_name, spec_value])
 
                     product_oldprice = data['final_price_max']
                     product_internalmemory = sel.xpath(
@@ -193,6 +197,9 @@ class SendoSpider(scrapy.Spider):
             pass
 
     def parse_money(self, value):
-        if str(value).isdigit():
-            return value
-        return re.sub(r'[^\d]', '', str(value))
+        try:
+            if str(value).isdigit():
+                return value
+            return re.sub(r'[^\d]', '', str(value))
+        except Exception as ex:
+            logger.error('parse_money errors: %s' % ex)

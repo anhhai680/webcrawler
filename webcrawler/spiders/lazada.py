@@ -120,7 +120,7 @@ class LazadaSpider(CrawlSpider):
     def parse_product_detail(self, response, product_item, skuId):
 
         def extract_with_css(query):
-            return response.css(query).get().strip()
+            return response.css(query).get(default='').strip()
 
         def extract_with_xpath(query):
             return response.xpath(query).get(default='').strip()
@@ -138,7 +138,7 @@ class LazadaSpider(CrawlSpider):
             product_images = None
             product_swatchcolors = None
             product_internalmemory = None
-            product_specifications = None
+            product_specifications = []
             product_brand = None
             product_shop = None
             #product_rates = None
@@ -179,18 +179,24 @@ class LazadaSpider(CrawlSpider):
                         #         '//ul/li/text()').getall()
                         data_specs = fields['specifications'][skuId]
                         if data_specs is not None:
-                            product_specifications = data_specs['features']
+                            # product_specifications = data_specs['features']
+                            for item_name in data_specs['features']:
+                                spec_name = item_name
+                                spec_value = str(
+                                    data_specs['features'][item_name])
+                                product_specifications.append(
+                                    [spec_name, spec_value])
 
-                        # price
-                        #data_prices = fields['skuInfos']['0']['price']
+                            # price
+                            #data_prices = fields['skuInfos']['0']['price']
                         data_prices = fields['skuInfos'][skuId]['price']
                         product_price = data_prices['salePrice']['value']
-                        if product_price is not None:
+                        if product_price is not None and product_price != '':
                             product_price = product_price/10
 
                         if 'originalPrice' in data_prices:
                             product_oldprice = data_prices['originalPrice']['value']
-                            if product_oldprice is not None:
+                            if product_oldprice is not None and product_oldprice != '':
                                 product_oldprice = product_oldprice/10
 
                         stock = fields['skuInfos'][skuId]['stock']

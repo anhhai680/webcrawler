@@ -3,7 +3,6 @@ import scrapy
 import logging
 import re
 import json
-import time
 
 from ..items import ProductItem
 
@@ -70,14 +69,14 @@ class ShopeeSpider(scrapy.Spider):
                 if item is not None:
                     product_title = str(item['name']).strip()
                     product_desc = str(item['description']).strip()
-                    product_price = str(item['price'])
+                    product_price = self.parse_money(item['price'])/100000
                     # product_swatchcolors = [{mod['name'], str(mod['price'])}
                     #                         for mod in item['models'] if item['models']]
                     product_swatchcolors = []
                     if len(item['models']) > 0:
                         for mod in item['models']:
                             name = mod['name']
-                            price = mod['price']
+                            price = self.parse_money(mod['price'])/100000
                             stock = mod['stock']
                             swatchcolors = {'name': name, 'value': {
                                 'price': price,
@@ -93,7 +92,8 @@ class ShopeeSpider(scrapy.Spider):
                     product_link = 'https://shopee.vn/{}-i.{}.{}'.format(
                         product_title, item['shopid'], item['itemid'])
 
-                    product_oldprice = item['price_max']
+                    product_oldprice = self.parse_money(
+                        item['price_before_discount'])/100000
                     product_internalmemory = None
                     if len(item['attributes']) > 0:
                         for attr in item['attributes']:
@@ -158,3 +158,11 @@ class ShopeeSpider(scrapy.Spider):
             logger.error('Could not parse shop name. Errors %s' % ex)
 
         yield shop_name
+
+    def parse_money(self, value):
+        try:
+            if str(value).isdigit():
+                return value
+            return re.sub(r'[^\d]', '', str(value))
+        except Exception as ex:
+            logger.error('parse_money errors: %s' % ex)

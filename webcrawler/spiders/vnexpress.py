@@ -122,25 +122,29 @@ class VnexpressSpider(CrawlSpider):
             names = [sp.strip() for sp in names if sp != '']
             values = [' '.join(sp.split()) for sp in values]
             values = [sp.strip() for sp in values if sp != '']
-            for index in range(len(names)):
+            for index in range(1, len(names)):
                 try:
                     if values[index] is not None and values[index] != '':
                         if 'ROM' in names[index]:
                             internalmemory = str(values[index])
                         if 'Thương hiệu' in names[index]:
                             brand = str(values[index])
+                        spec_name = str(names[index]).replace(':', '').strip()
+                        spec_value = str(values[index]).strip()
                         product_specifications.append(
-                            [str(names[index]), str(values[index])])
+                            [spec_name, spec_value])
                 except IndexError as ie:
-                    logger.error(ie)
+                    logger.error('IndexError: %s' % ie)
                 except Exception as ex:
                     logger.error('Errors: %s' % ex)
 
         product_oldprice = 0
         oldprice = extract_with_xpath(
             '//span[@class="price-old price_old_sp_detail"]/text()')
-        if oldprice is not None:
+        if oldprice is not None and oldprice != '':
             product_oldprice = self.parse_money(oldprice)
+        else:
+            product_oldprice = 0
 
         # product_internalmemory = extract_with_xpath(
         #     '//div[@class="box-body box-information"]/table[@class="table"]/tbody/tr/td[1]/label[contains(text(),"ROM")]/../td[2]/text()')
@@ -167,8 +171,8 @@ class VnexpressSpider(CrawlSpider):
         products['cid'] = 'dienthoai'  # 1: Smartphone
         products['title'] = product_title
         products['description'] = product_desc
-        products['oldprice'] = product_oldprice
-        products['price'] = product_price
+        products['oldprice'] = int(product_oldprice)
+        products['price'] = int(product_price)
         products['swatchcolors'] = product_swatchcolors
         products['internalmemory'] = product_internalmemory
         products['specifications'] = product_specifications
@@ -186,6 +190,9 @@ class VnexpressSpider(CrawlSpider):
         yield products
 
     def parse_money(self, value):
-        if str(value).isdigit():
-            return value
-        return re.sub(r'[^\d]', '', str(value))
+        try:
+            if str(value).isdigit():
+                return value
+            return re.sub(r'[^\d]', '', str(value))
+        except Exception as ex:
+            logger.error('parse_money errors: %s' % ex)

@@ -113,6 +113,11 @@ class TikiSpider(scrapy.Spider):
         product_price = 0
         product_oldprice = extract_with_xpath(
             '//p[@id="p-listpirce"]/@data-value')
+        if product_oldprice is not None and product_oldprice != '':
+            product_oldprice = self.parse_money(product_oldprice)
+        else:
+            product_oldprice = 0
+
         product_images = None
         product_swatchcolors = None
         product_internalmemory = extract_with_xpath(
@@ -160,7 +165,7 @@ class TikiSpider(scrapy.Spider):
             '//script/text()').re('var configuration = ({.*?});')
         if len(script) > 0:
             json_data = json.loads(script[0])
-            if len(json_data) > 0:
+            if isinstance(json_data, list) and len(json_data) > 0:
                 # if len(json_data["configurable_options"]) > 0:
                 #     product_swatchcolors = [
                 #         color["label"] for color in json_data["configurable_options"][0]["values"]]
@@ -214,7 +219,14 @@ class TikiSpider(scrapy.Spider):
                         products['domain'] = 'tiki.vn'
                         products['sku'] = product_sku
                         products['instock'] = product_instock
-                        #products['freeshipping'] = product_shipping
                         products['body'] = ''
 
                         yield products
+
+    def parse_money(self, value):
+        try:
+            if str(value).isdigit():
+                return value
+            return re.sub(r'[^\d]', '', str(value))
+        except Exception as ex:
+            logger.error('parse_money errors: %s' % ex)
