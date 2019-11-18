@@ -5,7 +5,7 @@ import re
 import json
 import time
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
+from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
 import numpy as np
 #from scrapy.loader import ItemLoader
@@ -17,37 +17,37 @@ from ..items import ProductLoader
 logger = logging.getLogger(__name__)
 
 
-class LazadaSpider(CrawlSpider):
+class LazadaSpider(scrapy.Spider):
     name = 'lazada'
     allowed_domains = ['www.lazada.vn']
     start_urls = ['https://www.lazada.vn/dien-thoai-di-dong/']
-    rules = (
-        Rule(LxmlLinkExtractor(
-            allow=(
-                '/dien-thoai-di-dong/',
-                '/dien-thoai-di-dong/?page=[0-9]'
-            ),
-            deny=(
-                '/tin-tuc/',
-                '/phu-kien/',
-                '/huong-dan/',
-                '/ho-tro/',
-                '/tra-gop/',
-                '/khuyen-mai/',
-                '/tui-deo-cheo-deo-vai-nu/',
-                '/pages/i/vn/digitalgoods/voucher-dich-vu',
-                '/wow/camp/vn/midyear-festival/voucher',
-                '/helpcenter/'
-                '/about/',
-                '/sell-on-lazada/',
-                '/affiliate/',
-                '/press/'
-            ),
-            deny_domains=(
-                'pages.lazada.vn'
-            ),
-        ), callback='parse_lazada'),
-    )
+    # rules = (
+    #     Rule(LinkExtractor(
+    #         allow=(
+    #             '/dien-thoai-di-dong/',
+    #             '/dien-thoai-di-dong/?page=[0-9]'
+    #         ),
+    #         deny=(
+    #             '/tin-tuc/',
+    #             '/phu-kien/',
+    #             '/huong-dan/',
+    #             '/ho-tro/',
+    #             '/tra-gop/',
+    #             '/khuyen-mai/',
+    #             '/tui-deo-cheo-deo-vai-nu/',
+    #             '/pages/i/vn/digitalgoods/voucher-dich-vu',
+    #             '/wow/camp/vn/midyear-festival/voucher',
+    #             '/helpcenter/'
+    #             '/about/',
+    #             '/sell-on-lazada/',
+    #             '/affiliate/',
+    #             '/press/'
+    #         ),
+    #         deny_domains=(
+    #             'pages.lazada.vn'
+    #         ),
+    #     ), callback='parse_lazada'),
+    # )
     custom_settings = {
         'DOWNLOADER_MIDDLEWARES': {
             'webcrawler.middlewares.lazada.LazadaSpiderMiddleware': 543
@@ -62,12 +62,12 @@ class LazadaSpider(CrawlSpider):
             self.limit_pages = 300
         self.unique_urls = []
 
-    def parse_lazada(self, response):
+    def parse(self, response):
         logger.info('Scrape Url: %s' % response.url)
         try:
             pageData = re.findall(
                 "<script>window.pageData=({.+?})</script>", response.body.decode("utf-8"), re.M)
-            if pageData is not None:
+            if isinstance(pageData, list) and len(pageData) > 0:
                 data = json.loads(pageData[0])
                 if data["mods"]["listItems"] is not None:
                     for item in data["mods"]["listItems"]:
@@ -107,7 +107,7 @@ class LazadaSpider(CrawlSpider):
                     next_page_number = int(match.groups()[0])
                     # logger.info('next_page_number: %s', str(next_page_number))
                     if next_page_number <= self.limit_pages:
-                        yield response.follow(next_page, callback=self.parse_lazada)
+                        yield response.follow(next_page, callback=self.parse)
                     else:
                         logger.info('Spider will be stop here.{0} of {1}'.format(
                             next_page_number, next_page))
