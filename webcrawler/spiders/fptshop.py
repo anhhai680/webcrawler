@@ -10,42 +10,42 @@ from ..items import ProductItem
 logger = logging.getLogger(__name__)
 
 
-class FptshopSpider(CrawlSpider):
+class FptshopSpider(scrapy.Spider):
     name = 'fptshop'
     allowed_domains = ['fptshop.com.vn']
     start_urls = [
         'https://fptshop.com.vn/dien-thoai?sort=ban-chay-nhat',
     ]
-    rules = (
-        Rule(LinkExtractor(
-            allow=(
-                '/dien-thoai/',
-                '/dien-thoai/[\\w-]+/[\\w-]+$'
-            ),
-            deny=(
-                '/tin-tuc/',
-                '/ctkm/(.*?)',
-                '/phu-kien/',
-                '/huong-dan/',
-                '/ho-tro/',
-                '/tra-gop',
-                '/kiem-tra-bao-hanh?tab=thong-tin-bao-hanh',
-                '/cua-hang',
-                '/kiem-tra-hang-apple-chinh-hang',
-                '/ffriends',
-                '/khuyen-mai',
-                '/sim-so-dep',
-                'tel:18006601',
-                'tel:18006616'
-            ),
-            deny_domains=(
-                'vieclam.fptshop.com.vn',
-                'online.gov.vn',
-                'hangmy.fptshop.com.vn'
-            ),
-        ), callback='parse_fptshop'),
-    )
-    handle_httpstatus_list = [301]
+    # rules = (
+    #     Rule(LinkExtractor(
+    #         allow=(
+    #             '/dien-thoai/',
+    #             '/dien-thoai/[\\w-]+/[\\w-]+$'
+    #         ),
+    #         deny=(
+    #             '/tin-tuc/',
+    #             '/ctkm/(.*?)',
+    #             '/phu-kien/',
+    #             '/huong-dan/',
+    #             '/ho-tro/',
+    #             '/tra-gop',
+    #             '/kiem-tra-bao-hanh?tab=thong-tin-bao-hanh',
+    #             '/cua-hang',
+    #             '/kiem-tra-hang-apple-chinh-hang',
+    #             '/ffriends',
+    #             '/khuyen-mai',
+    #             '/sim-so-dep',
+    #             'tel:18006601',
+    #             'tel:18006616'
+    #         ),
+    #         deny_domains=(
+    #             'vieclam.fptshop.com.vn',
+    #             'online.gov.vn',
+    #             'hangmy.fptshop.com.vn'
+    #         ),
+    #     ), callback='parse_fptshop'),
+    # )
+    handle_httpstatus_list = [301, 302, 400]
 
     def __init__(self, limit_pages=None, *a, **kw):
         super(FptshopSpider, self).__init__(*a, **kw)
@@ -54,7 +54,7 @@ class FptshopSpider(CrawlSpider):
         else:
             self.limit_pages = 300
 
-    def parse_fptshop(self, response):
+    def parse(self, response):
         logger.info('Scrape url: %s' % response.url)
         for link in response.xpath('//div[@class="fs-lpil"]/a[@class="fs-lpil-img"]/@href').getall():
             product_link = "https://fptshop.com.vn%s" % link
@@ -67,7 +67,7 @@ class FptshopSpider(CrawlSpider):
             next_page_number = int(next_page)
             if next_page_number <= self.limit_pages:
                 next_page = 'https://fptshop.com.vn/dien-thoai?sort=ban-chay-nhat&trang=%s' % next_page
-                yield response.follow(next_page, callback=self.parse_fptshop)
+                yield response.follow(next_page, callback=self.parse)
             else:
                 logger.info('Spider will be stop here.{0} of {1}'.format(
                     next_page_number, next_page))
@@ -139,8 +139,11 @@ class FptshopSpider(CrawlSpider):
 
         product_rates = None
         reviews = extract_with_xpath('//div[@class="fs-dttrating"]//h5/text()')
-        if reviews is not None:
+        if reviews is not None and reviews != '':
             product_rates = reviews.split('/')[0]
+            product_rates = product_rates.replace(',', '.')
+        else:
+            product_rates = 0
 
         product_location = 'Hồ Chí Minh'
         product_sku = None
@@ -166,7 +169,7 @@ class FptshopSpider(CrawlSpider):
         products['images'] = product_images
         products['brand'] = product_brand
         products["shop"] = product_shop
-        products['rates'] = product_rates
+        products['rates'] = float(product_rates)
         products['location'] = product_location
         products["domain"] = 'fptshop.com.vn'
         products['sku'] = product_sku

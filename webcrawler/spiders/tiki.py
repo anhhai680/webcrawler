@@ -129,8 +129,14 @@ class TikiSpider(scrapy.Spider):
             '//div[@class="current-seller"]/div/div/span/text()')
         product_location = 'Hồ Chí Minh'
         # product_shipping = 0  # 1 Free shipping, 0 Not Free
-        product_rates = extract_with_xpath(
+        product_rates = None
+        rates = extract_with_xpath(
             '//meta[@itemprop="ratingValue"]/@content')
+        if rates is not None and rates != '':
+            product_rates = rates
+        else:
+            product_rates = 0
+
         product_instock = 1  # Product in stock
 
         # product_images = extract_xpath_all(
@@ -214,7 +220,7 @@ class TikiSpider(scrapy.Spider):
                         products['images'] = product_images
                         products['brand'] = product_brand
                         products['shop'] = product_shop
-                        products['rates'] = product_rates
+                        products['rates'] = float(product_rates)
                         products['location'] = product_location
                         products['domain'] = 'tiki.vn'
                         products['sku'] = product_sku

@@ -68,7 +68,7 @@ class ProductLoader(ItemLoader):
     link_out = clean_text
     brand_out = clean_text
     shop_out = clean_text
-    rates_out = clean_text
+    rates_out = TakeFirst()
     location_out = clean_text
     domain_out = TakeFirst()
     sku_out = clean_text

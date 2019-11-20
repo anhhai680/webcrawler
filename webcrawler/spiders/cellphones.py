@@ -190,7 +190,7 @@ class CellphonesSpider(scrapy.Spider):
         products['images'] = product_images
         products['brand'] = product_brand
         products['shop'] = product_shop
-        products['rates'] = product_rates
+        products['rates'] = float(product_rates)
         products['location'] = product_location
         products['domain'] = 'cellphones.com.vn'
         products['sku'] = product_sku

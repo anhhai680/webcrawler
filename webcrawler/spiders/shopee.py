@@ -129,7 +129,7 @@ class ShopeeSpider(scrapy.Spider):
                         images=product_images,
                         brand=product_brand,
                         shop=product_shop,
-                        rates=product_rates,
+                        rates=float(product_rates),
                         location=product_location,
                         domain='shopee.vn',
                         sku=product_sku,

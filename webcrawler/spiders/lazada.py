@@ -91,7 +91,7 @@ class LazadaSpider(scrapy.Spider):
                             il.add_value('location', product_location)
                             #il.add_value('freeshipping', product_shipping)
                             # il.add_value('instock', product_instock)
-                            il.add_value('rates', rating_scope)
+                            il.add_value('rates', float(rating_scope))
                             il.add_value('sku', product_sku)
                             yield scrapy.Request(product_link, callback=self.parse_product_detail, cb_kwargs={'product_item': il.load_item(), 'skuId': skuId})
                         time.sleep(1)

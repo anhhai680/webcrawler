@@ -10,28 +10,28 @@ from ..items import ProductItem
 logger = logging.getLogger(__name__)
 
 
-class HnammobileSpider(CrawlSpider):
+class HnammobileSpider(scrapy.Spider):
     name = 'hnammobile'
     allowed_domains = ['www.hnammobile.com']
     start_urls = ['https://www.hnammobile.com/dien-thoai/']
-    rules = (
-        Rule(LinkExtractor(
-            allow=('/dien-thoai/'),
-            deny=(
-                '/dien-thoai/#',
-                '/tin-tuc/',
-                '/may-tinh-bang/',
-                '/phu-kien/',
-                '/dong-ho-thong-minh/',
-                '/kho-sim',
-                '/event/',
-                '/loai-dien-thoai/',
-                '/mua-tra-gop',
-                'https://www.hnammobile.com/dien-thoai/tel:19002012',
-                'https://www.hnammobile.com/dien-thoai/tel:01234303000'
-            )
-        ), callback='parse_hnammobile'),
-    )
+    # rules = (
+    #     Rule(LinkExtractor(
+    #         allow=('/dien-thoai/'),
+    #         deny=(
+    #             '/dien-thoai/#',
+    #             '/tin-tuc/',
+    #             '/may-tinh-bang/',
+    #             '/phu-kien/',
+    #             '/dong-ho-thong-minh/',
+    #             '/kho-sim',
+    #             '/event/',
+    #             '/loai-dien-thoai/',
+    #             '/mua-tra-gop',
+    #             'https://www.hnammobile.com/dien-thoai/tel:19002012',
+    #             'https://www.hnammobile.com/dien-thoai/tel:01234303000'
+    #         )
+    #     ), callback='parse_hnammobile'),
+    # )
     handle_httpstatus_list = [301, 302]
 
     def __init__(self, limit_pages=None, *a, **kw):
@@ -41,7 +41,7 @@ class HnammobileSpider(CrawlSpider):
         else:
             self.limit_pages = 300
 
-    def parse_hnammobile(self, response):
+    def parse(self, response):
         logger.info('Scrape url: %s' % response.url)
         for product_link in response.css('div.image>a::attr(href)'):
             yield response.follow(product_link, callback=self.parse_product_detail)
@@ -59,7 +59,7 @@ class HnammobileSpider(CrawlSpider):
             if match is not None:
                 next_page_number = int(match.groups()[0])
                 if next_page_number <= self.limit_pages:
-                    yield response.follow(next_page, callback=self.parse_hnammobile)
+                    yield response.follow(next_page, callback=self.parse)
                 else:
                     logger.info('Spider will be stop here.{0} of {1}'.format(
                         next_page_number, next_page))
@@ -153,7 +153,7 @@ class HnammobileSpider(CrawlSpider):
         products['images'] = product_images
         products['brand'] = product_brand
         products["shop"] = product_shop
-        products['rates'] = product_rates
+        products['rates'] = float(product_rates)
         products['location'] = product_location
         products["domain"] = 'hnammobile.com'
         products['sku'] = product_sku

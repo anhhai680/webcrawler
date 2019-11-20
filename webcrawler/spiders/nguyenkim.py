@@ -125,8 +125,14 @@ class NguyenkimSpider(scrapy.Spider):
         product_brand = extract_with_xpath(
             '//table[@class="productSpecification_table"]/tbody/tr/td[contains(text(),"Nhà sản xuất")]/../td[@class="value"]/text()')
         product_shop = 'Nguyễn Kim'
-        product_rates = extract_with_xpath(
+        product_rates = None
+        rates = extract_with_xpath(
             '//div[@id="average_rating_product"]/span[@class="number_avg_rate_npv"]/text()')
+        if rates is not None and rates != '':
+            product_rates = rates
+        else:
+            product_rates = 0
+
         product_location = 'Hồ Chí Minh'
         product_sku = None
         product_instock = 1
@@ -150,7 +156,7 @@ class NguyenkimSpider(scrapy.Spider):
         products['images'] = product_images
         products['brand'] = product_brand
         products["shop"] = product_shop
-        products['rates'] = product_rates
+        products['rates'] = float(product_rates)
         products['location'] = product_location
         products["domain"] = 'nguyenkim.com'
         products['sku'] = product_sku
