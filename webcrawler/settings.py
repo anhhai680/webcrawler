@@ -190,3 +190,6 @@ MONGO_COLLECTION_NAME = 'crawl_products'
 # Enable or disable a spider extension
 # MYEXT_ENABLED = True
 # MYEXT_ITEMCOUNT = 30
+
+# Enable or disable Proxy Pool Middleware
+PROXY_POOL_ENABLED = True

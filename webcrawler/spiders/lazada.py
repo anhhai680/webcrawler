@@ -50,7 +50,9 @@ class LazadaSpider(scrapy.Spider):
     # )
     custom_settings = {
         'DOWNLOADER_MIDDLEWARES': {
-            'webcrawler.middlewares.lazada.LazadaSpiderMiddleware': 543
+            'webcrawler.middlewares.lazada.LazadaSpiderMiddleware': 543,
+            'scrapy_proxy_pool.middlewares.ProxyPoolMiddleware': 610,
+            'scrapy_proxy_pool.middlewares.BanDetectionMiddleware': 620,
         },
     }
 
