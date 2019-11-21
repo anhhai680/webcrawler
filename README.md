@@ -28,3 +28,6 @@ fetch(request)
 # Install MySQL Server on Ubuntu
 sudo apt install mysql-server
 sudo systemctl status mysql
+
+# Google cache of site
+https://webcache.googleusercontent.com/search?q=cache:lazada.vn/dien-thoai-di-dong/
